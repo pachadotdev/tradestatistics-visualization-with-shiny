@@ -1,0 +1,1414 @@
+## server.R ##
+
+shinyServer(
+  function(input, output, session) {
+    # Input -------------------------------------------------------------------
+
+    y <- reactive({
+      (min(input$y[1], input$y[2])):(max(input$y[1], input$y[2]))
+    })
+
+    # This section removed non-existing countries for the selected years,
+    # unfortunately this resets the url and removes the selection
+    # therefore I prefer to have a shareable url
+    # 
+    # available_reporters_iso_in_range <- reactive({
+    #   available_reporters_iso_min_year <- sprintf("%s/reporters?y=%s", base_url, min(y())) %>% 
+    #     jsonlite::fromJSON() %>%
+    #     purrr::as_vector()
+    #   
+    #   available_reporters_iso_max_year <- sprintf("%s/reporters?y=%s", base_url, max(y())) %>% 
+    #     jsonlite::fromJSON() %>%
+    #     purrr::as_vector()
+    #   
+    #   dplyr::intersect(available_reporters_iso_min_year, available_reporters_iso_max_year)
+    # })
+    # 
+    # output$r <- renderUI({
+    #   selectInput(
+    #     "r",
+    #     "Reporter:",
+    #     choices = available_reporters_iso[available_reporters_iso != "all" &
+    #                                         available_reporters_iso %in% available_reporters_iso_in_range()],
+    #     selected = sample(available_reporters_iso[available_reporters_iso != "all" &
+    #                                                 available_reporters_iso %in% available_reporters_iso_in_range()],1),
+    #     selectize = TRUE
+    #   )
+    # })
+    # 
+    # output$p <- renderUI({
+    #   selectInput(
+    #     "p",
+    #     "Partner:",
+    #     choices = available_reporters_iso[available_reporters_iso %in% c("all", available_reporters_iso_in_range())],
+    #     selected = "all",
+    #     selectize = TRUE
+    #   )
+    # })
+    
+    r_iso <- reactive({
+      input$r
+    })
+
+    r_name <- reactive({
+      reporters_to_display %>%
+        filter(available_reporters_iso == input$r) %>%
+        select(available_reporters_names) %>%
+        as.character()
+    })
+
+    p_iso <- reactive({
+      input$p
+    })
+
+    p_name <- reactive({
+      reporters_to_display %>%
+        filter(available_reporters_iso == input$p) %>%
+        select(available_reporters_names) %>%
+        as.character()
+    })
+
+    table_aggregated <- reactive({
+      if (p_iso() == "all") {
+        "yr"
+      } else {
+        "yrp"
+      }
+    })
+
+    table_detailed <- reactive({
+      if (p_iso() == "all") {
+        "yrc"
+      } else {
+        "yrpc"
+      }
+    })
+    
+    # Title -------------------------------------------------------------------
+
+    text_add_the <- reactive({
+      if (substr(p_name(), 1, 6) == "United" | substr(p_name(), 1, 3) == "USA") {
+        "the "
+      } else {
+        ""
+      }
+    })
+    
+    text_add_proper_the <- reactive({
+      if (substr(r_name(), 1, 6) == "United" | substr(r_name(), 1, 3) == "USA") {
+        "The "
+      } else {
+        ""
+      }
+    })
+
+    initial_title <- function() {
+      x <- c("Data", "Data visualization", "Computing", "Statistics")
+      x_sample <- sample(x,1)
+      y <- statquotes::statquote(topic = x_sample)
+      glue::glue(
+        "
+        <h1>
+        To begin, select at least reporter and a partner and then click Go!
+        </h1><br>
+        <p>
+        <b>Our users detected that the beta does not work with Chromium. Firefox, Chrome and Edge work ok.</b>
+        </p><br>
+        <p>
+        We already picked the USA and the World as an example. You can click and type in the menus to avoid scrolling, and 
+        you can move the year slider to explore.
+        </p><br>
+        <p>
+        Here is random { x_sample } quote for you:
+        </p><br>
+        <h5 align='center'>
+        \"<i>{y$text}\"</i> 
+        </h5>
+        <h5 align='center'>
+        {y$source}
+        </h5><br>
+        <p>
+          <center>
+            <img src='img/pizza_sammy_box.png' width='250px'><br>
+            This project is powered by <a href='https://digitalocean.com'>Digital Ocean</a>.
+          </center>
+        </p>
+        "
+      )
+    }
+    
+    title <- eventReactive(input$go, {
+      hide("contents")
+      hide("share_download_cite")
+      show("loading")
+
+      switch(
+        table_detailed(),
+        "yrc" = glue::glue("<h1>{ text_add_proper_the() } { r_name() } multilateral trade between { min(y()) } and { max(y()) }</h1>"),
+        "yrpc" = glue::glue("<h1>{ text_add_proper_the() } { r_name() } and { text_add_the() } { p_name() } between { min(y()) } and { max(y()) }</h1>")
+      )
+    })
+
+    title_legend <- eventReactive(input$go, {
+      "The information displayed here is based on <a href='https://comtrade.un.org/'>UN COMTRADE</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
+      of restrictions and applicable licenses."
+    })
+
+    # Format ------------------------------------------------------------------
+
+    format <- reactive({
+      input$format
+    })
+
+    # Data --------------------------------------------------------------------
+
+    data_aggregated <- eventReactive(input$go, {
+      ots_create_tidy_data(
+        years = y(),
+        reporters = r_iso(),
+        partners = p_iso(),
+        include_shortnames = FALSE,
+        include_communities = FALSE,
+        table = table_aggregated()
+      )
+    })
+
+    data_detailed <- eventReactive(input$go, {
+      ots_create_tidy_data(
+        years = y(),
+        reporters = r_iso(),
+        partners = p_iso(),
+        include_shortnames = TRUE,
+        include_communities = TRUE,
+        table = table_detailed()
+      )
+    })
+
+    trade_rankings <- eventReactive(input$go, {
+      ots_create_tidy_data(
+        years = c(min(y()),max(y())),
+        reporters = r_iso(),
+        partners = "all",
+        include_shortnames = FALSE,
+        include_communities = FALSE,
+        table = "yrp_short"
+      ) %>% 
+        mutate(
+          exp_rank = dense_rank(desc(export_value_usd)),
+          imp_rank = dense_rank(desc(import_value_usd))
+        )
+    })
+    
+    top_imports_exports <- eventReactive(input$go, {
+      ots_create_tidy_data(
+        years = c(min(y()),max(y())),
+        reporters = r_iso(),
+        partners = p_iso(),
+        include_shortnames = FALSE,
+        include_communities = FALSE,
+        table = "yrp_short"
+      ) %>% 
+        
+        select(year, reporter_iso, export_value_usd, import_value_usd, starts_with("top_")) %>% 
+        
+        rename(
+          export_value_usd_bilateral = export_value_usd, 
+          import_value_usd_bilateral = import_value_usd
+        ) %>% 
+
+        inner_join(
+          ots_create_tidy_data(
+            years = c(min(y()),max(y())),
+            reporters = r_iso(),
+            include_shortnames = FALSE,
+            include_communities = FALSE,
+            table = "yr_short"
+          )
+        ) %>% 
+        
+        mutate(
+          top_export_to_total_exports = top_export_trade_value_usd / export_value_usd,
+          top_import_to_total_imports = top_import_trade_value_usd / import_value_usd
+        ) %>% 
+        
+        left_join(
+          ots_product_shortnames %>% 
+            rename(
+              top_export_product_code = product_code,
+              top_export_product_name = product_shortname_english
+            )
+        ) %>% 
+        
+        left_join(
+          ots_product_shortnames %>% 
+            rename(
+              top_import_product_code = product_code,
+              top_import_product_name = product_shortname_english
+            )
+        )
+    })
+    
+    top_imports_exports_short <- eventReactive(input$go, {
+      ots_create_tidy_data(
+        years = c(min(y()),max(y())),
+        reporters = r_iso(),
+        include_shortnames = FALSE,
+        include_communities = FALSE,
+        table = "yr_short"
+      ) %>% 
+        
+        select(year, reporter_iso, export_value_usd, import_value_usd, starts_with("top_")) %>% 
+        
+        mutate(
+          top_export_to_total_exports = top_export_trade_value_usd / export_value_usd,
+          top_import_to_total_imports = top_import_trade_value_usd / import_value_usd
+        ) %>% 
+        
+        left_join(
+          ots_product_shortnames %>% 
+            rename(
+              top_export_product_code = product_code,
+              top_export_product_name = product_shortname_english
+            )
+        ) %>% 
+        
+        left_join(
+          ots_product_shortnames %>% 
+            rename(
+              top_import_product_code = product_code,
+              top_import_product_name = product_shortname_english
+            )
+        )
+    })
+    
+    # Exports elements for texts ----------------------------------------------
+
+    exports_value_paragraph_min_year <- eventReactive(input$go, {
+      trade_rankings() %>% 
+        filter(
+          year == min(y()),
+          reporter_iso == r_iso(),
+          partner_iso == p_iso()
+        ) %>% 
+        select(export_value_usd) %>% 
+        as.numeric()
+    })
+    
+    exports_value_paragraph_min_year_2 <- eventReactive(input$go, {
+      show_dollars(exports_value_paragraph_min_year())
+    })
+    
+    exports_value_paragraph_max_year <- eventReactive(input$go, {
+      trade_rankings() %>% 
+        filter(
+          year == max(y()),
+          reporter_iso == r_iso(),
+          partner_iso == p_iso()
+        ) %>% 
+        select(export_value_usd) %>% 
+        as.numeric()
+    })
+    
+    exports_value_paragraph_max_year_2 <- eventReactive(input$go, {
+      show_dollars(exports_value_paragraph_max_year())
+    })
+    
+    exports_total_value_paragraph_max_year <- eventReactive(input$go, {
+      ifelse(
+        p_iso() == "all",
+        top_imports_exports_short() %>% 
+          filter(year == max(y())) %>% 
+          select(export_value_usd) %>% 
+          as.numeric(),
+        top_imports_exports() %>% 
+          filter(year == max(y())) %>% 
+          select(export_value_usd) %>% 
+          as.numeric()
+      )
+    })
+    
+    exports_total_value_paragraph_max_year_2 <- eventReactive(input$go, {
+      show_dollars(exports_total_value_paragraph_max_year())
+    })
+    
+    exports_bilateral_share_paragraph_max_year <- eventReactive(input$go, {
+      show_percentage(
+        exports_value_paragraph_max_year() / exports_total_value_paragraph_max_year()
+      )
+    })
+    
+    exports_rank_paragraph_min_year <- eventReactive(input$go, {
+      trade_rankings() %>% 
+        filter(
+          year == min(y()),
+          reporter_iso == r_iso(),
+          partner_iso == p_iso()
+        ) %>% 
+        select(exp_rank) %>% 
+        as.character()
+    })
+    
+    exports_total_value_paragraph_min_year <- eventReactive(input$go, {
+      ifelse(
+        p_iso() == "all",
+        top_imports_exports_short() %>% 
+          filter(year == min(y())) %>% 
+          select(export_value_usd) %>% 
+          as.numeric(),
+        top_imports_exports() %>% 
+          filter(year == min(y())) %>% 
+          select(export_value_usd) %>% 
+          as.numeric()
+      )
+    })
+    
+    exports_total_value_paragraph_min_year_2 <- eventReactive(input$go, {
+      show_dollars(exports_total_value_paragraph_min_year())
+    })
+    
+    exports_bilateral_share_paragraph_min_year <- eventReactive(input$go, {
+      show_percentage(
+        exports_value_paragraph_min_year() / exports_total_value_paragraph_min_year()
+      )
+    })
+    
+    exports_rank_paragraph_max_year <- eventReactive(input$go, {
+      trade_rankings() %>% 
+        filter(
+          year == max(y()),
+          reporter_iso == r_iso(),
+          partner_iso == p_iso()
+        ) %>% 
+        select(exp_rank) %>% 
+        as.character()
+    })
+    
+    top_export_name_paragraph_min_year <- eventReactive(input$go, {
+      ifelse(
+        p_iso() == "all",
+        top_imports_exports_short() %>% 
+          filter(year == min(y())) %>% 
+          select(top_export_product_name) %>% 
+          as.character(),
+        top_imports_exports() %>% 
+          filter(year == min(y())) %>% 
+          select(top_export_product_name) %>% 
+          as.character()
+      )
+    })
+    
+    top_export_value_paragraph_min_year <- eventReactive(input$go, {
+      top_imports_exports() %>% 
+        filter(year == min(y())) %>% 
+        select(top_export_trade_value_usd) %>% 
+        as.character()
+    })
+    
+    top_export_value_paragraph_min_year_2 <- eventReactive(input$go, {
+      show_dollars(stop_export_value_paragraph_min_year())
+    })
+    
+    top_export_bilateral_share_paragraph_min_year <- eventReactive(input$go, {
+      data_detailed() %>% 
+        filter(
+          year == min(y()), 
+          product_shortname_english == top_export_name_paragraph_min_year()
+        ) %>% 
+        select(year, export_value_usd) %>% 
+        rename(top_export_value_usd_bilateral = export_value_usd) %>% 
+        inner_join(
+          top_imports_exports() %>% 
+            select(year, export_value_usd_bilateral)
+        ) %>% 
+        mutate(
+          top_export_share_usd_bilateral = top_export_value_usd_bilateral / export_value_usd_bilateral
+        ) %>% 
+        select(top_export_share_usd_bilateral) %>% 
+        as.numeric()
+    })
+    
+    top_export_bilateral_share_paragraph_min_year_2 <- eventReactive(input$go, {
+      show_percentage(top_export_bilateral_share_paragraph_min_year())
+    })
+    
+    top_export_total_share_paragraph_min_year <- eventReactive(input$go, {
+      ifelse(
+        p_iso() == "all",
+        top_imports_exports_short() %>% 
+          filter(year == min(y())) %>% 
+          select(top_export_to_total_exports) %>% 
+          as.numeric(),
+        top_imports_exports() %>% 
+          filter(year == min(y())) %>% 
+          select(top_export_to_total_exports) %>% 
+          as.numeric()
+      )
+    })
+    
+    top_export_total_share_paragraph_min_year_2 <- eventReactive(input$go, {
+      show_percentage(top_export_total_share_paragraph_min_year())
+    })
+    
+    top_export_name_paragraph_max_year <- eventReactive(input$go, {
+      ifelse(
+        p_iso() == "all",
+        top_imports_exports_short() %>% 
+          filter(year == max(y())) %>% 
+          select(top_export_product_name) %>% 
+          as.character(),
+        top_imports_exports() %>% 
+          filter(year == max(y())) %>% 
+          select(top_export_product_name) %>% 
+          as.character()
+      )
+    })
+    
+    top_export_value_paragraph_max_year <- eventReactive(input$go, {
+      top_imports_exports() %>% 
+        filter(year == max(y())) %>% 
+        select(top_export_trade_value_usd) %>% 
+        as.character()
+    })
+    
+    top_export_value_paragraph_max_year_2 <- eventReactive(input$go, {
+      show_dollars(top_export_value_paragraph_max_year())
+    })
+    
+    top_export_bilateral_share_paragraph_max_year <- eventReactive(input$go, {
+      data_detailed() %>% 
+        filter(
+          year == max(y()), 
+          product_shortname_english == top_export_name_paragraph_max_year()
+        ) %>% 
+        select(year, export_value_usd) %>% 
+        rename(top_export_value_usd_bilateral = export_value_usd) %>% 
+        inner_join(
+          top_imports_exports() %>% 
+            select(year, export_value_usd_bilateral)
+        ) %>% 
+        mutate(
+          top_export_share_usd_bilateral = top_export_value_usd_bilateral / export_value_usd_bilateral
+        ) %>% 
+        select(top_export_share_usd_bilateral) %>% 
+        as.numeric()
+    })
+    
+    top_export_bilateral_share_paragraph_max_year_2 <- eventReactive(input$go, {
+      show_percentage(top_export_bilateral_share_paragraph_max_year())
+    })
+    
+    top_export_total_share_paragraph_max_year <- eventReactive(input$go, {
+      ifelse(
+        p_iso() == "all",
+        top_imports_exports_short() %>% 
+          filter(year == max(y())) %>% 
+          select(top_export_to_total_exports) %>% 
+          as.numeric(),
+        top_imports_exports() %>% 
+          filter(year == max(y())) %>% 
+          select(top_export_to_total_exports) %>% 
+          as.numeric()
+      )
+    })
+    
+    top_export_total_share_paragraph_max_year_2 <- eventReactive(input$go, {
+      show_percentage(top_export_total_share_paragraph_max_year())
+    })
+    
+    exports_growth_paragraph <- eventReactive(input$go, {
+      ifelse(
+        p_iso() == "all",
+        growth_rate(
+          exports_total_value_paragraph_max_year(), exports_total_value_paragraph_min_year(), y()
+        ),
+        growth_rate(
+          exports_value_paragraph_max_year(), exports_value_paragraph_min_year(), y()
+        )
+      )
+    })
+    
+    exports_growth_in_or_decreased_paragraph <- eventReactive(input$go, {
+      ifelse(exports_growth_paragraph() >= 0, "increased", "decreased")
+    })
+    
+    exports_growth_paragraph_2 <- eventReactive(input$go, {
+      show_percentage(exports_growth_paragraph())
+    })
+    
+    # Imports elements for texts ----------------------------------------------
+
+    imports_value_paragraph_min_year <- eventReactive(input$go, {
+      trade_rankings() %>% 
+        filter(
+          year == min(y()),
+          reporter_iso == r_iso(),
+          partner_iso == p_iso()
+        ) %>% 
+        select(import_value_usd) %>% 
+        as.numeric()
+    })
+    
+    imports_value_paragraph_min_year_2 <- eventReactive(input$go, {
+      show_dollars(imports_value_paragraph_min_year())
+    })
+    
+    imports_value_paragraph_max_year <- eventReactive(input$go, {
+      trade_rankings() %>% 
+        filter(
+          year == max(y()),
+          reporter_iso == r_iso(),
+          partner_iso == p_iso()
+        ) %>% 
+        select(import_value_usd) %>% 
+        as.numeric()
+    })
+    
+    imports_value_paragraph_max_year_2 <- eventReactive(input$go, {
+      show_dollars(imports_value_paragraph_max_year())
+    })
+    
+    imports_total_value_paragraph_max_year <- eventReactive(input$go, {
+      ifelse(
+        p_iso() == "all",
+        top_imports_exports_short() %>% 
+          filter(year == max(y())) %>% 
+          select(import_value_usd) %>% 
+          as.numeric(),
+        top_imports_exports() %>% 
+          filter(year == max(y())) %>% 
+          select(import_value_usd) %>% 
+          as.numeric()
+      )
+    })
+    
+    imports_total_value_paragraph_max_year_2 <- eventReactive(input$go, {
+      show_dollars(imports_total_value_paragraph_max_year())
+    })
+    
+    imports_bilateral_share_paragraph_max_year <- eventReactive(input$go, {
+      show_percentage(
+        imports_value_paragraph_max_year() / imports_total_value_paragraph_max_year()
+      )
+    })
+    
+    imports_rank_paragraph_min_year <- eventReactive(input$go, {
+      trade_rankings() %>% 
+        filter(
+          year == min(y()),
+          reporter_iso == r_iso(),
+          partner_iso == p_iso()
+        ) %>% 
+        select(exp_rank) %>% 
+        as.character()
+    })
+    
+    imports_total_value_paragraph_min_year <- eventReactive(input$go, {
+      ifelse(
+        p_iso() == "all",
+        top_imports_exports_short() %>% 
+          filter(year == min(y())) %>% 
+          select(import_value_usd) %>% 
+          as.numeric(),
+        top_imports_exports() %>% 
+          filter(year == min(y())) %>% 
+          select(import_value_usd) %>% 
+          as.numeric()
+      )
+    })
+    
+    imports_total_value_paragraph_min_year_2 <- eventReactive(input$go, {
+      show_dollars(imports_total_value_paragraph_min_year())
+    })
+    
+    imports_bilateral_share_paragraph_min_year <- eventReactive(input$go, {
+      show_percentage(
+        imports_value_paragraph_min_year() / imports_total_value_paragraph_min_year()
+      )
+    })
+    
+    imports_rank_paragraph_max_year <- eventReactive(input$go, {
+      trade_rankings() %>% 
+        filter(
+          year == max(y()),
+          reporter_iso == r_iso(),
+          partner_iso == p_iso()
+        ) %>% 
+        select(exp_rank) %>% 
+        as.character()
+    })
+    
+    top_import_name_paragraph_min_year <- eventReactive(input$go, {
+      ifelse(
+        p_iso() == "all",
+        top_imports_exports_short() %>% 
+          filter(year == min(y())) %>% 
+          select(top_import_product_name) %>% 
+          as.character(),
+        top_imports_exports() %>% 
+          filter(year == min(y())) %>% 
+          select(top_import_product_name) %>% 
+          as.character()
+      )
+    })
+    
+    top_import_value_paragraph_min_year <- eventReactive(input$go, {
+      top_imports_exports() %>% 
+        filter(year == min(y())) %>% 
+        select(top_import_trade_value_usd) %>% 
+        as.character()
+    })
+    
+    top_import_value_paragraph_min_year_2 <- eventReactive(input$go, {
+      show_dollars(stop_import_value_paragraph_min_year())
+    })
+    
+    top_import_bilateral_share_paragraph_min_year <- eventReactive(input$go, {
+      data_detailed() %>% 
+        filter(
+          year == min(y()), 
+          product_shortname_english == top_import_name_paragraph_min_year()
+        ) %>% 
+        select(year, import_value_usd) %>% 
+        rename(top_import_value_usd_bilateral = import_value_usd) %>% 
+        inner_join(
+          top_imports_exports() %>% 
+            select(year, import_value_usd_bilateral)
+        ) %>% 
+        mutate(
+          top_import_share_usd_bilateral = top_import_value_usd_bilateral / import_value_usd_bilateral
+        ) %>% 
+        select(top_import_share_usd_bilateral) %>% 
+        as.numeric()
+    })
+    
+    top_import_bilateral_share_paragraph_min_year_2 <- eventReactive(input$go, {
+      show_percentage(top_import_bilateral_share_paragraph_min_year())
+    })
+    
+    top_import_total_share_paragraph_min_year <- eventReactive(input$go, {
+      ifelse(
+        p_iso() == "all",
+        top_imports_exports_short() %>% 
+          filter(year == min(y())) %>% 
+          select(top_import_to_total_imports) %>% 
+          as.numeric(),
+        top_imports_exports() %>% 
+          filter(year == min(y())) %>% 
+          select(top_import_to_total_imports) %>% 
+          as.numeric()
+      )
+    })
+    
+    top_import_total_share_paragraph_min_year_2 <- eventReactive(input$go, {
+      show_percentage(top_import_total_share_paragraph_min_year())
+    })
+    
+    top_import_name_paragraph_max_year <- eventReactive(input$go, {
+      ifelse(
+        p_iso() == "all",
+        top_imports_exports_short() %>% 
+          filter(year == max(y())) %>% 
+          select(top_import_product_name) %>% 
+          as.character(),
+        top_imports_exports() %>% 
+          filter(year == max(y())) %>% 
+          select(top_import_product_name) %>% 
+          as.character()
+      )
+    })
+    
+    top_import_value_paragraph_max_year <- eventReactive(input$go, {
+      top_imports_exports() %>% 
+        filter(year == max(y())) %>% 
+        select(top_import_trade_value_usd) %>% 
+        as.character()
+    })
+    
+    top_import_value_paragraph_max_year_2 <- eventReactive(input$go, {
+      show_dollars(top_import_value_paragraph_max_year())
+    })
+    
+    top_import_bilateral_share_paragraph_max_year <- eventReactive(input$go, {
+      data_detailed() %>% 
+        filter(
+          year == max(y()), 
+          product_shortname_english == top_import_name_paragraph_max_year()
+        ) %>% 
+        select(year, import_value_usd) %>% 
+        rename(top_import_value_usd_bilateral = import_value_usd) %>% 
+        inner_join(
+          top_imports_exports() %>% 
+            select(year, import_value_usd_bilateral)
+        ) %>% 
+        mutate(
+          top_import_share_usd_bilateral = top_import_value_usd_bilateral / import_value_usd_bilateral
+        ) %>% 
+        select(top_import_share_usd_bilateral) %>% 
+        as.numeric()
+    })
+    
+    top_import_bilateral_share_paragraph_max_year_2 <- eventReactive(input$go, {
+      show_percentage(top_import_bilateral_share_paragraph_max_year())
+    })
+    
+    top_import_total_share_paragraph_max_year <- eventReactive(input$go, {
+      ifelse(
+        p_iso() == "all",
+        top_imports_exports_short() %>% 
+          filter(year == max(y())) %>% 
+          select(top_import_to_total_imports) %>% 
+          as.numeric(),
+        top_imports_exports() %>% 
+          filter(year == max(y())) %>% 
+          select(top_import_to_total_imports) %>% 
+          as.numeric()
+      )
+    })
+    
+    top_import_total_share_paragraph_max_year_2 <- eventReactive(input$go, {
+      show_percentage(top_import_total_share_paragraph_max_year())
+    })
+    
+    imports_growth_paragraph <- eventReactive(input$go, {
+      ifelse(
+        p_iso() == "all",
+        growth_rate(
+          imports_total_value_paragraph_max_year(), imports_total_value_paragraph_min_year(), y()
+        ),
+        growth_rate(
+          imports_value_paragraph_max_year(), imports_value_paragraph_min_year(), y()
+        )
+      )
+    })
+    
+    imports_growth_in_or_decreased_paragraph <- eventReactive(input$go, {
+      ifelse(imports_growth_paragraph() >= 0, "increased", "decreased")
+    })
+    
+    imports_growth_paragraph_2 <- eventReactive(input$go, {
+      show_percentage(imports_growth_paragraph())
+    })
+    
+    # Trade -------------------------------------------------------------------
+
+    trade_table_aggregated <- eventReactive(input$go, {
+      data_aggregated() %>%
+        select(year, export_value_usd, import_value_usd)
+    })
+    
+    trade_subtitle <- eventReactive(input$go, {
+      "<hr/>Exports and Imports, grouped by year"
+    })
+
+    trade_paragraph <- eventReactive(input$go, {
+      switch(table_aggregated(),
+             "yr" = glue::glue("<h3>Exports</h3>
+                                
+                               In { min(y()) } { r_name() } exported { exports_total_value_paragraph_min_year_2() } to the World.<br>
+                               
+                               In { max(y()) } { r_name() } exported { exports_total_value_paragraph_max_year_2() } to the World.<br>
+                               
+                               Between { min(y()) } and { max(y()) } the exports of { r_name() } 
+                               to the World { exports_growth_in_or_decreased_paragraph() } at an annualized rate of { exports_growth_paragraph_2() }, from { exports_total_value_paragraph_min_year_2() } 
+                               in { min(y()) } to { exports_total_value_paragraph_max_year_2() } in { max(y()) }.<br>
+                               
+                               <h3>Imports</h3>
+                               
+                               In { min(y()) } { r_name() } imported { imports_total_value_paragraph_min_year_2() } from the World.<br>
+                               
+                               In { max(y()) } { r_name() } imported { imports_total_value_paragraph_max_year_2() } from the World.<br>
+                               
+                               Between { min(y()) } and { max(y()) } the imports of { r_name() } 
+                               from the World { imports_growth_in_or_decreased_paragraph() } at an annualized rate of { imports_growth_paragraph_2() }, from { imports_total_value_paragraph_min_year_2() } 
+                               in { min(y()) } from { imports_total_value_paragraph_max_year_2() } in { max(y()) }."),
+             
+             "yrp" = glue::glue("<h3>Exports</h3>
+                                
+                                In { min(y()) } { r_name() } exported { exports_value_paragraph_min_year_2() } to { p_name() }, 
+                                and { exports_total_value_paragraph_min_year_2() } to the world. { r_name() } sent { exports_bilateral_share_paragraph_min_year() } 
+                                of its exports to { p_name() }, which was its No. { exports_rank_paragraph_min_year() } exports destination.<br>
+                                
+                                In { max(y()) } { r_name() } exported { exports_value_paragraph_max_year_2() } to { p_name() }, 
+                                and { exports_total_value_paragraph_max_year_2() } to the world. { r_name() } sent { exports_bilateral_share_paragraph_max_year() } 
+                                of its exports to { p_name() }, which was its No. { exports_rank_paragraph_max_year() } exports destination.<br>
+                                
+                                Between { min(y()) } and { max(y()) } the exports of { r_name() } 
+                                to { p_name() } { exports_growth_in_or_decreased_paragraph() } at an annualized rate of { exports_growth_paragraph_2() }, from { exports_value_paragraph_min_year_2() } 
+                                in { min(y()) } to { exports_value_paragraph_max_year_2() } in { max(y()) }.<br>
+                                
+                                <h3>Imports</h3>
+                                
+                                In { min(y()) } { r_name() } imported { imports_value_paragraph_min_year_2() } from { p_name() }, 
+                                and { imports_total_value_paragraph_min_year_2() } from the world. { r_name() } received { imports_bilateral_share_paragraph_min_year() } 
+                                of its imports from { p_name() }, which was its No. { imports_rank_paragraph_min_year() } imports origin.<br>
+                                
+                                In { max(y()) } { r_name() } imported { imports_value_paragraph_max_year_2() } from { p_name() }, 
+                                and { imports_total_value_paragraph_max_year_2() } from the world. { r_name() } received { imports_bilateral_share_paragraph_max_year() } 
+                                of its imports from { p_name() }, which was its No. { imports_rank_paragraph_max_year() } imports origin.<br>
+                                
+                                Between { min(y()) } and { max(y()) } the imports of { r_name() } 
+                                from { p_name() } { imports_growth_in_or_decreased_paragraph() } at an annualized rate of { imports_growth_paragraph_2() }, from { imports_value_paragraph_min_year_2() } 
+                                in { min(y()) } from { imports_value_paragraph_max_year_2() } in { max(y()) }.")
+      )
+    })
+    
+    trade_exchange_bars_title <- eventReactive(input$go, {
+      switch(table_aggregated(),
+             "yr" = glue::glue("{ r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
+             "yrp" = glue::glue("{ r_name() } and { p_name() } exchange between { min(y()) } and { max(y()) }")
+      )
+    })
+    
+    trade_exchange_bars_aggregated <- eventReactive(input$go, {
+      d <- trade_table_aggregated() %>%
+        gather(key, value, -year) %>%
+        mutate(
+          key = ifelse(key == "export_value_usd", "Exports", "Imports")
+        ) %>%
+        rename(
+          `Trade Value` = value,
+          `Year` = year,
+          group = key
+        ) 
+      
+      hchart(d, "column", hcaes(x = `Year`, y = `Trade Value`, group = group)) %>% 
+        hc_colors(c("#4d6fd0", "#bf3251")) %>% 
+        hc_title(text = trade_exchange_bars_title()) %>% 
+        hc_exporting(enabled = TRUE)
+    })
+
+    # Exports -----------------------------------------------------------------
+
+    exports_table_detailed_min_year <- eventReactive(input$go, {
+      data_detailed() %>%
+        filter(year == min(y())) %>%
+        select(community_name, community_code, community_color, product_shortname_english, export_value_usd) %>%
+        filter(export_value_usd > 0) %>% 
+        mutate(
+          icon = glue::glue("img/hs/hs_{ community_code }.png")
+        )
+    })
+    
+    exports_subtitle <- eventReactive(input$go, {
+      "<hr/>Exports, grouped by product community"
+    })
+    
+    exports_paragraph <- eventReactive(input$go, {
+      switch(table_aggregated(),
+             "yr" = glue::glue("In { min(y()) } { top_export_name_paragraph_min_year() } was the most exported product from { r_name() }, 
+                                which represented { top_export_total_share_paragraph_min_year_2() } of the total exports of { r_name() } to the World.<br><br>
+
+                                In { max(y()) } { top_export_name_paragraph_max_year() } was the most exported product from { r_name() }, 
+                                which represented { top_export_total_share_paragraph_max_year_2() } of the total exports of { r_name() } to the World."),
+             
+             "yrp" = glue::glue("In { min(y()) } { top_export_name_paragraph_min_year() } was the most exported product from { r_name() },
+                                which represented { top_export_bilateral_share_paragraph_min_year_2() } of the total exports of { r_name() } to { p_name() } 
+                                and { top_export_total_share_paragraph_min_year_2() } of the total exports of { r_name() } to the World.<br><br>
+
+                                In { max(y()) } { top_export_name_paragraph_max_year() } was the most exported product from { r_name() }, 
+                                which represented { top_export_bilateral_share_paragraph_max_year_2() } of the total exports of { r_name() } to { p_name() } 
+                                and { top_export_total_share_paragraph_max_year_2() } of the total exports of { r_name() } to the World.")
+      )
+    })
+    
+    exports_title_min_year <- eventReactive(input$go, {
+      switch(
+        table_detailed(),
+        "yrc" = glue::glue("Exports of { r_name() } to the rest of the world in { min(y()) }"),
+        "yrpc" = glue::glue("Exports of { r_name() } to { p_name() } in { min(y()) }")
+      )
+    })
+
+    exports_treemap_detailed_min_year <- eventReactive(input$go, {
+      d <- exports_table_detailed_min_year() %>% 
+        group_by(community_name, community_color) %>% 
+        summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>% 
+        ungroup() %>% 
+        mutate(
+          share = paste0(round(100 * export_value_usd / sum(export_value_usd), 2),"%"),
+          community_name = paste0(community_name, "<br>", share)
+        ) %>% 
+        rename(
+          value = export_value_usd,
+          name = community_name, 
+          color = community_color
+        )
+    
+      highchart() %>%
+        hc_chart(type = "treemap") %>% 
+        hc_xAxis(categories = d$name) %>% 
+        hc_add_series(d, name = "Export Value USD", showInLegend = FALSE,
+                      dataLabels = list(verticalAlign = "top", align = "left", style = list(textOutline = FALSE))) %>% 
+        hc_title(text = exports_title_min_year()) %>% 
+        hc_exporting(enabled = TRUE)
+    })
+
+    exports_title_max_year <- eventReactive(input$go, {
+      switch(
+        table_detailed(),
+        "yrc" = glue::glue("Exports of { r_name() } to the rest of the world { max(y()) }"),
+        "yrpc" = glue::glue("Exports of { r_name() } to { p_name() } in { max(y()) }")
+      )
+    })
+
+    exports_table_detailed_max_year <- eventReactive(input$go, {
+      data_detailed() %>%
+        filter(year == max(y())) %>%
+        select(community_name, community_code, community_color, product_shortname_english, export_value_usd) %>%
+        filter(export_value_usd > 0) %>% 
+        mutate(
+          icon = glue::glue("img/hs/hs_{ community_code }.png")
+        )
+    })
+
+    exports_treemap_detailed_max_year <- eventReactive(input$go, {
+      d <- exports_table_detailed_max_year() %>% 
+        group_by(community_name, community_color) %>% 
+        summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>% 
+        ungroup() %>% 
+        mutate(
+          share = paste0(round(100 * export_value_usd / sum(export_value_usd), 2),"%"),
+          community_name = paste0(community_name, "<br>", share)
+        ) %>% 
+        rename(
+          value = export_value_usd,
+          name = community_name, 
+          color = community_color
+        )
+      
+      highchart() %>%
+        hc_chart(type = "treemap") %>% 
+        hc_xAxis(categories = d$name) %>% 
+        hc_add_series(d, name = "Export Value USD", showInLegend = FALSE,
+                      dataLabels = list(verticalAlign = "top", align = "left", style = list(textOutline = FALSE))) %>% 
+        hc_title(text = exports_title_max_year()) %>% 
+        hc_exporting(enabled = TRUE)
+    })
+
+    # Imports -----------------------------------------------------------------
+
+    imports_subtitle <- eventReactive(input$go, {
+      "<hr/>Imports, grouped by product community"
+    })
+    
+    imports_paragraph <- eventReactive(input$go, {
+      switch(table_aggregated(),
+             "yr" = glue::glue("In { min(y()) } { top_import_name_paragraph_min_year() } was the most imported product from { r_name() }, 
+                                which represented { top_import_total_share_paragraph_min_year_2() } of the total imports of { r_name() } from the World.<br><br>
+                                
+                                In { max(y()) } { top_import_name_paragraph_max_year() } was the most imported product from { r_name() }, 
+                                which represented { top_import_total_share_paragraph_max_year_2() } of the total imports of { r_name() } from the World."),
+             
+             "yrp" = glue::glue("In { min(y()) } { top_import_name_paragraph_min_year() } was the most imported product from { r_name() }, 
+                                which represented { top_import_bilateral_share_paragraph_min_year_2() } of the total imports of { r_name() } from { p_name() } 
+                                and { top_import_total_share_paragraph_min_year_2() } of the total imports of { r_name() } from the World.<br><br>
+                                
+                                In { max(y()) } { top_import_name_paragraph_max_year() } was the most imported product from { r_name() }, 
+                                which represented { top_import_bilateral_share_paragraph_max_year_2() } of the total imports of { r_name() } from { p_name() } 
+                                and { top_import_total_share_paragraph_max_year_2() } of the total imports of { r_name() } from the World.")
+             )
+    })
+    
+    imports_title_min_year <- eventReactive(input$go, {
+      switch(
+        table_detailed(),
+        "yrc" = glue::glue("Imports of { r_name() } from the rest of the world in { min(y()) }"),
+        "yrpc" = glue::glue("Imports of { r_name() } from { p_name() } in { min(y()) }")
+      )
+    })
+
+    imports_table_detailed_min_year <- eventReactive(input$go, {
+      data_detailed() %>%
+        filter(year == min(y())) %>%
+        select(community_name, community_code, community_color, product_shortname_english, import_value_usd) %>%
+        filter(import_value_usd > 0) %>% 
+        mutate(
+          icon = glue::glue("img/hs/hs_{ community_code }.png")
+        )
+    })
+
+    imports_treemap_detailed_min_year <- eventReactive(input$go, {
+      d <- imports_table_detailed_min_year() %>% 
+        group_by(community_name, community_color) %>% 
+        summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>% 
+        ungroup() %>% 
+        mutate(
+          share = paste0(round(100 * import_value_usd / sum(import_value_usd), 2),"%"),
+          community_name = paste0(community_name, "<br>", share)
+        ) %>% 
+        rename(
+          value = import_value_usd,
+          name = community_name, 
+          color = community_color
+        )
+      
+      highchart() %>%
+        hc_chart(type = "treemap") %>% 
+        hc_xAxis(categories = d$name) %>% 
+        hc_add_series(d, 
+                      name = "import Value USD", 
+                      showInLegend = FALSE,
+                      dataLabels = list(verticalAlign = "top",
+                                        align = "left",
+                                        style = list(textOutline = FALSE))) %>% 
+        hc_title(text = imports_title_min_year()) %>% 
+        hc_exporting(enabled = TRUE)
+    })
+
+    imports_title_max_year <- eventReactive(input$go, {
+      switch(
+        table_detailed(),
+        "yrc" = glue::glue("Imports of { r_name() } from the rest of the world in { max(y()) }"),
+        "yrpc" = glue::glue("Imports of { r_name() } from { p_name() } in { max(y()) }")
+      )
+    })
+
+    imports_title_max_year <- eventReactive(input$go, {
+      switch(
+        table_detailed(),
+        "yrc" = glue::glue("Imports of { r_name() } from the rest of the world in { max(y()) }"),
+        "yrpc" = glue::glue("Imports of { r_name() } from { p_name() } in { max(y()) }")
+      )
+    })
+
+    imports_table_detailed_max_year <- eventReactive(input$go, {
+      data_detailed() %>%
+        filter(year == max(y())) %>%
+        select(community_name, community_code, community_color, product_shortname_english, import_value_usd) %>%
+        filter(import_value_usd > 0) %>% 
+        mutate(
+          icon = glue::glue("img/hs/hs_{ community_code }.png")
+        )
+    })
+
+    imports_treemap_detailed_max_year <- eventReactive(input$go, {
+      hide("loading")
+      show("contents")
+      show("share_download_cite")
+      
+      d <- imports_table_detailed_max_year() %>% 
+        group_by(community_name, community_color) %>% 
+        summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>% 
+        ungroup() %>% 
+        mutate(
+          share = paste0(round(100 * import_value_usd / sum(import_value_usd), 2),"%"),
+          community_name = paste0(community_name, "<br>", share)
+        ) %>% 
+        rename(
+          value = import_value_usd,
+          name = community_name, 
+          color = community_color
+        )
+      
+      highchart() %>%
+        hc_chart(type = "treemap") %>% 
+        hc_xAxis(categories = d$name) %>% 
+        hc_add_series(d, name = "import Value USD", showInLegend = FALSE,
+                      dataLabels = list(verticalAlign = "top", align = "left", style = list(textOutline = FALSE))) %>% 
+        hc_title(text = imports_title_max_year()) %>% 
+        hc_exporting(enabled = TRUE)
+    })
+
+    # URL ---------------------------------------------------------------------
+
+    url_trade <- eventReactive(input$go, {
+      glue::glue(
+        "{ site_url }/embed-trade/?_inputs_&y1={ min(y()) }&y2={ max(y()) }&r=%22{ r_iso() }%22&p=%22{ p_iso() }%22&go=1"
+      )
+    })
+    
+    url_exports_min_year <- eventReactive(input$go, {
+      glue::glue(
+        "{ site_url }/embed-exports/?_inputs_&y={ min(y()) }&r=%22{ r_iso() }%22&p=%22{ p_iso() }%22&go=1"
+      )
+    })
+    
+    url_exports_max_year <- eventReactive(input$go, {
+      glue::glue(
+        "{ site_url }/embed-exports/?_inputs_&y={ max(y()) }&r=%22{ r_iso() }%22&p=%22{ p_iso() }%22&go=1"
+      )
+    })
+    
+    url_imports_min_year <- eventReactive(input$go, {
+      glue::glue(
+        "{ site_url }/embed-imports/?_inputs_&y={ min(y()) }&r=%22{ r_iso() }%22&p=%22{ p_iso() }%22&go=1"
+      )
+    })
+    
+    url_imports_max_year <- eventReactive(input$go, {
+      glue::glue(
+        "{ site_url }/embed-imports/?_inputs_&y={ max(y()) }&r=%22{ r_iso() }%22&p=%22{ p_iso() }%22&go=1"
+      )
+    })
+    
+    share_download_cite_subtitle <- eventReactive(input$go, {
+      "<hr/>Share, download or cite"
+    })
+    
+    url <- eventReactive(input$go, {
+      glue::glue(
+        "{ site_url }/dashboard/?_inputs_&y=[{ min(y()) },{ max(y()) }]&r=%22{ r_iso() }%22&p=%22{ p_iso() }%22&go=1"
+      )
+    })
+
+    # Cite --------------------------------------------------------------------
+
+    cite_subtitle <- eventReactive(input$go, {
+      "Chicago citation"
+    })
+
+    cite <- eventReactive(input$go, {
+      sprintf(
+        "Open Trade Statistics. \"OTS BETA DASHBOARD\". <i>Open Trade Statistics</i>. Accessed %s %s, %s. https://%s/",
+        months(Sys.Date()),
+        lubridate::day(Sys.Date()),
+        lubridate::year(Sys.Date()),
+        site_url
+      )
+    })
+
+    cite_bibtex_subtitle <- eventReactive(input$go, {
+      "BibTeX entry"
+    })
+
+    cite_bibtex <- eventReactive(input$go, {
+      sprintf(
+        "@misc{open_trade_statistics_2019,
+              title = {OTS BETA DASHBOARD},
+              url = {https://%s/},
+              author = {{Open Trade Statistics}},
+              publisher = {Open Trade Statistics},
+              year = {2019},
+              month = {Apr},
+              note = {Accessed: %s %s, %s}
+    }",
+        site_url,
+        months(Sys.Date()),
+        lubridate::day(Sys.Date()),
+        lubridate::year(Sys.Date())
+      )
+    })
+
+    # Title output ------------------------------------------------------------
+
+    output$title <- renderText({
+      if (input$go == 0) {
+        initial_title()
+      } else {
+        title()
+      }
+    })
+
+    output$title_legend <- renderText({
+      title_legend()
+    })
+
+    # Trade output ------------------------------------------------------------
+
+    output$trade_subtitle <- renderText(trade_subtitle())
+
+    output$trade_paragraph <- renderText(trade_paragraph())
+    
+    output$trade_title <- renderText(trade_title())
+
+    output$trade_exchange_bars_aggregated <- renderHighchart({
+      trade_exchange_bars_aggregated()
+    })
+
+    # Exports output ----------------------------------------------------------
+
+    output$exports_subtitle <- renderText(exports_subtitle())
+
+    output$exports_paragraph <- renderText(exports_paragraph())
+    
+    output$exports_title_min_year <- renderText(exports_title_min_year())
+
+    output$exports_treemap_detailed_min_year <- renderHighchart({
+      exports_treemap_detailed_min_year()
+    })
+
+    output$exports_title_max_year <- renderText(exports_title_max_year())
+
+    output$exports_treemap_detailed_max_year <- renderHighchart({
+      exports_treemap_detailed_max_year()
+    })
+
+    # Imports output ----------------------------------------------------------
+
+    output$imports_subtitle <- renderText(imports_subtitle())
+
+    output$imports_paragraph <- renderText(imports_paragraph())
+    
+    output$imports_title_min_year <- renderText(imports_title_min_year())
+
+    output$imports_treemap_detailed_min_year <- renderHighchart({
+      imports_treemap_detailed_min_year()
+    })
+
+    output$imports_title_max_year <- renderText(imports_title_max_year())
+
+    output$imports_treemap_detailed_max_year <- renderHighchart({
+      imports_treemap_detailed_max_year()
+    })
+
+    # URL and downloads output ------------------------------------------------
+
+    output$url_trade <- eventReactive(input$go, {
+      glue::glue(
+        "
+        <div class='input-group'>
+        <input type='text' class='form-control' value='{ url_trade() }' id='UrlTrade'>
+        <span class='input-group-btn'>
+        <button class='btn btn-default' type='button' onclick='copyUrlTrade()'><i class='fas fa-copy'></i> Copy</button>
+        </span>
+        </div>
+        "
+      )
+    })
+    
+    output$url_exports_min_year <- eventReactive(input$go, {
+      glue::glue(
+        "
+        <div class='input-group'>
+        <input type='text' class='form-control' value='{ url_exports_min_year() }' id='UrlExportsMinYear'>
+        <span class='input-group-btn'>
+        <button class='btn btn-default' type='button' onclick='copyUrlExportsMinYear()'><i class='fas fa-copy'></i> Copy</button>
+        </span>
+        </div>
+        "
+      )
+    })
+    
+    output$url_exports_max_year <- eventReactive(input$go, {
+      glue::glue(
+        "
+        <div class='input-group'>
+        <input type='text' class='form-control' value='{ url_exports_max_year() }' id='UrlExportsMaxYear'>
+        <span class='input-group-btn'>
+        <button class='btn btn-default' type='button' onclick='copyUrlExportsMaxYear()'><i class='fas fa-copy'></i> Copy</button>
+        </span>
+        </div>
+        "
+      )
+    })
+    
+    output$url_imports_min_year <- eventReactive(input$go, {
+      glue::glue(
+        "
+        <div class='input-group'>
+        <input type='text' class='form-control' value='{ url_imports_min_year() }' id='UrlImportsMinYear'>
+        <span class='input-group-btn'>
+        <button class='btn btn-default' type='button' onclick='copyUrlImportsMinYear()'><i class='fas fa-copy'></i> Copy</button>
+        </span>
+        </div>
+        "
+      )
+    })
+
+    output$url_imports_max_year <- eventReactive(input$go, {
+      glue::glue(
+        "
+        <div class='input-group'>
+        <input type='text' class='form-control' value='{ url_imports_max_year() }' id='UrlImportsMaxYear'>
+        <span class='input-group-btn'>
+        <button class='btn btn-default' type='button' onclick='copyUrlImportsMaxYear()'><i class='fas fa-copy'></i> Copy</button>
+        </span>
+        </div>
+        "
+      )
+    })
+    
+    output$share_download_cite_subtitle <- renderText({
+      share_download_cite_subtitle()
+    })
+
+    output$url <- eventReactive(input$go, {
+      glue::glue(
+        "
+        <p><b>Link sharing:</b></p>
+        <div class='input-group'>
+        <input type='text' class='form-control' value='{ url() }' id='Url'>
+        <span class='input-group-btn'>
+        <button class='btn btn-default' type='button' onclick='copyUrl()'><i class='fas fa-copy'></i> Copy</button>
+        </span>
+        </div>
+        "
+      )
+    })
+
+    output$download_aggregated <- downloadHandler(
+      filename = function() {
+        glue::glue("{ table_aggregated() }_{ min(y()) }_{ max(y()) }.{ format() }")
+      },
+      content = function(filename) {
+        if (format() == "csv") {
+          data.table::fwrite(data_aggregated(), filename, sep = ",")
+        }
+        if (format() == "tsv") {
+          data.table::fwrite(data_aggregated(), filename, sep = "\t")
+        }
+        if (format() == "json") {
+          jsonlite::write_json(data_aggregated(), filename, pretty = F)
+        }
+        if (format() %in% c("xlsx", "sav", "dta")) {
+          rio::export(data_aggregated(), filename)
+        }
+      },
+      contentType = "application/zip"
+    )
+
+    output$download_detailed <- downloadHandler(
+      filename = function() {
+        glue::glue("{ table_detailed() }_{ min(y()) }_{ max(y()) }.{ format() }")
+      },
+      content = function(filename) {
+        if (format() == "csv") {
+          data.table::fwrite(data_detailed(), filename, sep = ",")
+        }
+        if (format() == "tsv") {
+          data.table::fwrite(data_detailed(), filename, sep = "\t")
+        }
+        if (format() == "json") {
+          jsonlite::write_json(data_detailed(), filename, pretty = F)
+        }
+        if (format() %in% c("xlsx", "sav", "dta")) {
+          rio::export(data_detailed(), filename)
+        }
+      },
+      contentType = "application/zip"
+    )
+
+    # Cite output -------------------------------------------------------------
+
+    output$cite_subtitle <- renderText({
+      cite_subtitle()
+    })
+
+    output$cite <- renderText({
+      cite()
+    })
+
+    output$cite_bibtex_subtitle <- renderText({
+      cite_bibtex_subtitle()
+    })
+
+    output$cite_bibtex <- renderText({
+      cite_bibtex()
+    })
+
+    # Bookmarking -------------------------------------------------------------
+
+    observe({
+      # Trigger this observer every time an input changes
+      # strip shiny related URL parameters
+      reactiveValuesToList(input)
+      setBookmarkExclude(c("r-selectized", "p-selectized", "sidebarCollapsed", "sidebarItemExpanded", "Url", "UrlTrade",
+                           "UrlExportsMaxYear", "UrlExportsMinYear", "UrlImportsMaxYear", "UrlImportsMinYear", "format", "format-selectized"))
+      session$doBookmark()
+    })
+
+    onBookmarked(function(url) {
+      updateQueryString(url)
+    })
+  }
+)

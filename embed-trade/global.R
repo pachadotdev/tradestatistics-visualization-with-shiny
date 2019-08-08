@@ -1,0 +1,53 @@
+# Packages ----------------------------------------------------------------
+
+library(shiny)
+library(shinyjs)
+library(dplyr)
+library(tidyr)
+library(tradestatistics)
+library(highcharter)
+
+# URLs --------------------------------------------------------------------
+
+base_url <- "http://localhost:8080"
+# base_url <- "https://api.tradestatistics.io"
+site_url <- "shiny.tradestatistics.io"
+
+# Tables ------------------------------------------------------------------
+
+countries <- ots_countries %>%
+  select(country_iso, country_name_english)
+
+products <- ots_products %>%
+  filter(stringr::str_length(product_code) %in% c(2, 4)) %>%
+  arrange(product_code)
+
+communities <- ots_communities
+
+# Choices -----------------------------------------------------------------
+
+# choices trick by Andrea Gao
+# http://gytcrt.github.io/gytcrt.github.io/2016/08/11/RShiny-easily-passing-a-long-list-of-items-to-selectInput-choices/
+
+available_tables <- as.list(c("select", "yr", "yrp"))
+names(available_tables) <- c("Select", "Multilateral trade", "Bilateral trade")
+
+available_years <- sprintf("%s/year_range", base_url) %>%
+  jsonlite::fromJSON() %>%
+  purrr::as_vector()
+
+available_years_min <- min(available_years)
+available_years_max <- max(available_years)
+
+available_reporters_iso <- as.list(countries$country_iso)
+available_reporters_iso <- c("all", available_reporters_iso[grep("^c-|all", available_reporters_iso, invert = T)])
+names(available_reporters_iso) <- c("the World", as.vector(countries$country_name_english[grep("^Alias", countries$country_name_english, invert = T)]))
+
+reporters_to_display <- tibble(
+  available_reporters_iso = purrr::as_vector(available_reporters_iso),
+  available_reporters_names = names(available_reporters_iso)
+)
+
+# Bookmarking -------------------------------------------------------------
+
+enableBookmarking(store = "url")
