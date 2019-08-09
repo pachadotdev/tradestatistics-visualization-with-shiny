@@ -169,7 +169,8 @@ shinyServer(
         partners = p_iso(),
         include_shortnames = FALSE,
         include_communities = FALSE,
-        table = table_aggregated()
+        table = table_aggregated(),
+        use_localhost = TRUE
       )
     })
 
@@ -180,7 +181,8 @@ shinyServer(
         partners = p_iso(),
         include_shortnames = TRUE,
         include_communities = TRUE,
-        table = table_detailed()
+        table = table_detailed(),
+        use_localhost = TRUE
       )
     })
 
@@ -191,7 +193,8 @@ shinyServer(
         partners = "all",
         include_shortnames = FALSE,
         include_communities = FALSE,
-        table = "yrp_short"
+        table = "yrp_short",
+        use_localhost = TRUE
       ) %>% 
         mutate(
           exp_rank = dense_rank(desc(export_value_usd)),
@@ -206,7 +209,8 @@ shinyServer(
         partners = p_iso(),
         include_shortnames = FALSE,
         include_communities = FALSE,
-        table = "yrp_short"
+        table = "yrp_short",
+        use_localhost = TRUE
       ) %>% 
         
         select(year, reporter_iso, export_value_usd, import_value_usd, starts_with("top_")) %>% 
@@ -222,7 +226,8 @@ shinyServer(
             reporters = r_iso(),
             include_shortnames = FALSE,
             include_communities = FALSE,
-            table = "yr_short"
+            table = "yr_short",
+            use_localhost = TRUE
           )
         ) %>% 
         
@@ -254,7 +259,8 @@ shinyServer(
         reporters = r_iso(),
         include_shortnames = FALSE,
         include_communities = FALSE,
-        table = "yr_short"
+        table = "yr_short",
+        use_localhost = TRUE
       ) %>% 
         
         select(year, reporter_iso, export_value_usd, import_value_usd, starts_with("top_")) %>% 
@@ -848,7 +854,7 @@ shinyServer(
                                 
                                 Between { min(y()) } and { max(y()) } the imports of { r_name() } 
                                 from { p_name() } { imports_growth_in_or_decreased_paragraph() } at an annualized rate of { imports_growth_paragraph_2() }, from { imports_value_paragraph_min_year_2() } 
-                                in { min(y()) } from { imports_value_paragraph_max_year_2() } in { max(y()) }.")
+                                in { min(y()) } to { imports_value_paragraph_max_year_2() } in { max(y()) }.")
       )
     })
     
