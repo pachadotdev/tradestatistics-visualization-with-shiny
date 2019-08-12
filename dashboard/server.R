@@ -880,7 +880,7 @@ shinyServer(
       hchart(d, "column", hcaes(x = `Year`, y = `Trade Value`, group = group)) %>% 
         hc_colors(c("#4d6fd0", "#bf3251")) %>% 
         hc_title(text = trade_exchange_bars_title()) %>% 
-        hc_exporting(enabled = TRUE)
+        hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
 
     # Exports -----------------------------------------------------------------
@@ -954,7 +954,7 @@ shinyServer(
         hc_add_series(d, name = "Export Value USD", showInLegend = FALSE,
                       dataLabels = list(verticalAlign = "top", align = "left", style = list(textOutline = FALSE))) %>% 
         hc_title(text = exports_title_min_year()) %>% 
-        hc_exporting(enabled = TRUE)
+        hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
 
     exports_title_max_year <- eventReactive(input$go, {
@@ -1004,7 +1004,7 @@ shinyServer(
         hc_add_series(d, name = "Export Value USD", showInLegend = FALSE,
                       dataLabels = list(verticalAlign = "top", align = "left", style = list(textOutline = FALSE))) %>% 
         hc_title(text = exports_title_max_year()) %>% 
-        hc_exporting(enabled = TRUE)
+        hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
 
     # Imports -----------------------------------------------------------------
@@ -1090,7 +1090,7 @@ shinyServer(
                                         align = "left",
                                         style = list(textOutline = FALSE))) %>% 
         hc_title(text = imports_title_min_year()) %>% 
-        hc_exporting(enabled = TRUE)
+        hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
 
     imports_title_max_year <- eventReactive(input$go, {
@@ -1152,7 +1152,7 @@ shinyServer(
         hc_add_series(d, name = "import Value USD", showInLegend = FALSE,
                       dataLabels = list(verticalAlign = "top", align = "left", style = list(textOutline = FALSE))) %>% 
         hc_title(text = imports_title_max_year()) %>% 
-        hc_exporting(enabled = TRUE)
+        hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
 
     # URL ---------------------------------------------------------------------

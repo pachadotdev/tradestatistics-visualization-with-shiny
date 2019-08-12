@@ -122,7 +122,7 @@ shinyServer(
                                         align = "left",
                                         style = list(textOutline = FALSE))) %>% 
         hc_title(text = imports_title()) %>% 
-        hc_exporting(enabled = TRUE)
+        hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
 
     # Output ------------------------------------------------------------------

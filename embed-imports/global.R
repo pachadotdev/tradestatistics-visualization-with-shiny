@@ -50,3 +50,20 @@ reporters_to_display <- tibble(
 # Bookmarking -------------------------------------------------------------
 
 enableBookmarking(store = "url")
+
+# Highcharts --------------------------------------------------------------
+
+hc_export_menu <- list(
+  list(text="Download PNG image",
+       onclick=JS("function () { 
+                  this.exportChart({ type: 'image/png' }); }")),
+  list(text="Download JPEG image",
+       onclick=JS("function () { 
+                  this.exportChart({ type: 'image/jpeg' }); }")),
+  list(text="Download SVG vector image",
+       onclick=JS("function () { 
+                  this.exportChart({ type: 'image/svg+xml' }); }")),
+  list(text="Download PDF document",
+       onclick=JS("function () { 
+                  this.exportChart({ type: 'application/pdf' }); }"))
+)
