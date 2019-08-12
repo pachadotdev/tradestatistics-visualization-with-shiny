@@ -94,7 +94,7 @@ body {
 .content-wrapper,
 .right-side {
   min-height: 250px;
-  background-color: #ffffff;
+  background-color: #f9fbfc;
   z-index: 800;
 }
 .main-footer {

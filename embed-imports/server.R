@@ -72,6 +72,14 @@ shinyServer(
         filter(import_value_usd > 0) %>% 
         group_by(community_name, community_color) %>% 
         summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>% 
+        ungroup() %>% 
+        mutate(
+          share = import_value_usd / sum(import_value_usd),
+          community_name = ifelse(share < 0.01, "Others >1% each", community_name),
+          community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
+        ) %>% 
+        group_by(community_name, community_color) %>% 
+        summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>% 
         ungroup()
     })
 

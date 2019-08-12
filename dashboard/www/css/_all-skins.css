@@ -25,9 +25,6 @@
   color: #f6f6f6;
   background: rgba(0, 0, 0, 0.1);
 }
-.skin-blue-light .main-header .navbar .sidebar-toggle {
-  color: #fff;
-}
 .skin-blue-light .main-header .navbar .sidebar-toggle:hover {
   background-color: #5475a7;
 }
@@ -59,7 +56,7 @@
 .skin-blue-light .wrapper,
 .skin-blue-light .main-sidebar,
 .skin-blue-light .left-side {
-  background-color: #ffffff;
+  background-color: #fff;
 }
 .skin-blue-light .content-wrapper,
 .skin-blue-light .main-footer {

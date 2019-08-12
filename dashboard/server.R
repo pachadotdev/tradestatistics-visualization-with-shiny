@@ -931,6 +931,14 @@ shinyServer(
         summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>% 
         ungroup() %>% 
         mutate(
+          share = export_value_usd / sum(export_value_usd),
+          community_name = ifelse(share < 0.01, "Others >1% each", community_name),
+          community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
+        ) %>% 
+        group_by(community_name, community_color) %>% 
+        summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>% 
+        ungroup() %>% 
+        mutate(
           share = paste0(round(100 * export_value_usd / sum(export_value_usd), 2),"%"),
           community_name = paste0(community_name, "<br>", share)
         ) %>% 
@@ -969,6 +977,14 @@ shinyServer(
 
     exports_treemap_detailed_max_year <- eventReactive(input$go, {
       d <- exports_table_detailed_max_year() %>% 
+        group_by(community_name, community_color) %>% 
+        summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>% 
+        ungroup() %>% 
+        mutate(
+          share = export_value_usd / sum(export_value_usd),
+          community_name = ifelse(share < 0.01, "Others >1% each", community_name),
+          community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
+        ) %>% 
         group_by(community_name, community_color) %>% 
         summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>% 
         ungroup() %>% 
@@ -1039,6 +1055,22 @@ shinyServer(
         summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>% 
         ungroup() %>% 
         mutate(
+          share = import_value_usd / sum(import_value_usd),
+          community_name = ifelse(share < 0.01, "Others >1% each", community_name),
+          community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
+        ) %>% 
+        group_by(community_name, community_color) %>% 
+        summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>% 
+        ungroup() %>% 
+        mutate(
+          share = import_value_usd / sum(import_value_usd),
+          community_name = ifelse(share < 0.01, "Others >1% each", community_name),
+          community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
+        ) %>% 
+        group_by(community_name, community_color) %>% 
+        summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>% 
+        ungroup() %>% 
+        mutate(
           share = paste0(round(100 * import_value_usd / sum(import_value_usd), 2),"%"),
           community_name = paste0(community_name, "<br>", share)
         ) %>% 
@@ -1093,6 +1125,14 @@ shinyServer(
       show("share_download_cite")
       
       d <- imports_table_detailed_max_year() %>% 
+        group_by(community_name, community_color) %>% 
+        summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>% 
+        ungroup() %>% 
+        mutate(
+          share = import_value_usd / sum(import_value_usd),
+          community_name = ifelse(share < 0.01, "Others >1% each", community_name),
+          community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
+        ) %>% 
         group_by(community_name, community_color) %>% 
         summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>% 
         ungroup() %>% 
