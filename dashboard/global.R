@@ -19,12 +19,6 @@ site_url <- "shiny.tradestatistics.io"
 countries <- ots_countries %>%
   select(country_iso, country_name_english)
 
-products <- ots_products %>%
-  filter(stringr::str_length(product_code) %in% c(2, 4)) %>%
-  arrange(product_code)
-
-communities <- ots_communities
-
 # Paragraphs format -------------------------------------------------------
 
 show_dollars <- function(x) {
@@ -45,9 +39,6 @@ growth_rate <- function(p, q, t) {
 
 # choices trick by Andrea Gao
 # http://gytcrt.github.io/gytcrt.github.io/2016/08/11/RShiny-easily-passing-a-long-list-of-items-to-selectInput-choices/
-
-available_tables <- as.list(c("select", "yr", "yrp"))
-names(available_tables) <- c("Select", "Multilateral trade", "Bilateral trade")
 
 available_years <- sprintf("%s/year_range", base_url) %>%
   jsonlite::fromJSON() %>%

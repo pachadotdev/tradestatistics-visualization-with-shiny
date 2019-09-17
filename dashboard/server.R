@@ -889,10 +889,7 @@ shinyServer(
       data_detailed() %>%
         filter(year == min(y())) %>%
         select(community_name, community_code, community_color, product_shortname_english, export_value_usd) %>%
-        filter(export_value_usd > 0) %>% 
-        mutate(
-          icon = glue::glue("img/hs/hs_{ community_code }.png")
-        )
+        filter(export_value_usd > 0)
     })
     
     exports_subtitle <- eventReactive(input$go, {
@@ -932,7 +929,7 @@ shinyServer(
         ungroup() %>% 
         mutate(
           share = export_value_usd / sum(export_value_usd),
-          community_name = ifelse(share < 0.01, "Others >1% each", community_name),
+          community_name = ifelse(share < 0.01, "Others <1% each", community_name),
           community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
         ) %>% 
         group_by(community_name, community_color) %>% 
@@ -969,10 +966,7 @@ shinyServer(
       data_detailed() %>%
         filter(year == max(y())) %>%
         select(community_name, community_code, community_color, product_shortname_english, export_value_usd) %>%
-        filter(export_value_usd > 0) %>% 
-        mutate(
-          icon = glue::glue("img/hs/hs_{ community_code }.png")
-        )
+        filter(export_value_usd > 0)
     })
 
     exports_treemap_detailed_max_year <- eventReactive(input$go, {
@@ -982,7 +976,7 @@ shinyServer(
         ungroup() %>% 
         mutate(
           share = export_value_usd / sum(export_value_usd),
-          community_name = ifelse(share < 0.01, "Others >1% each", community_name),
+          community_name = ifelse(share < 0.01, "Others <1% each", community_name),
           community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
         ) %>% 
         group_by(community_name, community_color) %>% 
@@ -1043,10 +1037,7 @@ shinyServer(
       data_detailed() %>%
         filter(year == min(y())) %>%
         select(community_name, community_code, community_color, product_shortname_english, import_value_usd) %>%
-        filter(import_value_usd > 0) %>% 
-        mutate(
-          icon = glue::glue("img/hs/hs_{ community_code }.png")
-        )
+        filter(import_value_usd > 0)
     })
 
     imports_treemap_detailed_min_year <- eventReactive(input$go, {
@@ -1056,7 +1047,7 @@ shinyServer(
         ungroup() %>% 
         mutate(
           share = import_value_usd / sum(import_value_usd),
-          community_name = ifelse(share < 0.01, "Others >1% each", community_name),
+          community_name = ifelse(share < 0.01, "Others <1% each", community_name),
           community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
         ) %>% 
         group_by(community_name, community_color) %>% 
@@ -1064,7 +1055,7 @@ shinyServer(
         ungroup() %>% 
         mutate(
           share = import_value_usd / sum(import_value_usd),
-          community_name = ifelse(share < 0.01, "Others >1% each", community_name),
+          community_name = ifelse(share < 0.01, "Others <1% each", community_name),
           community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
         ) %>% 
         group_by(community_name, community_color) %>% 
@@ -1113,10 +1104,7 @@ shinyServer(
       data_detailed() %>%
         filter(year == max(y())) %>%
         select(community_name, community_code, community_color, product_shortname_english, import_value_usd) %>%
-        filter(import_value_usd > 0) %>% 
-        mutate(
-          icon = glue::glue("img/hs/hs_{ community_code }.png")
-        )
+        filter(import_value_usd > 0)
     })
 
     imports_treemap_detailed_max_year <- eventReactive(input$go, {
@@ -1130,7 +1118,7 @@ shinyServer(
         ungroup() %>% 
         mutate(
           share = import_value_usd / sum(import_value_usd),
-          community_name = ifelse(share < 0.01, "Others >1% each", community_name),
+          community_name = ifelse(share < 0.01, "Others <1% each", community_name),
           community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
         ) %>% 
         group_by(community_name, community_color) %>% 
