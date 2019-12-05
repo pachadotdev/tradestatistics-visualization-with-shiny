@@ -23,8 +23,8 @@ app_server <- function(input, output, session) {
     select(country_iso, country_name_english)
   
   products <- tradestatistics::ots_products %>%
-    dplyr::filter(stringr::str_length(product_code) %in% c(2, 4)) %>%
-    dplyr::arrange(product_code)
+    filter(str_length(product_code) %in% c(2, 4)) %>%
+    arrange(product_code)
   
   communities <- tradestatistics::ots_communities
   
@@ -37,8 +37,8 @@ app_server <- function(input, output, session) {
   names(available_tables) <- c("Select", "Multilateral trade", "Bilateral trade")
   
   available_years <- sprintf("%s/year_range", base_url) %>%
-    jsonlite::fromJSON() %>%
-    purrr::as_vector()
+    fromJSON() %>%
+    as_vector()
   
   available_years_min <- min(available_years)
   available_years_max <- max(available_years)
@@ -47,8 +47,8 @@ app_server <- function(input, output, session) {
   available_reporters_iso <- c("all", available_reporters_iso[grep("^c-|all", available_reporters_iso, invert = T)])
   names(available_reporters_iso) <- c("the World", as.vector(countries$country_name_english[grep("^Alias", countries$country_name_english, invert = T)]))
   
-  reporters_to_display <- dplyr::tibble(
-    available_reporters_iso = purrr::as_vector(available_reporters_iso),
+  reporters_to_display <- tibble(
+    available_reporters_iso = as_vector(available_reporters_iso),
     available_reporters_names = names(available_reporters_iso)
   )
   
@@ -93,8 +93,8 @@ app_server <- function(input, output, session) {
   
   r_name <- reactive({
     reporters_to_display %>%
-      dplyr::filter(available_reporters_iso == input$r) %>%
-      dplyr::select(available_reporters_names) %>%
+      filter(available_reporters_iso == input$r) %>%
+      select(available_reporters_names) %>%
       as.character()
   })
   
@@ -104,8 +104,8 @@ app_server <- function(input, output, session) {
   
   p_name <- reactive({
     reporters_to_display %>%
-      dplyr::filter(available_reporters_iso == input$p) %>%
-      dplyr::select(available_reporters_names) %>%
+      filter(available_reporters_iso == input$p) %>%
+      select(available_reporters_names) %>%
       as.character()
   })
   
@@ -128,7 +128,7 @@ app_server <- function(input, output, session) {
   # Data --------------------------------------------------------------------
   
   text_add_the <- reactive({
-    if (stringr::str_sub(p_name(), 1, 6) == "United" | stringr::str_sub(p_name(), 1, 3) == "USA") {
+    if (str_sub(p_name(), 1, 6) == "United" | str_sub(p_name(), 1, 3) == "USA") {
       "the "
     } else {
       ""
@@ -136,11 +136,11 @@ app_server <- function(input, output, session) {
   })
   
   title <- eventReactive(input$go, {
-    glue::glue("Trade between { text_add_the() } { r_name() } and { text_add_the() } { p_name() } from { y1() } to { y2() }, aggregated")
+    glue("Trade between { text_add_the() } { r_name() } and { text_add_the() } { p_name() } from { y1() } to { y2() }, aggregated")
   })
   
   data_aggregated <- eventReactive(input$go, {
-    tradestatistics::ots_create_tidy_data(
+    ots_create_tidy_data(
       years = y(),
       reporters = r_iso(),
       partners = p_iso(),
@@ -152,37 +152,37 @@ app_server <- function(input, output, session) {
   
   trade_table_aggregated <- eventReactive(input$go, {
     data_aggregated() %>%
-      dplyr::select(year, export_value_usd, import_value_usd)
+      select(year, export_value_usd, import_value_usd)
   })
   
   trade_exchange_bars_title <- eventReactive(input$go, {
     switch(table_aggregated(),
-           "yr" = glue::glue("{ r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
-           "yrp" = glue::glue("{ r_name() } and { p_name() } exchange between { min(y()) } and { max(y()) }")
+           "yr" = glue("{ r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
+           "yrp" = glue("{ r_name() } and { p_name() } exchange between { min(y()) } and { max(y()) }")
     )
   })
   
   trade_bars_aggregated <- eventReactive(input$go, {
     d <- trade_table_aggregated() %>%
-      tidyr::gather(key, value, -year) %>%
-      dplyr::mutate(
+      gather(key, value, -year) %>%
+      mutate(
         key = ifelse(key == "export_value_usd", "Exports", "Imports")
       ) %>%
-      dplyr::rename(
+      rename(
         `Trade Value` = value,
         `Year` = year,
         group = key
       )
     
-    highcharter::hchart(d, "column", highcharter::hcaes(x = `Year`, y = `Trade Value`, group = group)) %>% 
-      highcharter::hc_colors(c("#4d6fd0", "#bf3251")) %>% 
-      highcharter::hc_title(text = trade_exchange_bars_title()) %>% 
-      highcharter::hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
+    hchart(d, "column", hcaes(x = `Year`, y = `Trade Value`, group = group)) %>% 
+      hc_colors(c("#4d6fd0", "#bf3251")) %>% 
+      hc_title(text = trade_exchange_bars_title()) %>% 
+      hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
   })
   
   # Output ------------------------------------------------------------------
   
-  output$trade_bars_aggregated <- highcharter::renderHighchart({
+  output$trade_bars_aggregated <- renderHighchart({
     trade_bars_aggregated()
   })
   

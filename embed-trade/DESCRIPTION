@@ -1,8 +1,8 @@
-Package: embedtrade
-Title: An Amazing Shiny App
+Package: tradestatistics.embedtrade
+Title: Open Trade Statistics Embedded Trade Barchart
 Version: 0.0.0.9000
 Authors@R: person("Mauricio", "Vargas", email = "mvargas@dcc.uchile.cl", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Description: Trade barchart created to be inserted in sites or html presentations outside tradestatistics.io.
 License: AGPL-3
 Encoding: UTF-8
 LazyData: true

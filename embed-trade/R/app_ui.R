@@ -75,15 +75,16 @@ app_ui <- function(request) {
 }
 
 #' @import shiny
-golem_add_external_resources <- function(){
+#' @importFrom golem activate_js favicon
+golem_add_external_resources <- function() {
   
   addResourcePath(
     'www', system.file('app/www', package = 'embedtrade')
   )
  
   tags$head(
-    golem::activate_js(),
-    golem::favicon("www/img/favicon.ico"),
+    activate_js(),
+    favicon("www/img/favicon.ico"),
     # Add here all the external resources
     # If you have a custom.css in the inst/app/www
     # Or for example, you can add shinyalert::useShinyalert() here
