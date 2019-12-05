@@ -36,14 +36,12 @@ app_server <- function(input, output, session) {
   available_tables <- as.list(c("select", "yr", "yrp"))
   names(available_tables) <- c("Select", "Multilateral trade", "Bilateral trade")
   
-  available_years <- sprintf("%s/year_range", base_url) %>%
-    fromJSON() %>%
-    as_vector()
+  available_years <- golem::get_golem_options("available_years")
   
   available_years_min <- min(available_years)
   available_years_max <- max(available_years)
   
-  available_reporters_iso <- as.list(countries$country_iso)
+  available_reporters_iso <- golem::get_golem_options("available_reporters_iso")
   available_reporters_iso <- c("all", available_reporters_iso[grep("^c-|all", available_reporters_iso, invert = T)])
   names(available_reporters_iso) <- c("the World", as.vector(countries$country_name_english[grep("^Alias", countries$country_name_english, invert = T)]))
   
