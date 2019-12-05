@@ -27,7 +27,7 @@ app_ui <- function(request) {
             selectInput(
               "y1",
               "Year 1:",
-              choices = golem::get_golem_options("available_years"),
+              choices = NULL,
               selected = NULL,
               selectize = FALSE
             ),
@@ -35,7 +35,7 @@ app_ui <- function(request) {
             selectInput(
               "y2",
               "Year 2:",
-              choices = golem::get_golem_options("available_years"),
+              choices = NULL,
               selected = NULL,
               selectize = FALSE
             )
@@ -46,7 +46,7 @@ app_ui <- function(request) {
             selectInput(
               "r",
               "Reporter:",
-              choices = c("Select", golem::get_golem_options("available_reporters_iso")),
+              choices = NULL, #c("Select", golem::get_golem_options("available_reporters_iso")),
               selected = NULL,
               selectize = FALSE
             )
@@ -57,7 +57,7 @@ app_ui <- function(request) {
             selectInput(
               "p",
               "Partner:",
-              choices = c("Select", golem::get_golem_options("available_reporters_iso")),
+              choices = NULL, 
               selected = NULL,
               selectize = FALSE
             )
