@@ -11,12 +11,6 @@
 #' @importFrom tradestatistics ots_create_tidy_data
 #' @importFrom highcharter hchart hcaes hc_colors hc_title hc_exporting renderHighchart JS
 app_server <- function(input, output, session) {
-  # URLs --------------------------------------------------------------------
-  
-  # base_url <- "http://localhost:8080"
-  base_url <- "https://api.tradestatistics.io"
-  site_url <- "shiny.tradestatistics.io"
-  
   # Tables ------------------------------------------------------------------
   
   countries <- tradestatistics::ots_countries %>%
@@ -38,31 +32,31 @@ app_server <- function(input, output, session) {
   
   available_years <- get_available_years()
   
-  updateSelectInput(
-    session, 
-    "y1", 
-    choices = available_years
-  )
-  updateSelectInput(
-    session, 
-    "y2", 
-    choices = available_years
-  )
+  # updateSelectInput(
+  #   session, 
+  #   "y1", 
+  #   choices = available_years
+  # )
+  # updateSelectInput(
+  #   session, 
+  #   "y2", 
+  #   choices = available_years
+  # )
 
   available_years_min <- min(available_years)
   available_years_max <- max(available_years)
   
   available_reporters_iso <- get_available_reporters_iso()
-  updateSelectInput(
-    session, 
-    "p", 
-    choices = c("Select", available_reporters_iso)
-  )
-  updateSelectInput(
-    session, 
-    "r", 
-    choices = c("Select", available_reporters_iso)
-  )
+  # updateSelectInput(
+  #   session, 
+  #   "p", 
+  #   choices = c("Select", available_reporters_iso)
+  # )
+  # updateSelectInput(
+  #   session, 
+  #   "r", 
+  #   choices = c("Select", available_reporters_iso)
+  # )
   
   available_reporters_iso <- c("all", available_reporters_iso[grep("^c-|all", available_reporters_iso, invert = T)])
   names(available_reporters_iso) <- c("the World", as.vector(countries$country_name_english[grep("^Alias", countries$country_name_english, invert = T)]))
