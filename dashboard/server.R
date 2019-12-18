@@ -1147,7 +1147,7 @@ shinyServer(
 
     url_trade <- eventReactive(input$go, {
       glue::glue(
-        "https://{ site_url }/embed-trade/?_inputs_&y1={ min(y()) }&y2={ max(y()) }&r=%22{ r_iso() }%22&p=%22{ p_iso() }%22&go=1"
+        "{ site_url }/embed-trade/?_inputs_&y1={ min(y()) }&y2={ max(y()) }&r=%22{ r_iso() }%22&p=%22{ p_iso() }%22&go=1"
       )
     })
     

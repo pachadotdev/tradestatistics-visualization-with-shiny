@@ -12,7 +12,7 @@ library(tradestatistics) # from github.com/tradestatistics/tradestatistics
 
 base_url <- "http://localhost:8080"
 # base_url <- "https://api.tradestatistics.io"
-site_url <- "shiny.tradestatistics.io"
+site_url <- "https://shiny.tradestatistics.io"
 
 # Tables ------------------------------------------------------------------
 
