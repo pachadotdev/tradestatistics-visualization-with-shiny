@@ -69,7 +69,7 @@ shinyUI(
               htmlOutput("trade_subtitle", container = tags$h2),
               htmlOutput("trade_paragraph", container = tags$p),
               br(),
-              highchartOutput("trade_exchange_bars_aggregated", height = "500px"),
+              highchartOutput("trade_exchange_lines_aggregated", height = "500px"),
               htmlOutput("url_trade")
             ),
             

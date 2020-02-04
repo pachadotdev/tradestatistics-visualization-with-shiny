@@ -109,17 +109,14 @@ shinyServer(
       glue::glue(
         "
         <h1>
-        To begin, select at least reporter and a partner and then click Go!
-        </h1><br>
-        <p>
-        <b>Our users detected that the beta does not work with Chromium. Firefox, Chrome and Edge work ok.</b>
-        </p><br>
+        To begin, select at least a reporter and a partner and then click Go!
+        </h1>
         <p>
         We already picked the USA and the World as an example. You can click and type in the menus to avoid scrolling, and 
         you can move the year slider to explore.
         </p><br>
         <p>
-        Here is random { x_sample } quote for you:
+        Here is a random { x_sample } quote for you:
         </p><br>
         <h5 align='center'>
         \"<i>{y$text}\"</i> 
@@ -858,18 +855,19 @@ shinyServer(
       )
     })
     
-    trade_exchange_bars_title <- eventReactive(input$go, {
+    trade_exchange_lines_title <- eventReactive(input$go, {
       switch(table_aggregated(),
              "yr" = glue::glue("{ r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
              "yrp" = glue::glue("{ r_name() } and { p_name() } exchange between { min(y()) } and { max(y()) }")
       )
     })
     
-    trade_exchange_bars_aggregated <- eventReactive(input$go, {
+    trade_exchange_lines_aggregated <- eventReactive(input$go, {
       d <- trade_table_aggregated() %>%
         gather(key, value, -year) %>%
         mutate(
-          key = ifelse(key == "export_value_usd", "Exports", "Imports")
+          key = ifelse(key == "export_value_usd", "Exports", "Imports"),
+          year = as.Date(paste(year, "01-01", sep = "-"))
         ) %>%
         rename(
           `Trade Value` = value,
@@ -877,9 +875,9 @@ shinyServer(
           group = key
         ) 
       
-      hchart(d, "column", hcaes(x = `Year`, y = `Trade Value`, group = group)) %>% 
+      hchart(d, "line", hcaes(x = `Year`, y = `Trade Value`, group = group)) %>% 
         hc_colors(c("#4d6fd0", "#bf3251")) %>% 
-        hc_title(text = trade_exchange_bars_title()) %>% 
+        hc_title(text = trade_exchange_lines_title()) %>% 
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
 
@@ -1245,8 +1243,8 @@ shinyServer(
     
     output$trade_title <- renderText(trade_title())
 
-    output$trade_exchange_bars_aggregated <- renderHighchart({
-      trade_exchange_bars_aggregated()
+    output$trade_exchange_lines_aggregated <- renderHighchart({
+      trade_exchange_lines_aggregated()
     })
 
     # Exports output ----------------------------------------------------------

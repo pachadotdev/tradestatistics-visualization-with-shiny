@@ -103,7 +103,7 @@ shinyServer(
           group = key
         )
       
-      hchart(d, "column", hcaes(x = `Year`, y = `Trade Value`, group = group)) %>% 
+      hchart(d, "line", hcaes(x = `Year`, y = `Trade Value`, group = group)) %>% 
         hc_colors(c("#4d6fd0", "#bf3251")) %>% 
         hc_title(text = trade_exchange_bars_title()) %>% 
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
