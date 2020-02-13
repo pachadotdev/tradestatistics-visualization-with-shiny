@@ -84,14 +84,14 @@ shinyServer(
         select(year, export_value_usd, import_value_usd)
     })
     
-    trade_exchange_bars_title <- eventReactive(input$go, {
+    trade_exchange_title <- eventReactive(input$go, {
       switch(table_aggregated(),
              "yr" = glue::glue("{ r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
              "yrp" = glue::glue("{ r_name() } and { p_name() } exchange between { min(y()) } and { max(y()) }")
       )
     })
 
-    trade_bars_aggregated <- eventReactive(input$go, {
+    trade_aggregated <- eventReactive(input$go, {
       d <- trade_table_aggregated() %>%
         gather(key, value, -year) %>%
         mutate(
@@ -105,14 +105,14 @@ shinyServer(
       
       hchart(d, "line", hcaes(x = `Year`, y = `Trade Value`, group = group)) %>% 
         hc_colors(c("#4d6fd0", "#bf3251")) %>% 
-        hc_title(text = trade_exchange_bars_title()) %>% 
+        hc_title(text = trade_exchange_title()) %>% 
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
 
     # Output ------------------------------------------------------------------
 
-    output$trade_bars_aggregated <- renderHighchart({
-      trade_bars_aggregated()
+    output$trade_aggregated <- renderHighchart({
+      trade_aggregated()
     })
 
     # Bookmarking -------------------------------------------------------------
