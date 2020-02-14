@@ -1282,11 +1282,11 @@ shinyServer(
     output$imports_subtitle <- renderText(imports_subtitle())
 
     output$imports_box_min_year <- renderValueBox({
-      valueBox(
+      customValueBox(
         h4(top_import_name_paragraph_min_year()),
         imports_paragraph_min_year(),
         icon = icon("chart-line"),
-        color = "light-blue"
+        color = "33c481"
       )
     })
     

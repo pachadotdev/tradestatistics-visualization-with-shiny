@@ -35,6 +35,27 @@ growth_rate <- function(p, q, t) {
   (p / q)^(1 / (max(t) - min(t))) - 1
 }
 
+# Custom value boxes ------------------------------------------------------
+
+customValueBox <- function(value, subtitle, icon = NULL, color = "aqua", width = 4,
+                     href = NULL, inputId = NULL)
+{
+  boxContent <- div(id = inputId, class = paste0("small-box bg-", color),
+                    div(class = "inner",
+                        h3(class = "value-box-value", value),
+                        p(subtitle)
+                    ),
+                    if (!is.null(icon)) div(class = "icon-large", icon)
+  )
+  
+  if (!is.null(href))
+    boxContent <- a(href = href, boxContent)
+  
+  div(class = if (!is.null(width)) paste0("col-sm-", width),
+      boxContent
+  )
+}
+
 # Choices -----------------------------------------------------------------
 
 # choices trick by Andrea Gao
