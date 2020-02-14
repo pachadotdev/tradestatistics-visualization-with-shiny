@@ -10,8 +10,16 @@ library(tradestatistics) # from github.com/tradestatistics/tradestatistics
 
 # URLs --------------------------------------------------------------------
 
-base_url <- "http://localhost:8080"
-# base_url <- "https://api.tradestatistics.io"
+running_on_server <- TRUE
+
+if (running_on_server == TRUE) {
+  base_url <- "http://localhost:8080"
+  use_localhost <- TRUE
+} else {
+  base_url <- "https://api.tradestatistics.io"
+  use_localhost <- FALSE
+}
+
 site_url <- "https://shiny.tradestatistics.io"
 
 # Tables ------------------------------------------------------------------

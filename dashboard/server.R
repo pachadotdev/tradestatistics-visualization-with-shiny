@@ -167,7 +167,7 @@ shinyServer(
         include_shortnames = FALSE,
         include_communities = FALSE,
         table = table_aggregated(),
-        use_localhost = TRUE
+        use_localhost = use_localhost
       )
     })
 
@@ -179,7 +179,7 @@ shinyServer(
         include_shortnames = TRUE,
         include_communities = TRUE,
         table = table_detailed(),
-        use_localhost = TRUE
+        use_localhost = use_localhost
       )
     })
 
@@ -191,7 +191,7 @@ shinyServer(
         include_shortnames = FALSE,
         include_communities = FALSE,
         table = "yrp_short",
-        use_localhost = TRUE
+        use_localhost = use_localhost
       ) %>% 
         mutate(
           exp_rank = dense_rank(desc(export_value_usd)),
@@ -207,7 +207,7 @@ shinyServer(
         include_shortnames = FALSE,
         include_communities = FALSE,
         table = "yrp_short",
-        use_localhost = TRUE
+        use_localhost = use_localhost
       ) %>% 
         
         select(year, reporter_iso, export_value_usd, import_value_usd, starts_with("top_")) %>% 
@@ -224,7 +224,7 @@ shinyServer(
             include_shortnames = FALSE,
             include_communities = FALSE,
             table = "yr_short",
-            use_localhost = TRUE
+            use_localhost = use_localhost
           )
         ) %>% 
         
@@ -257,7 +257,7 @@ shinyServer(
         include_shortnames = FALSE,
         include_communities = FALSE,
         table = "yr_short",
-        use_localhost = TRUE
+        use_localhost = use_localhost
       ) %>% 
         
         select(year, reporter_iso, export_value_usd, import_value_usd, starts_with("top_")) %>% 
@@ -1248,20 +1248,20 @@ shinyServer(
     output$exports_subtitle <- renderText(exports_subtitle())
 
     output$exports_box_min_year <- renderValueBox({
-      valueBox(
+      customValueBox(
         h4(top_export_name_paragraph_min_year()),
         exports_paragraph_min_year(),
         icon = icon("chart-line"),
-        color = "light-blue"
+        color = "valueboxred1"
       )
     })
     
     output$exports_box_max_year <- renderValueBox({
-      valueBox(
+      customValueBox(
         h4(top_export_name_paragraph_max_year()),
         exports_paragraph_max_year(),
         icon = icon("chart-line"),
-        color = "blue"
+        color = "valueboxred2"
       )
     })
     
@@ -1286,16 +1286,16 @@ shinyServer(
         h4(top_import_name_paragraph_min_year()),
         imports_paragraph_min_year(),
         icon = icon("chart-line"),
-        color = "33c481"
+        color = "valueboxgreen1"
       )
     })
     
     output$imports_box_max_year <- renderValueBox({
-      valueBox(
+      customValueBox(
         h4(top_import_name_paragraph_max_year()),
         imports_paragraph_max_year(),
         icon = icon("chart-line"),
-        color = "blue"
+        color = "valueboxgreen2"
       )
     })
     

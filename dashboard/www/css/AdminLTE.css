@@ -4474,8 +4474,21 @@ table.text-center th {
 .bg-maroon {
   background-color: #ab7967 !important;
 }
-.bg-33c481 {
-  background-color: #33c481 !important;
+.bg-valueboxgreen1 {
+  color: #333 !important;
+  background-color: #8abdb6 !important;
+}
+.bg-valueboxgreen2 {
+  color: #333 !important;
+  background-color: #7caaa3 !important;
+}
+.bg-valueboxred1 {
+  color: #333 !important;
+  background-color: #d1a1bc !important;
+}
+.bg-valueboxred2 {
+  color: #333 !important;
+  background-color: #bc90a9 !important;
 }
 .bg-gray-active {
   color: #000;
