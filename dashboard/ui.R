@@ -78,7 +78,8 @@ shinyUI(
             column(
               12,
               htmlOutput("exports_subtitle", container = tags$h2),
-              htmlOutput("exports_paragraph", container = tags$p),
+              valueBoxOutput("exports_box_min_year", width = 6),
+              valueBoxOutput("exports_box_max_year", width = 6),
               br()
             ),
             
@@ -99,7 +100,8 @@ shinyUI(
             column(
               12,
               htmlOutput("imports_subtitle", container = tags$h2),
-              htmlOutput("imports_paragraph", container = tags$p),
+              valueBoxOutput("imports_box_min_year", width = 6),
+              valueBoxOutput("imports_box_max_year", width = 6),
               br()
             ),
             
@@ -173,8 +175,6 @@ shinyUI(
           ),
           
           # Footer ------------------------------------------------------------------
-          
-          p("Open Trade Statistics, 2019.", style = "color:#f9fafb"),
           
           tags$footer(
             tags$link(rel = "shortcut icon", href = "img/favicon.ico"),
