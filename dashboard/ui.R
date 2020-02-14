@@ -67,7 +67,8 @@ shinyUI(
             column(
               12,
               htmlOutput("trade_subtitle", container = tags$h2),
-              htmlOutput("trade_paragraph", container = tags$p),
+              valueBoxOutput("trade_box_exports", width = 6),
+              valueBoxOutput("trade_box_imports", width = 6),
               br(),
               highchartOutput("trade_exchange_lines_aggregated", height = "500px"),
               htmlOutput("url_trade")

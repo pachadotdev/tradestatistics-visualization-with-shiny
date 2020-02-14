@@ -601,7 +601,7 @@ shinyServer(
           reporter_iso == r_iso(),
           partner_iso == p_iso()
         ) %>% 
-        select(exp_rank) %>% 
+        select(imp_rank) %>% 
         as.character()
     })
     
@@ -636,7 +636,7 @@ shinyServer(
           reporter_iso == r_iso(),
           partner_iso == p_iso()
         ) %>% 
-        select(exp_rank) %>% 
+        select(imp_rank) %>% 
         as.character()
     })
     
@@ -803,55 +803,43 @@ shinyServer(
       "<hr/>Exports and Imports, grouped by year"
     })
 
-    trade_paragraph <- eventReactive(input$go, {
+    trade_paragraph_exports_1 <- eventReactive(input$go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("<h3>Exports</h3>
-                                
-                               In { min(y()) } { r_name() } exported { exports_total_value_paragraph_min_year_2() } to the World.<br>
-                               
-                               In { max(y()) } { r_name() } exported { exports_total_value_paragraph_max_year_2() } to the World.<br>
-                               
-                               Between { min(y()) } and { max(y()) } the exports of { r_name() } 
-                               to the World { exports_growth_in_or_decreased_paragraph() } at an annualized rate of { exports_growth_paragraph_2() }, from { exports_total_value_paragraph_min_year_2() } 
-                               in { min(y()) } to { exports_total_value_paragraph_max_year_2() } in { max(y()) }.<br>
-                               
-                               <h3>Imports</h3>
-                               
-                               In { min(y()) } { r_name() } imported { imports_total_value_paragraph_min_year_2() } from the World.<br>
-                               
-                               In { max(y()) } { r_name() } imported { imports_total_value_paragraph_max_year_2() } from the World.<br>
-                               
-                               Between { min(y()) } and { max(y()) } the imports of { r_name() } 
-                               from the World { imports_growth_in_or_decreased_paragraph() } at an annualized rate of { imports_growth_paragraph_2() }, from { imports_total_value_paragraph_min_year_2() } 
-                               in { min(y()) } from { imports_total_value_paragraph_max_year_2() } in { max(y()) }."),
+             "yr" = glue::glue("Exports: From { exports_total_value_paragraph_min_year_2() } in { min(y()) } to { exports_total_value_paragraph_max_year_2() } in { max(y()) }"),
              
-             "yrp" = glue::glue("<h3>Exports</h3>
-                                
-                                In { min(y()) } { r_name() } exported { exports_value_paragraph_min_year_2() } to { p_name() }, 
-                                and { exports_total_value_paragraph_min_year_2() } to the world. { r_name() } sent { exports_bilateral_share_paragraph_min_year() } 
-                                of its exports to { p_name() }, which was its No. { exports_rank_paragraph_min_year() } exports destination.<br>
-                                
-                                In { max(y()) } { r_name() } exported { exports_value_paragraph_max_year_2() } to { p_name() }, 
-                                and { exports_total_value_paragraph_max_year_2() } to the world. { r_name() } sent { exports_bilateral_share_paragraph_max_year() } 
-                                of its exports to { p_name() }, which was its No. { exports_rank_paragraph_max_year() } exports destination.<br>
-                                
-                                Between { min(y()) } and { max(y()) } the exports of { r_name() } 
-                                to { p_name() } { exports_growth_in_or_decreased_paragraph() } at an annualized rate of { exports_growth_paragraph_2() }, from { exports_value_paragraph_min_year_2() } 
-                                in { min(y()) } to { exports_value_paragraph_max_year_2() } in { max(y()) }.<br>
-                                
-                                <h3>Imports</h3>
-                                
-                                In { min(y()) } { r_name() } imported { imports_value_paragraph_min_year_2() } from { p_name() }, 
-                                and { imports_total_value_paragraph_min_year_2() } from the world. { r_name() } received { imports_bilateral_share_paragraph_min_year() } 
-                                of its imports from { p_name() }, which was its No. { imports_rank_paragraph_min_year() } imports origin.<br>
-                                
-                                In { max(y()) } { r_name() } imported { imports_value_paragraph_max_year_2() } from { p_name() }, 
-                                and { imports_total_value_paragraph_max_year_2() } from the world. { r_name() } received { imports_bilateral_share_paragraph_max_year() } 
-                                of its imports from { p_name() }, which was its No. { imports_rank_paragraph_max_year() } imports origin.<br>
-                                
-                                Between { min(y()) } and { max(y()) } the imports of { r_name() } 
-                                from { p_name() } { imports_growth_in_or_decreased_paragraph() } at an annualized rate of { imports_growth_paragraph_2() }, from { imports_value_paragraph_min_year_2() } 
-                                in { min(y()) } to { imports_value_paragraph_max_year_2() } in { max(y()) }.")
+             "yrp" = glue::glue("Exports: From { exports_value_paragraph_min_year_2() } in { min(y()) } to { exports_value_paragraph_max_year_2() } in { max(y()) }")
+      )
+    })
+    
+    trade_paragraph_exports_2 <- eventReactive(input$go, {
+      switch(table_aggregated(),
+             "yr" = glue::glue("The exports of { r_name() } to the World { exports_growth_in_or_decreased_paragraph() } at
+                               an annualized rate of { exports_growth_paragraph_2() }."),
+             
+             "yrp" = glue::glue("The exports of { r_name() } to { p_name() } { exports_growth_in_or_decreased_paragraph() } at
+                                an annualized rate of { exports_growth_paragraph_2() }. { p_name() } moved from No. { exports_rank_paragraph_min_year() } 
+                                exports destination to No. { exports_rank_paragraph_max_year() }, representing { exports_bilateral_share_paragraph_min_year() }
+                                and { exports_bilateral_share_paragraph_max_year() } of the exports of { r_name() }.")
+      )
+    })
+    
+    trade_paragraph_imports_1 <- eventReactive(input$go, {
+      switch(table_aggregated(),
+             "yr" = glue::glue("Imports: From { imports_total_value_paragraph_min_year_2() } in { min(y()) } to { imports_total_value_paragraph_max_year_2() } in { max(y()) }"),
+             
+             "yrp" = glue::glue("Imports: From { imports_value_paragraph_min_year_2() } in { min(y()) } to { imports_value_paragraph_max_year_2() } in { max(y()) }")
+      )
+    })
+    
+    trade_paragraph_imports_2 <- eventReactive(input$go, {
+      switch(table_aggregated(),
+             "yr" = glue::glue("The imports of { r_name() } from the World { imports_growth_in_or_decreased_paragraph() } at
+                               an annualized rate of { imports_growth_paragraph_2() }."),
+             
+             "yrp" = glue::glue("The imports of { r_name() } from { p_name() } { imports_growth_in_or_decreased_paragraph() } at
+                                an annualized rate of { imports_growth_paragraph_2() }. { p_name() } moved from No. { imports_rank_paragraph_min_year() } 
+                                imports destination to No. { imports_rank_paragraph_max_year() }, representing { imports_bilateral_share_paragraph_min_year() }
+                                and { imports_bilateral_share_paragraph_max_year() } of the imports of { r_name() }.")
       )
     })
     
@@ -896,17 +884,17 @@ shinyServer(
     
     exports_paragraph_min_year <- eventReactive(input$go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("Most exported product in { min(y()) }. Represented { top_export_total_share_paragraph_min_year_2() } of the total exports of { r_name() } from the World."),
+             "yr" = glue::glue("Represented { top_export_total_share_paragraph_min_year_2() } of the total exports of { r_name() } to the World."),
              
-             "yrp" = glue::glue("Most exported product in { min(y()) }. Represented { top_export_bilateral_share_paragraph_min_year_2() } of the total exports of { r_name() } from { p_name() }.")
+             "yrp" = glue::glue("Represented { top_export_bilateral_share_paragraph_min_year_2() } of the total exports of { r_name() } to { p_name() }.")
       )
     })
     
     exports_paragraph_max_year <- eventReactive(input$go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("Most exported product in { max(y()) }. Represented { top_export_total_share_paragraph_max_year_2() } of the total exports of { r_name() } from the World."),
+             "yr" = glue::glue("Represented { top_export_total_share_paragraph_max_year_2() } of the total exports of { r_name() } to the World."),
              
-             "yrp" = glue::glue("Most exported product in { max(y()) }. Represented { top_export_bilateral_share_paragraph_max_year_2() } of the total exports of { r_name() } from { p_name() }.")
+             "yrp" = glue::glue("Represented { top_export_bilateral_share_paragraph_max_year_2() } of the total exports of { r_name() } to { p_name() }.")
       )
     })
     
@@ -1005,17 +993,17 @@ shinyServer(
     
     imports_paragraph_min_year <- eventReactive(input$go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("Most imported product in { min(y()) }. Represented { top_import_total_share_paragraph_min_year_2() } of the total imports of { r_name() } from the World."),
+             "yr" = glue::glue("Represented { top_import_total_share_paragraph_min_year_2() } of the total imports of { r_name() } from the World."),
              
-             "yrp" = glue::glue("Most imported product in { min(y()) }. Represented { top_import_bilateral_share_paragraph_min_year_2() } of the total imports of { r_name() } from { p_name() }.")
+             "yrp" = glue::glue("Represented { top_import_bilateral_share_paragraph_min_year_2() } of the total imports of { r_name() } from { p_name() }.")
              )
     })
     
     imports_paragraph_max_year <- eventReactive(input$go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("Most imported product in { max(y()) }. Represented { top_import_total_share_paragraph_max_year_2() } of the total imports of { r_name() } from the World."),
+             "yr" = glue::glue("Represented { top_import_total_share_paragraph_max_year_2() } of the total imports of { r_name() } from the World."),
              
-             "yrp" = glue::glue("Most imported product in { max(y()) }. Represented { top_import_bilateral_share_paragraph_max_year_2() } of the total imports of { r_name() } from { p_name() }.")
+             "yrp" = glue::glue("Represented { top_import_bilateral_share_paragraph_max_year_2() } of the total imports of { r_name() } from { p_name() }.")
       )
     })
     
@@ -1235,7 +1223,23 @@ shinyServer(
 
     output$trade_subtitle <- renderText(trade_subtitle())
 
-    output$trade_paragraph <- renderText(trade_paragraph())
+    output$trade_box_exports <- renderValueBox({
+      customValueBox(
+        h4(trade_paragraph_exports_1()),
+        trade_paragraph_exports_2(),
+        icon = icon("chart-line"),
+        color = "valueboxgreen1"
+      )
+    })
+    
+    output$trade_box_imports <- renderValueBox({
+      customValueBox(
+        h4(trade_paragraph_imports_1()),
+        trade_paragraph_imports_2(),
+        icon = icon("chart-line"),
+        color = "valueboxred1"
+      )
+    })
     
     output$trade_title <- renderText(trade_title())
 
@@ -1249,19 +1253,19 @@ shinyServer(
 
     output$exports_box_min_year <- renderValueBox({
       customValueBox(
-        h4(top_export_name_paragraph_min_year()),
+        h4(glue::glue("Most exported product in { min(y()) }: { top_export_name_paragraph_min_year() }")),
         exports_paragraph_min_year(),
         icon = icon("chart-line"),
-        color = "valueboxred1"
+        color = "valueboxgreen1"
       )
     })
     
     output$exports_box_max_year <- renderValueBox({
       customValueBox(
-        h4(top_export_name_paragraph_max_year()),
+        h4(glue::glue("Most exported product in { max(y()) }: { top_export_name_paragraph_max_year() }")),
         exports_paragraph_max_year(),
         icon = icon("chart-line"),
-        color = "valueboxred2"
+        color = "valueboxgreen2"
       )
     })
     
@@ -1283,19 +1287,19 @@ shinyServer(
 
     output$imports_box_min_year <- renderValueBox({
       customValueBox(
-        h4(top_import_name_paragraph_min_year()),
+        h4(glue::glue("Most imported product in { min(y()) }: { top_import_name_paragraph_min_year() }")),
         imports_paragraph_min_year(),
         icon = icon("chart-line"),
-        color = "valueboxgreen1"
+        color = "valueboxred1"
       )
     })
     
     output$imports_box_max_year <- renderValueBox({
       customValueBox(
-        h4(top_import_name_paragraph_max_year()),
+        h4(glue::glue("Most imported product in { max(y()) }: { top_import_name_paragraph_max_year() }")),
         imports_paragraph_max_year(),
         icon = icon("chart-line"),
-        color = "valueboxgreen2"
+        color = "valueboxred2"
       )
     })
     
