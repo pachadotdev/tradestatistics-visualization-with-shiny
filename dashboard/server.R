@@ -86,17 +86,33 @@ shinyServer(
     
     # Title -------------------------------------------------------------------
 
-    text_add_the <- reactive({
-      if (substr(p_name(), 1, 6) == "United" | substr(p_name(), 1, 3) == "USA") {
-        "the "
+    r_add_the <- reactive({
+      if (substr(r_name(), 1, 6) == "United" | substr(r_name(), 1, 3) == "USA") {
+        "the"
       } else {
         ""
       }
     })
     
-    text_add_proper_the <- reactive({
+    r_add_proper_the <- reactive({
       if (substr(r_name(), 1, 6) == "United" | substr(r_name(), 1, 3) == "USA") {
-        "The "
+        "The"
+      } else {
+        ""
+      }
+    })
+    
+    p_add_the <- reactive({
+      if (substr(p_name(), 1, 6) == "United" | substr(p_name(), 1, 3) == "USA") {
+        "the"
+      } else {
+        ""
+      }
+    })
+    
+    p_add_proper_the <- reactive({
+      if (substr(p_name(), 1, 6) == "United" | substr(p_name(), 1, 3) == "USA") {
+        "The"
       } else {
         ""
       }
@@ -141,8 +157,8 @@ shinyServer(
 
       switch(
         table_detailed(),
-        "yrc" = glue::glue("<h1>{ text_add_proper_the() } { r_name() } multilateral trade between { min(y()) } and { max(y()) }</h1>"),
-        "yrpc" = glue::glue("<h1>{ text_add_proper_the() } { r_name() } and { text_add_the() } { p_name() } between { min(y()) } and { max(y()) }</h1>")
+        "yrc" = glue::glue("<h1>{ r_add_proper_the() } { r_name() } multilateral trade between { min(y()) } and { max(y()) }</h1>"),
+        "yrpc" = glue::glue("<h1>{ r_add_proper_the() } { r_name() } and { p_add_the() } { p_name() } between { min(y()) } and { max(y()) }</h1>")
       )
     })
 
@@ -190,7 +206,7 @@ shinyServer(
         partners = "all",
         include_shortnames = FALSE,
         include_communities = FALSE,
-        table = "yrp_short",
+        table = "yrp",
         use_localhost = use_localhost
       ) %>% 
         mutate(
@@ -199,18 +215,16 @@ shinyServer(
         )
     })
     
-    top_imports_exports <- eventReactive(input$go, {
+    top_imports_exports_bilateral <- eventReactive(input$go, {
       ots_create_tidy_data(
         years = c(min(y()),max(y())),
         reporters = r_iso(),
         partners = p_iso(),
         include_shortnames = FALSE,
         include_communities = FALSE,
-        table = "yrp_short",
+        table = "yrp",
         use_localhost = use_localhost
       ) %>% 
-        
-        select(year, reporter_iso, export_value_usd, import_value_usd, starts_with("top_")) %>% 
         
         rename(
           export_value_usd_bilateral = export_value_usd, 
@@ -223,7 +237,7 @@ shinyServer(
             reporters = r_iso(),
             include_shortnames = FALSE,
             include_communities = FALSE,
-            table = "yr_short",
+            table = "yr",
             use_localhost = use_localhost
           )
         ) %>% 
@@ -250,7 +264,7 @@ shinyServer(
         )
     })
     
-    top_imports_exports_short <- eventReactive(input$go, {
+    top_imports_exports_total <- eventReactive(input$go, {
       ots_create_tidy_data(
         years = c(min(y()),max(y())),
         reporters = r_iso(),
@@ -259,8 +273,6 @@ shinyServer(
         table = "yr_short",
         use_localhost = use_localhost
       ) %>% 
-        
-        select(year, reporter_iso, export_value_usd, import_value_usd, starts_with("top_")) %>% 
         
         mutate(
           top_export_to_total_exports = top_export_trade_value_usd / export_value_usd,
@@ -319,11 +331,11 @@ shinyServer(
     exports_total_value_paragraph_max_year <- eventReactive(input$go, {
       ifelse(
         p_iso() == "all",
-        top_imports_exports_short() %>% 
+        top_imports_exports_total() %>% 
           filter(year == max(y())) %>% 
           select(export_value_usd) %>% 
           as.numeric(),
-        top_imports_exports() %>% 
+        top_imports_exports_bilateral() %>% 
           filter(year == max(y())) %>% 
           select(export_value_usd) %>% 
           as.numeric()
@@ -354,11 +366,11 @@ shinyServer(
     exports_total_value_paragraph_min_year <- eventReactive(input$go, {
       ifelse(
         p_iso() == "all",
-        top_imports_exports_short() %>% 
+        top_imports_exports_total() %>% 
           filter(year == min(y())) %>% 
           select(export_value_usd) %>% 
           as.numeric(),
-        top_imports_exports() %>% 
+        top_imports_exports_bilateral() %>% 
           filter(year == min(y())) %>% 
           select(export_value_usd) %>% 
           as.numeric()
@@ -389,11 +401,11 @@ shinyServer(
     top_export_name_paragraph_min_year <- eventReactive(input$go, {
       ifelse(
         p_iso() == "all",
-        top_imports_exports_short() %>% 
+        top_imports_exports_total() %>% 
           filter(year == min(y())) %>% 
           select(top_export_product_name) %>% 
           as.character(),
-        top_imports_exports() %>% 
+        top_imports_exports_bilateral() %>% 
           filter(year == min(y())) %>% 
           select(top_export_product_name) %>% 
           as.character()
@@ -401,7 +413,7 @@ shinyServer(
     })
     
     top_export_value_paragraph_min_year <- eventReactive(input$go, {
-      top_imports_exports() %>% 
+      top_imports_exports_bilateral() %>% 
         filter(year == min(y())) %>% 
         select(top_export_trade_value_usd) %>% 
         as.character()
@@ -412,22 +424,17 @@ shinyServer(
     })
     
     top_export_bilateral_share_paragraph_min_year <- eventReactive(input$go, {
-      data_detailed() %>% 
-        filter(
-          year == min(y()), 
-          product_shortname_english == top_export_name_paragraph_min_year()
-        ) %>% 
-        select(year, export_value_usd) %>% 
-        rename(top_export_value_usd_bilateral = export_value_usd) %>% 
-        inner_join(
-          top_imports_exports() %>% 
-            select(year, export_value_usd_bilateral)
-        ) %>% 
-        mutate(
-          top_export_share_usd_bilateral = top_export_value_usd_bilateral / export_value_usd_bilateral
-        ) %>% 
-        select(top_export_share_usd_bilateral) %>% 
+      top_export_bilateral_share_1 <- top_imports_exports_total() %>% 
+        filter(year == min(y())) %>% 
+        select(top_export_trade_value_usd) %>% 
         as.numeric()
+      
+      top_export_bilateral_share_2 <- sum(
+        data_aggregated() %>% filter(year == min(y())) %>% select(export_value_usd) %>% pull(),
+        na.rm = T
+      )
+      
+      top_export_bilateral_share_1 / top_export_bilateral_share_2
     })
     
     top_export_bilateral_share_paragraph_min_year_2 <- eventReactive(input$go, {
@@ -435,17 +442,10 @@ shinyServer(
     })
     
     top_export_total_share_paragraph_min_year <- eventReactive(input$go, {
-      ifelse(
-        p_iso() == "all",
-        top_imports_exports_short() %>% 
-          filter(year == min(y())) %>% 
-          select(top_export_to_total_exports) %>% 
-          as.numeric(),
-        top_imports_exports() %>% 
-          filter(year == min(y())) %>% 
-          select(top_export_to_total_exports) %>% 
-          as.numeric()
-      )
+      top_imports_exports_total() %>% 
+        filter(year == min(y())) %>% 
+        select(top_export_to_total_exports) %>% 
+        as.numeric()
     })
     
     top_export_total_share_paragraph_min_year_2 <- eventReactive(input$go, {
@@ -453,24 +453,17 @@ shinyServer(
     })
     
     top_export_name_paragraph_max_year <- eventReactive(input$go, {
-      ifelse(
-        p_iso() == "all",
-        top_imports_exports_short() %>% 
-          filter(year == max(y())) %>% 
-          select(top_export_product_name) %>% 
-          as.character(),
-        top_imports_exports() %>% 
-          filter(year == max(y())) %>% 
-          select(top_export_product_name) %>% 
-          as.character()
-      )
+      top_imports_exports_total() %>% 
+        filter(year == max(y())) %>% 
+        select(top_export_product_name) %>% 
+        as.character()
     })
     
     top_export_value_paragraph_max_year <- eventReactive(input$go, {
-      top_imports_exports() %>% 
-        filter(year == max(y())) %>% 
-        select(top_export_trade_value_usd) %>% 
-        as.character()
+      top_imports_exports_total() %>% 
+        filter(year == min(y())) %>% 
+        select(top_export_to_total_exports) %>% 
+        as.numeric()
     })
     
     top_export_value_paragraph_max_year_2 <- eventReactive(input$go, {
@@ -478,22 +471,17 @@ shinyServer(
     })
     
     top_export_bilateral_share_paragraph_max_year <- eventReactive(input$go, {
-      data_detailed() %>% 
-        filter(
-          year == max(y()), 
-          product_shortname_english == top_export_name_paragraph_max_year()
-        ) %>% 
-        select(year, export_value_usd) %>% 
-        rename(top_export_value_usd_bilateral = export_value_usd) %>% 
-        inner_join(
-          top_imports_exports() %>% 
-            select(year, export_value_usd_bilateral)
-        ) %>% 
-        mutate(
-          top_export_share_usd_bilateral = top_export_value_usd_bilateral / export_value_usd_bilateral
-        ) %>% 
-        select(top_export_share_usd_bilateral) %>% 
+      top_export_bilateral_share_1 <- top_imports_exports_total() %>% 
+        filter(year == max(y())) %>% 
+        select(top_export_trade_value_usd) %>% 
         as.numeric()
+      
+      top_export_bilateral_share_2 <- sum(
+        data_aggregated() %>% filter(year == max(y())) %>% select(export_value_usd) %>% pull(),
+        na.rm = T
+      )
+      
+      top_export_bilateral_share_1 / top_export_bilateral_share_2
     })
     
     top_export_bilateral_share_paragraph_max_year_2 <- eventReactive(input$go, {
@@ -501,17 +489,10 @@ shinyServer(
     })
     
     top_export_total_share_paragraph_max_year <- eventReactive(input$go, {
-      ifelse(
-        p_iso() == "all",
-        top_imports_exports_short() %>% 
-          filter(year == max(y())) %>% 
-          select(top_export_to_total_exports) %>% 
-          as.numeric(),
-        top_imports_exports() %>% 
-          filter(year == max(y())) %>% 
-          select(top_export_to_total_exports) %>% 
-          as.numeric()
-      )
+      top_imports_exports_total() %>% 
+        filter(year == max(y())) %>% 
+        select(top_export_to_total_exports) %>% 
+        as.numeric()
     })
     
     top_export_total_share_paragraph_max_year_2 <- eventReactive(input$go, {
@@ -573,11 +554,11 @@ shinyServer(
     imports_total_value_paragraph_max_year <- eventReactive(input$go, {
       ifelse(
         p_iso() == "all",
-        top_imports_exports_short() %>% 
+        top_imports_exports_total() %>% 
           filter(year == max(y())) %>% 
           select(import_value_usd) %>% 
           as.numeric(),
-        top_imports_exports() %>% 
+        top_imports_exports_bilateral() %>% 
           filter(year == max(y())) %>% 
           select(import_value_usd) %>% 
           as.numeric()
@@ -608,11 +589,11 @@ shinyServer(
     imports_total_value_paragraph_min_year <- eventReactive(input$go, {
       ifelse(
         p_iso() == "all",
-        top_imports_exports_short() %>% 
+        top_imports_exports_total() %>% 
           filter(year == min(y())) %>% 
           select(import_value_usd) %>% 
           as.numeric(),
-        top_imports_exports() %>% 
+        top_imports_exports_bilateral() %>% 
           filter(year == min(y())) %>% 
           select(import_value_usd) %>% 
           as.numeric()
@@ -643,11 +624,11 @@ shinyServer(
     top_import_name_paragraph_min_year <- eventReactive(input$go, {
       ifelse(
         p_iso() == "all",
-        top_imports_exports_short() %>% 
+        top_imports_exports_total() %>% 
           filter(year == min(y())) %>% 
           select(top_import_product_name) %>% 
           as.character(),
-        top_imports_exports() %>% 
+        top_imports_exports_bilateral() %>% 
           filter(year == min(y())) %>% 
           select(top_import_product_name) %>% 
           as.character()
@@ -655,7 +636,7 @@ shinyServer(
     })
     
     top_import_value_paragraph_min_year <- eventReactive(input$go, {
-      top_imports_exports() %>% 
+      top_imports_exports_bilateral() %>% 
         filter(year == min(y())) %>% 
         select(top_import_trade_value_usd) %>% 
         as.character()
@@ -666,22 +647,17 @@ shinyServer(
     })
     
     top_import_bilateral_share_paragraph_min_year <- eventReactive(input$go, {
-      data_detailed() %>% 
-        filter(
-          year == min(y()), 
-          product_shortname_english == top_import_name_paragraph_min_year()
-        ) %>% 
-        select(year, import_value_usd) %>% 
-        rename(top_import_value_usd_bilateral = import_value_usd) %>% 
-        inner_join(
-          top_imports_exports() %>% 
-            select(year, import_value_usd_bilateral)
-        ) %>% 
-        mutate(
-          top_import_share_usd_bilateral = top_import_value_usd_bilateral / import_value_usd_bilateral
-        ) %>% 
-        select(top_import_share_usd_bilateral) %>% 
+      top_import_bilateral_share_1 <- top_imports_exports_total() %>% 
+        filter(year == min(y())) %>% 
+        select(top_import_trade_value_usd) %>% 
         as.numeric()
+      
+      top_import_bilateral_share_2 <- sum(
+        data_aggregated() %>% filter(year == min(y())) %>% select(import_value_usd) %>% pull(),
+        na.rm = T
+      )
+      
+      top_import_bilateral_share_1 / top_import_bilateral_share_2
     })
     
     top_import_bilateral_share_paragraph_min_year_2 <- eventReactive(input$go, {
@@ -691,11 +667,11 @@ shinyServer(
     top_import_total_share_paragraph_min_year <- eventReactive(input$go, {
       ifelse(
         p_iso() == "all",
-        top_imports_exports_short() %>% 
+        top_imports_exports_total() %>% 
           filter(year == min(y())) %>% 
           select(top_import_to_total_imports) %>% 
           as.numeric(),
-        top_imports_exports() %>% 
+        top_imports_exports_bilateral() %>% 
           filter(year == min(y())) %>% 
           select(top_import_to_total_imports) %>% 
           as.numeric()
@@ -707,21 +683,14 @@ shinyServer(
     })
     
     top_import_name_paragraph_max_year <- eventReactive(input$go, {
-      ifelse(
-        p_iso() == "all",
-        top_imports_exports_short() %>% 
-          filter(year == max(y())) %>% 
-          select(top_import_product_name) %>% 
-          as.character(),
-        top_imports_exports() %>% 
-          filter(year == max(y())) %>% 
-          select(top_import_product_name) %>% 
-          as.character()
-      )
+      top_imports_exports_total() %>% 
+        filter(year == max(y())) %>% 
+        select(top_import_product_name) %>% 
+        as.character()
     })
     
     top_import_value_paragraph_max_year <- eventReactive(input$go, {
-      top_imports_exports() %>% 
+      top_imports_exports_bilateral() %>% 
         filter(year == max(y())) %>% 
         select(top_import_trade_value_usd) %>% 
         as.character()
@@ -732,22 +701,17 @@ shinyServer(
     })
     
     top_import_bilateral_share_paragraph_max_year <- eventReactive(input$go, {
-      data_detailed() %>% 
-        filter(
-          year == max(y()), 
-          product_shortname_english == top_import_name_paragraph_max_year()
-        ) %>% 
-        select(year, import_value_usd) %>% 
-        rename(top_import_value_usd_bilateral = import_value_usd) %>% 
-        inner_join(
-          top_imports_exports() %>% 
-            select(year, import_value_usd_bilateral)
-        ) %>% 
-        mutate(
-          top_import_share_usd_bilateral = top_import_value_usd_bilateral / import_value_usd_bilateral
-        ) %>% 
-        select(top_import_share_usd_bilateral) %>% 
+      top_import_bilateral_share_1 <- top_imports_exports_total() %>% 
+        filter(year == max(y())) %>% 
+        select(top_import_trade_value_usd) %>% 
         as.numeric()
+      
+      top_import_bilateral_share_2 <- sum(
+        data_aggregated() %>% filter(year == max(y())) %>% select(import_value_usd) %>% pull(),
+        na.rm = T
+      )
+      
+      top_import_bilateral_share_1 / top_import_bilateral_share_2
     })
     
     top_import_bilateral_share_paragraph_max_year_2 <- eventReactive(input$go, {
@@ -757,11 +721,11 @@ shinyServer(
     top_import_total_share_paragraph_max_year <- eventReactive(input$go, {
       ifelse(
         p_iso() == "all",
-        top_imports_exports_short() %>% 
+        top_imports_exports_total() %>% 
           filter(year == max(y())) %>% 
           select(top_import_to_total_imports) %>% 
           as.numeric(),
-        top_imports_exports() %>% 
+        top_imports_exports_bilateral() %>% 
           filter(year == max(y())) %>% 
           select(top_import_to_total_imports) %>% 
           as.numeric()
@@ -813,13 +777,13 @@ shinyServer(
     
     trade_paragraph_exports_2 <- eventReactive(input$go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("The exports of { r_name() } to the World { exports_growth_in_or_decreased_paragraph() } at
+             "yr" = glue::glue("The exports of { r_add_the() } { r_name() } to the World { exports_growth_in_or_decreased_paragraph() } at
                                an annualized rate of { exports_growth_paragraph_2() }."),
              
-             "yrp" = glue::glue("The exports of { r_name() } to { p_name() } { exports_growth_in_or_decreased_paragraph() } at
-                                an annualized rate of { exports_growth_paragraph_2() }. { p_name() } moved from No. { exports_rank_paragraph_min_year() } 
+             "yrp" = glue::glue("The exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } { exports_growth_in_or_decreased_paragraph() } at
+                                an annualized rate of { exports_growth_paragraph_2() }. { p_add_proper_the() } { p_name() } moved from No. { exports_rank_paragraph_min_year() } 
                                 exports destination to No. { exports_rank_paragraph_max_year() }, representing { exports_bilateral_share_paragraph_min_year() }
-                                and { exports_bilateral_share_paragraph_max_year() } of the exports of { r_name() }.")
+                                and { exports_bilateral_share_paragraph_max_year() } of the exports of { r_add_the() } { r_name() }.")
       )
     })
     
@@ -833,20 +797,20 @@ shinyServer(
     
     trade_paragraph_imports_2 <- eventReactive(input$go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("The imports of { r_name() } from the World { imports_growth_in_or_decreased_paragraph() } at
+             "yr" = glue::glue("The imports of { r_add_the() } { r_name() } from the World { imports_growth_in_or_decreased_paragraph() } at
                                an annualized rate of { imports_growth_paragraph_2() }."),
              
-             "yrp" = glue::glue("The imports of { r_name() } from { p_name() } { imports_growth_in_or_decreased_paragraph() } at
-                                an annualized rate of { imports_growth_paragraph_2() }. { p_name() } moved from No. { imports_rank_paragraph_min_year() } 
+             "yrp" = glue::glue("The imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } { imports_growth_in_or_decreased_paragraph() } at
+                                an annualized rate of { imports_growth_paragraph_2() }. { p_add_proper_the() } { p_name() } moved from No. { imports_rank_paragraph_min_year() } 
                                 imports destination to No. { imports_rank_paragraph_max_year() }, representing { imports_bilateral_share_paragraph_min_year() }
-                                and { imports_bilateral_share_paragraph_max_year() } of the imports of { r_name() }.")
+                                and { imports_bilateral_share_paragraph_max_year() } of the imports of { r_add_the() } { r_name() }.")
       )
     })
     
     trade_exchange_lines_title <- eventReactive(input$go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("{ r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
-             "yrp" = glue::glue("{ r_name() } and { p_name() } exchange between { min(y()) } and { max(y()) }")
+             "yr" = glue::glue("{ r_add_proper_the() } { r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
+             "yrp" = glue::glue("{ r_add_proper_the() } { r_name() } and { p_add_the() } { p_name() } exchange between { min(y()) } and { max(y()) }")
       )
     })
     
@@ -884,25 +848,27 @@ shinyServer(
     
     exports_paragraph_min_year <- eventReactive(input$go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("Represented { top_export_total_share_paragraph_min_year_2() } of the total exports of { r_name() } to the World."),
+             "yr" = glue::glue("Represented { top_export_total_share_paragraph_min_year_2() } of the total exports of { r_add_the() } { r_name() } to the World."),
              
-             "yrp" = glue::glue("Represented { top_export_bilateral_share_paragraph_min_year_2() } of the total exports of { r_name() } to { p_name() }.")
+             "yrp" = glue::glue("Represented { top_export_total_share_paragraph_min_year_2() } of the total exports of { r_add_the() } { r_name() } to the World,
+                                and { top_export_bilateral_share_paragraph_min_year_2() } of the total exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() }.")
       )
     })
     
     exports_paragraph_max_year <- eventReactive(input$go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("Represented { top_export_total_share_paragraph_max_year_2() } of the total exports of { r_name() } to the World."),
+             "yr" = glue::glue("Represented { top_export_total_share_paragraph_max_year_2() } of the total exports of { r_add_the() } { r_name() } to the World."),
              
-             "yrp" = glue::glue("Represented { top_export_bilateral_share_paragraph_max_year_2() } of the total exports of { r_name() } to { p_name() }.")
+             "yrp" = glue::glue("Represented { top_export_total_share_paragraph_max_year_2() } of the total exports of { r_add_the() } { r_name() } to the World,
+                                and { top_export_bilateral_share_paragraph_max_year_2() } of the total exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() }.")
       )
     })
     
     exports_title_min_year <- eventReactive(input$go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Exports of { r_name() } to the rest of the world in { min(y()) }"),
-        "yrpc" = glue::glue("Exports of { r_name() } to { p_name() } in { min(y()) }")
+        "yrc" = glue::glue("Exports of { r_add_the() } { r_name() } to the rest of the World in { min(y()) }"),
+        "yrpc" = glue::glue("Exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } in { min(y()) }")
       )
     })
 
@@ -941,8 +907,8 @@ shinyServer(
     exports_title_max_year <- eventReactive(input$go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Exports of { r_name() } to the rest of the world { max(y()) }"),
-        "yrpc" = glue::glue("Exports of { r_name() } to { p_name() } in { max(y()) }")
+        "yrc" = glue::glue("Exports of { r_add_the() } { r_name() } to the rest of the World { max(y()) }"),
+        "yrpc" = glue::glue("Exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } in { max(y()) }")
       )
     })
 
@@ -993,25 +959,27 @@ shinyServer(
     
     imports_paragraph_min_year <- eventReactive(input$go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("Represented { top_import_total_share_paragraph_min_year_2() } of the total imports of { r_name() } from the World."),
+             "yr" = glue::glue("Represented { top_import_total_share_paragraph_min_year_2() } of the total imports of { r_add_the() } { r_name() } from the World."),
              
-             "yrp" = glue::glue("Represented { top_import_bilateral_share_paragraph_min_year_2() } of the total imports of { r_name() } from { p_name() }.")
-             )
+             "yrp" = glue::glue("Represented { top_import_total_share_paragraph_min_year_2() } of the total imports of { r_add_the() } { r_name() } to the World,
+                                and { top_import_bilateral_share_paragraph_min_year_2() } of the total imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() }.")
+      )
     })
     
     imports_paragraph_max_year <- eventReactive(input$go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("Represented { top_import_total_share_paragraph_max_year_2() } of the total imports of { r_name() } from the World."),
+             "yr" = glue::glue("Represented { top_import_total_share_paragraph_max_year_2() } of the total imports of { r_add_the() } { r_name() } from the World."),
              
-             "yrp" = glue::glue("Represented { top_import_bilateral_share_paragraph_max_year_2() } of the total imports of { r_name() } from { p_name() }.")
+             "yrp" = glue::glue("Represented { top_import_total_share_paragraph_max_year_2() } of the total imports of { r_add_the() } { r_name() } to the World,
+                                and { top_import_bilateral_share_paragraph_max_year_2() } of the total imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() }.")
       )
     })
     
     imports_title_min_year <- eventReactive(input$go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Imports of { r_name() } from the rest of the world in { min(y()) }"),
-        "yrpc" = glue::glue("Imports of { r_name() } from { p_name() } in { min(y()) }")
+        "yrc" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { min(y()) }"),
+        "yrpc" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { min(y()) }")
       )
     })
 
@@ -1069,16 +1037,16 @@ shinyServer(
     imports_title_max_year <- eventReactive(input$go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Imports of { r_name() } from the rest of the world in { max(y()) }"),
-        "yrpc" = glue::glue("Imports of { r_name() } from { p_name() } in { max(y()) }")
+        "yrc" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { max(y()) }"),
+        "yrpc" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { max(y()) }")
       )
     })
 
     imports_title_max_year <- eventReactive(input$go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Imports of { r_name() } from the rest of the world in { max(y()) }"),
-        "yrpc" = glue::glue("Imports of { r_name() } from { p_name() } in { max(y()) }")
+        "yrc" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { max(y()) }"),
+        "yrpc" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { max(y()) }")
       )
     })
 
