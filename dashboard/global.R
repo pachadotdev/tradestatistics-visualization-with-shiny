@@ -10,7 +10,7 @@ library(tradestatistics) # from github.com/tradestatistics/tradestatistics
 
 # URLs --------------------------------------------------------------------
 
-running_on_server <- TRUE
+running_on_server <- F
 
 if (running_on_server == TRUE) {
   base_url <- "http://localhost:8080"

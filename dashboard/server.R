@@ -423,18 +423,22 @@ shinyServer(
       show_dollars(stop_export_value_paragraph_min_year())
     })
     
-    top_export_bilateral_share_paragraph_min_year <- eventReactive(input$go, {
-      top_export_bilateral_share_1 <- top_imports_exports_total() %>% 
+    top_export_bilateral_value_paragraph_min_year <- eventReactive(input$go, {
+      top_imports_exports_total() %>% 
         filter(year == min(y())) %>% 
         select(top_export_trade_value_usd) %>% 
         as.numeric()
-      
-      top_export_bilateral_share_2 <- sum(
-        data_aggregated() %>% filter(year == min(y())) %>% select(export_value_usd) %>% pull(),
-        na.rm = T
-      )
-      
-      top_export_bilateral_share_1 / top_export_bilateral_share_2
+    })
+    
+    top_export_bilateral_value_paragraph_min_year_2 <- eventReactive(input$go, {
+      show_dollars(top_export_bilateral_value_paragraph_min_year())
+    })
+    
+    top_export_bilateral_share_paragraph_min_year <- eventReactive(input$go, {
+      top_export_bilateral_value_paragraph_min_year() /
+        sum(
+          data_aggregated() %>% filter(year == min(y())) %>% select(export_value_usd) %>% pull(), na.rm = T
+        )
     })
     
     top_export_bilateral_share_paragraph_min_year_2 <- eventReactive(input$go, {
@@ -470,18 +474,22 @@ shinyServer(
       show_dollars(top_export_value_paragraph_max_year())
     })
     
-    top_export_bilateral_share_paragraph_max_year <- eventReactive(input$go, {
-      top_export_bilateral_share_1 <- top_imports_exports_total() %>% 
+    top_export_bilateral_value_paragraph_max_year <- eventReactive(input$go, {
+      top_imports_exports_total() %>% 
         filter(year == max(y())) %>% 
         select(top_export_trade_value_usd) %>% 
         as.numeric()
-      
-      top_export_bilateral_share_2 <- sum(
-        data_aggregated() %>% filter(year == max(y())) %>% select(export_value_usd) %>% pull(),
-        na.rm = T
-      )
-      
-      top_export_bilateral_share_1 / top_export_bilateral_share_2
+    })
+    
+    top_export_bilateral_value_paragraph_max_year_2 <- eventReactive(input$go, {
+      show_dollars(top_export_bilateral_value_paragraph_max_year())
+    })
+    
+    top_export_bilateral_share_paragraph_max_year <- eventReactive(input$go, {
+      top_export_bilateral_value_paragraph_max_year() /
+        sum(
+          data_aggregated() %>% filter(year == max(y())) %>% select(export_value_usd) %>% pull(), na.rm = T
+        )
     })
     
     top_export_bilateral_share_paragraph_max_year_2 <- eventReactive(input$go, {
@@ -646,18 +654,22 @@ shinyServer(
       show_dollars(stop_import_value_paragraph_min_year())
     })
     
-    top_import_bilateral_share_paragraph_min_year <- eventReactive(input$go, {
-      top_import_bilateral_share_1 <- top_imports_exports_total() %>% 
+    top_import_bilateral_value_paragraph_min_year <- eventReactive(input$go, {
+      top_imports_exports_total() %>% 
         filter(year == min(y())) %>% 
         select(top_import_trade_value_usd) %>% 
         as.numeric()
-      
-      top_import_bilateral_share_2 <- sum(
-        data_aggregated() %>% filter(year == min(y())) %>% select(import_value_usd) %>% pull(),
-        na.rm = T
-      )
-      
-      top_import_bilateral_share_1 / top_import_bilateral_share_2
+    })
+    
+    top_import_bilateral_value_paragraph_min_year_2 <- eventReactive(input$go, {
+      show_dollars(top_import_bilateral_value_paragraph_min_year())
+    })
+    
+    top_import_bilateral_share_paragraph_min_year <- eventReactive(input$go, {
+      top_import_bilateral_value_paragraph_min_year() /
+        sum(
+          data_aggregated() %>% filter(year == min(y())) %>% select(import_value_usd) %>% pull(), na.rm = T
+        )
     })
     
     top_import_bilateral_share_paragraph_min_year_2 <- eventReactive(input$go, {
@@ -700,18 +712,22 @@ shinyServer(
       show_dollars(top_import_value_paragraph_max_year())
     })
     
-    top_import_bilateral_share_paragraph_max_year <- eventReactive(input$go, {
-      top_import_bilateral_share_1 <- top_imports_exports_total() %>% 
+    top_import_bilateral_value_paragraph_max_year <- eventReactive(input$go, {
+      top_imports_exports_total() %>% 
         filter(year == max(y())) %>% 
         select(top_import_trade_value_usd) %>% 
         as.numeric()
-      
-      top_import_bilateral_share_2 <- sum(
-        data_aggregated() %>% filter(year == max(y())) %>% select(import_value_usd) %>% pull(),
-        na.rm = T
-      )
-      
-      top_import_bilateral_share_1 / top_import_bilateral_share_2
+    })
+    
+    top_import_bilateral_value_paragraph_max_year_2 <- eventReactive(input$go, {
+      show_dollars(top_import_bilateral_value_paragraph_max_year())
+    })
+    
+    top_import_bilateral_share_paragraph_max_year <- eventReactive(input$go, {
+      top_import_bilateral_value_paragraph_max_year() /
+        sum(
+          data_aggregated() %>% filter(year == max(y())) %>% select(import_value_usd) %>% pull(), na.rm = T
+        )
     })
     
     top_import_bilateral_share_paragraph_max_year_2 <- eventReactive(input$go, {
@@ -1221,7 +1237,7 @@ shinyServer(
 
     output$exports_box_min_year <- renderValueBox({
       customValueBox(
-        h4(glue::glue("Most exported product in { min(y()) }: { top_export_name_paragraph_min_year() }")),
+        h4(glue::glue("Most exported product in { min(y()) }: { top_export_name_paragraph_min_year() } ({ top_export_bilateral_value_paragraph_min_year_2() })")),
         exports_paragraph_min_year(),
         icon = icon("chart-line"),
         color = "valueboxgreen1"
@@ -1230,7 +1246,7 @@ shinyServer(
     
     output$exports_box_max_year <- renderValueBox({
       customValueBox(
-        h4(glue::glue("Most exported product in { max(y()) }: { top_export_name_paragraph_max_year() }")),
+        h4(glue::glue("Most exported product in { max(y()) }: { top_export_name_paragraph_max_year() } ({ top_export_bilateral_value_paragraph_max_year_2() })")),
         exports_paragraph_max_year(),
         icon = icon("chart-line"),
         color = "valueboxgreen2"
@@ -1255,7 +1271,7 @@ shinyServer(
 
     output$imports_box_min_year <- renderValueBox({
       customValueBox(
-        h4(glue::glue("Most imported product in { min(y()) }: { top_import_name_paragraph_min_year() }")),
+        h4(glue::glue("Most imported product in { min(y()) }: { top_import_name_paragraph_min_year() } ({ top_import_bilateral_value_paragraph_min_year_2() })")),
         imports_paragraph_min_year(),
         icon = icon("chart-line"),
         color = "valueboxred1"
@@ -1264,7 +1280,7 @@ shinyServer(
     
     output$imports_box_max_year <- renderValueBox({
       customValueBox(
-        h4(glue::glue("Most imported product in { max(y()) }: { top_import_name_paragraph_max_year() }")),
+        h4(glue::glue("Most imported product in { max(y()) }: { top_import_name_paragraph_max_year() } ({ top_import_bilateral_value_paragraph_max_year_2() })")),
         imports_paragraph_max_year(),
         icon = icon("chart-line"),
         color = "valueboxred2"
