@@ -961,7 +961,7 @@ shinyServer(
       switch(table_aggregated(),
              "yr" = glue::glue("Represented { top_import_total_share_paragraph_min_year_2() } of the total imports of { r_add_the() } { r_name() } from the World."),
              
-             "yrp" = glue::glue("Represented { top_import_total_share_paragraph_min_year_2() } of the total imports of { r_add_the() } { r_name() } to the World,
+             "yrp" = glue::glue("Represented { top_import_total_share_paragraph_min_year_2() } of the total imports of { r_add_the() } { r_name() } from the World,
                                 and { top_import_bilateral_share_paragraph_min_year_2() } of the total imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() }.")
       )
     })
