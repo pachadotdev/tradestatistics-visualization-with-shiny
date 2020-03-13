@@ -7,6 +7,18 @@ shinyServer(
     y <- reactive({
       (min(input$y[1], input$y[2])):(max(input$y[1], input$y[2]))
     })
+    
+    observe({
+      if(length(y()) > 10) {
+        updateSliderInput(session, "y", value = c(max(y()) - 9, max(y())))
+      }
+    })
+    
+    observe({
+      if(length(y()) < 2) {
+        updateSliderInput(session, "y", value = c(max(y()) - 1, max(y())))
+      }
+    })
 
     # This section removed non-existing countries for the selected years,
     # unfortunately this resets the url and removes the selection
