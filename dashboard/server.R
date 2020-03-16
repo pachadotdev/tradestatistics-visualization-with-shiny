@@ -3,7 +3,7 @@
 shinyServer(
   function(input, output, session) {
     # Input -------------------------------------------------------------------
-
+    
     y <- reactive({
       (min(input$y[1], input$y[2])):(max(input$y[1], input$y[2]))
     })
@@ -19,7 +19,7 @@ shinyServer(
         updateSliderInput(session, "y", value = c(max(y()) - 1, max(y())))
       }
     })
-
+    
     # This section removed non-existing countries for the selected years,
     # unfortunately this resets the url and removes the selection
     # therefore I prefer to have a shareable url
@@ -61,25 +61,25 @@ shinyServer(
     r_iso <- reactive({
       input$r
     })
-
+    
     r_name <- reactive({
       reporters_to_display %>%
         filter(available_reporters_iso == input$r) %>%
         select(available_reporters_names) %>%
         as.character()
     })
-
+    
     p_iso <- reactive({
       input$p
     })
-
+    
     p_name <- reactive({
       reporters_to_display %>%
         filter(available_reporters_iso == input$p) %>%
         select(available_reporters_names) %>%
         as.character()
     })
-
+    
     table_aggregated <- reactive({
       if (p_iso() == "all") {
         "yr"
@@ -87,17 +87,17 @@ shinyServer(
         "yrp"
       }
     })
-
+    
     table_detailed <- reactive({
       if (p_iso() == "all") {
-        "yrc"
+        "yro"
       } else {
-        "yrpc"
+        "yrpo"
       }
     })
     
     # Title -------------------------------------------------------------------
-
+    
     r_add_the <- reactive({
       if (substr(r_name(), 1, 6) == "United" | substr(r_name(), 1, 3) == "USA") {
         "the"
@@ -129,7 +129,7 @@ shinyServer(
         ""
       }
     })
-
+    
     initial_title <- function() {
       x <- c("Data", "Data visualization", "Computing", "Statistics")
       x_sample <- sample(x,1)
@@ -166,27 +166,27 @@ shinyServer(
       hide("contents")
       hide("share_download_cite")
       show("loading")
-
+      
       switch(
         table_detailed(),
-        "yrc" = glue::glue("<h1>{ r_add_proper_the() } { r_name() } multilateral trade between { min(y()) } and { max(y()) }</h1>"),
-        "yrpc" = glue::glue("<h1>{ r_add_proper_the() } { r_name() } and { p_add_the() } { p_name() } between { min(y()) } and { max(y()) }</h1>")
+        "yro" = glue::glue("<h1>{ r_add_proper_the() } { r_name() } multilateral trade between { min(y()) } and { max(y()) }</h1>"),
+        "yrpo" = glue::glue("<h1>{ r_add_proper_the() } { r_name() } and { p_add_the() } { p_name() } between { min(y()) } and { max(y()) }</h1>")
       )
     })
-
+    
     title_legend <- eventReactive(input$go, {
       "The information displayed here is based on <a href='https://comtrade.un.org/'>UN COMTRADE</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
       of restrictions and applicable licenses."
     })
-
+    
     # Format ------------------------------------------------------------------
-
+    
     format <- reactive({
       input$format
     })
-
+    
     # Data --------------------------------------------------------------------
-
+    
     data_aggregated <- eventReactive(input$go, {
       ots_create_tidy_data(
         years = y(),
@@ -198,19 +198,21 @@ shinyServer(
         use_localhost = use_localhost
       )
     })
-
+    
     data_detailed <- eventReactive(input$go, {
-      ots_create_tidy_data(
+      d <- ots_create_tidy_data(
         years = y(),
         reporters = r_iso(),
         partners = p_iso(),
-        include_shortnames = TRUE,
+        include_shortnames = FALSE,
         include_communities = TRUE,
         table = table_detailed(),
         use_localhost = use_localhost
       )
+      
+      return(d)
     })
-
+    
     trade_rankings <- eventReactive(input$go, {
       ots_create_tidy_data(
         years = c(min(y()),max(y())),
@@ -242,7 +244,7 @@ shinyServer(
           export_value_usd_bilateral = export_value_usd, 
           import_value_usd_bilateral = import_value_usd
         ) %>% 
-
+        
         inner_join(
           ots_create_tidy_data(
             years = c(min(y()),max(y())),
@@ -282,7 +284,7 @@ shinyServer(
         reporters = r_iso(),
         include_shortnames = FALSE,
         include_communities = FALSE,
-        table = "yr_short",
+        table = "yr",
         use_localhost = use_localhost
       ) %>% 
         
@@ -309,7 +311,7 @@ shinyServer(
     })
     
     # Exports elements for texts ----------------------------------------------
-
+    
     exports_value_paragraph_min_year <- eventReactive(input$go, {
       trade_rankings() %>% 
         filter(
@@ -540,7 +542,7 @@ shinyServer(
     })
     
     # Imports elements for texts ----------------------------------------------
-
+    
     imports_value_paragraph_min_year <- eventReactive(input$go, {
       trade_rankings() %>% 
         filter(
@@ -785,7 +787,7 @@ shinyServer(
     })
     
     # Trade -------------------------------------------------------------------
-
+    
     trade_table_aggregated <- eventReactive(input$go, {
       data_aggregated() %>%
         select(year, export_value_usd, import_value_usd)
@@ -794,7 +796,7 @@ shinyServer(
     trade_subtitle <- eventReactive(input$go, {
       "<hr/>Exports and Imports, grouped by year"
     })
-
+    
     trade_paragraph_exports_1 <- eventReactive(input$go, {
       switch(table_aggregated(),
              "yr" = glue::glue("Exports: From { exports_total_value_paragraph_min_year_2() } in { min(y()) } to { exports_total_value_paragraph_max_year_2() } in { max(y()) }"),
@@ -860,13 +862,13 @@ shinyServer(
         hc_title(text = trade_exchange_lines_title()) %>% 
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
-
+    
     # Exports -----------------------------------------------------------------
-
+    
     exports_table_detailed_min_year <- eventReactive(input$go, {
       data_detailed() %>%
         filter(year == min(y())) %>%
-        select(community_name, community_code, community_color, product_shortname_english, export_value_usd) %>%
+        select(community_name, community_code, community_color, export_value_usd) %>%
         filter(export_value_usd > 0)
     })
     
@@ -895,16 +897,13 @@ shinyServer(
     exports_title_min_year <- eventReactive(input$go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Exports of { r_add_the() } { r_name() } to the rest of the World in { min(y()) }"),
-        "yrpc" = glue::glue("Exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } in { min(y()) }")
+        "yro" = glue::glue("Exports of { r_add_the() } { r_name() } to the rest of the World in { min(y()) }"),
+        "yrpo" = glue::glue("Exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } in { min(y()) }")
       )
     })
-
+    
     exports_treemap_detailed_min_year <- eventReactive(input$go, {
       d <- exports_table_detailed_min_year() %>% 
-        group_by(community_name, community_color) %>% 
-        summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>% 
-        ungroup() %>% 
         mutate(
           share = export_value_usd / sum(export_value_usd),
           community_name = ifelse(share < 0.01, "Others <1% each", community_name),
@@ -922,7 +921,7 @@ shinyServer(
           name = community_name, 
           color = community_color
         )
-    
+      
       highchart() %>%
         hc_chart(type = "treemap") %>% 
         hc_xAxis(categories = d$name) %>% 
@@ -931,27 +930,24 @@ shinyServer(
         hc_title(text = exports_title_min_year()) %>% 
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
-
+    
     exports_title_max_year <- eventReactive(input$go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Exports of { r_add_the() } { r_name() } to the rest of the World { max(y()) }"),
-        "yrpc" = glue::glue("Exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } in { max(y()) }")
+        "yro" = glue::glue("Exports of { r_add_the() } { r_name() } to the rest of the World { max(y()) }"),
+        "yrpo" = glue::glue("Exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } in { max(y()) }")
       )
     })
-
+    
     exports_table_detailed_max_year <- eventReactive(input$go, {
       data_detailed() %>%
         filter(year == max(y())) %>%
-        select(community_name, community_code, community_color, product_shortname_english, export_value_usd) %>%
+        select(community_name, community_code, community_color, export_value_usd) %>%
         filter(export_value_usd > 0)
     })
-
+    
     exports_treemap_detailed_max_year <- eventReactive(input$go, {
       d <- exports_table_detailed_max_year() %>% 
-        group_by(community_name, community_color) %>% 
-        summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>% 
-        ungroup() %>% 
         mutate(
           share = export_value_usd / sum(export_value_usd),
           community_name = ifelse(share < 0.01, "Others <1% each", community_name),
@@ -978,9 +974,9 @@ shinyServer(
         hc_title(text = exports_title_max_year()) %>% 
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
-
+    
     # Imports -----------------------------------------------------------------
-
+    
     imports_subtitle <- eventReactive(input$go, {
       "<hr/>Imports, grouped by product community"
     })
@@ -1006,31 +1002,20 @@ shinyServer(
     imports_title_min_year <- eventReactive(input$go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { min(y()) }"),
-        "yrpc" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { min(y()) }")
+        "yro" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { min(y()) }"),
+        "yrpo" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { min(y()) }")
       )
     })
-
+    
     imports_table_detailed_min_year <- eventReactive(input$go, {
       data_detailed() %>%
         filter(year == min(y())) %>%
-        select(community_name, community_code, community_color, product_shortname_english, import_value_usd) %>%
+        select(community_name, community_code, community_color, import_value_usd) %>%
         filter(import_value_usd > 0)
     })
-
+    
     imports_treemap_detailed_min_year <- eventReactive(input$go, {
       d <- imports_table_detailed_min_year() %>% 
-        group_by(community_name, community_color) %>% 
-        summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>% 
-        ungroup() %>% 
-        mutate(
-          share = import_value_usd / sum(import_value_usd),
-          community_name = ifelse(share < 0.01, "Others <1% each", community_name),
-          community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
-        ) %>% 
-        group_by(community_name, community_color) %>% 
-        summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>% 
-        ungroup() %>% 
         mutate(
           share = import_value_usd / sum(import_value_usd),
           community_name = ifelse(share < 0.01, "Others <1% each", community_name),
@@ -1061,39 +1046,36 @@ shinyServer(
         hc_title(text = imports_title_min_year()) %>% 
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
-
+    
     imports_title_max_year <- eventReactive(input$go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { max(y()) }"),
-        "yrpc" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { max(y()) }")
+        "yro" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { max(y()) }"),
+        "yrpo" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { max(y()) }")
       )
     })
-
+    
     imports_title_max_year <- eventReactive(input$go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { max(y()) }"),
-        "yrpc" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { max(y()) }")
+        "yro" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { max(y()) }"),
+        "yrpo" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { max(y()) }")
       )
     })
-
+    
     imports_table_detailed_max_year <- eventReactive(input$go, {
       data_detailed() %>%
         filter(year == max(y())) %>%
-        select(community_name, community_code, community_color, product_shortname_english, import_value_usd) %>%
+        select(community_name, community_code, community_color, import_value_usd) %>%
         filter(import_value_usd > 0)
     })
-
+    
     imports_treemap_detailed_max_year <- eventReactive(input$go, {
       hide("loading")
       show("contents")
       show("share_download_cite")
       
       d <- imports_table_detailed_max_year() %>% 
-        group_by(community_name, community_color) %>% 
-        summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>% 
-        ungroup() %>% 
         mutate(
           share = import_value_usd / sum(import_value_usd),
           community_name = ifelse(share < 0.01, "Others <1% each", community_name),
@@ -1120,9 +1102,9 @@ shinyServer(
         hc_title(text = imports_title_max_year()) %>% 
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
-
+    
     # URL ---------------------------------------------------------------------
-
+    
     url_trade <- eventReactive(input$go, {
       glue::glue(
         "{ site_url }/embed-trade/?_inputs_&y1={ min(y()) }&y2={ max(y()) }&r=%22{ r_iso() }%22&p=%22{ p_iso() }%22&go=1"
@@ -1162,32 +1144,32 @@ shinyServer(
         "{ site_url }/dashboard/?_inputs_&y=[{ min(y()) },{ max(y()) }]&r=%22{ r_iso() }%22&p=%22{ p_iso() }%22&go=1"
       )
     })
-
+    
     # Cite --------------------------------------------------------------------
-
+    
     cite_subtitle <- eventReactive(input$go, {
       "Chicago citation"
     })
-
+    
     cite <- eventReactive(input$go, {
       sprintf(
-        "Open Trade Statistics. \"OTS BETA DASHBOARD\". <i>Open Trade Statistics</i>. Accessed %s %s, %s. https://%s/",
+        "Open Trade Statistics. \"OTS BETA DASHBOARD\". <i>Open Trade Statistics</i>. Accessed %s %s, %s. %s/",
         months(Sys.Date()),
         lubridate::day(Sys.Date()),
         lubridate::year(Sys.Date()),
         site_url
       )
     })
-
+    
     cite_bibtex_subtitle <- eventReactive(input$go, {
       "BibTeX entry"
     })
-
+    
     cite_bibtex <- eventReactive(input$go, {
       sprintf(
         "@misc{open_trade_statistics_2019,
               title = {OTS BETA DASHBOARD},
-              url = {https://%s/},
+              url = {%s/},
               author = {{Open Trade Statistics}},
               publisher = {Open Trade Statistics},
               year = {2019},
@@ -1200,9 +1182,9 @@ shinyServer(
         lubridate::year(Sys.Date())
       )
     })
-
+    
     # Title output ------------------------------------------------------------
-
+    
     output$title <- renderText({
       if (input$go == 0) {
         initial_title()
@@ -1210,15 +1192,15 @@ shinyServer(
         title()
       }
     })
-
+    
     output$title_legend <- renderText({
       title_legend()
     })
-
+    
     # Trade output ------------------------------------------------------------
-
+    
     output$trade_subtitle <- renderText(trade_subtitle())
-
+    
     output$trade_box_exports <- renderValueBox({
       customValueBox(
         h4(trade_paragraph_exports_1()),
@@ -1238,15 +1220,15 @@ shinyServer(
     })
     
     output$trade_title <- renderText(trade_title())
-
+    
     output$trade_exchange_lines_aggregated <- renderHighchart({
       trade_exchange_lines_aggregated()
     })
-
+    
     # Exports output ----------------------------------------------------------
-
+    
     output$exports_subtitle <- renderText(exports_subtitle())
-
+    
     output$exports_box_min_year <- renderValueBox({
       customValueBox(
         h4(glue::glue("Most exported product in { min(y()) }: { top_export_name_paragraph_min_year() } ({ top_export_bilateral_value_paragraph_min_year_2() })")),
@@ -1266,21 +1248,21 @@ shinyServer(
     })
     
     output$exports_title_min_year <- renderText(exports_title_min_year())
-
+    
     output$exports_treemap_detailed_min_year <- renderHighchart({
       exports_treemap_detailed_min_year()
     })
-
+    
     output$exports_title_max_year <- renderText(exports_title_max_year())
-
+    
     output$exports_treemap_detailed_max_year <- renderHighchart({
       exports_treemap_detailed_max_year()
     })
-
+    
     # Imports output ----------------------------------------------------------
-
+    
     output$imports_subtitle <- renderText(imports_subtitle())
-
+    
     output$imports_box_min_year <- renderValueBox({
       customValueBox(
         h4(glue::glue("Most imported product in { min(y()) }: { top_import_name_paragraph_min_year() } ({ top_import_bilateral_value_paragraph_min_year_2() })")),
@@ -1300,19 +1282,19 @@ shinyServer(
     })
     
     output$imports_title_min_year <- renderText(imports_title_min_year())
-
+    
     output$imports_treemap_detailed_min_year <- renderHighchart({
       imports_treemap_detailed_min_year()
     })
-
+    
     output$imports_title_max_year <- renderText(imports_title_max_year())
-
+    
     output$imports_treemap_detailed_max_year <- renderHighchart({
       imports_treemap_detailed_max_year()
     })
-
+    
     # URL and downloads output ------------------------------------------------
-
+    
     output$url_trade <- eventReactive(input$go, {
       glue::glue(
         "
@@ -1364,7 +1346,7 @@ shinyServer(
         "
       )
     })
-
+    
     output$url_imports_max_year <- eventReactive(input$go, {
       glue::glue(
         "
@@ -1381,7 +1363,7 @@ shinyServer(
     output$share_download_cite_subtitle <- renderText({
       share_download_cite_subtitle()
     })
-
+    
     output$url <- eventReactive(input$go, {
       glue::glue(
         "
@@ -1395,10 +1377,10 @@ shinyServer(
         "
       )
     })
-
+    
     output$download_aggregated <- downloadHandler(
       filename = function() {
-        glue::glue("{ table_aggregated() }_{ min(y()) }_{ max(y()) }.{ format() }")
+        glue::glue("{ table_aggregated() }_{ r_iso() }_{ p_iso() }_{ min(y()) }_{ max(y()) }.{ format() }")
       },
       content = function(filename) {
         if (format() == "csv") {
@@ -1416,10 +1398,10 @@ shinyServer(
       },
       contentType = "application/zip"
     )
-
+    
     output$download_detailed <- downloadHandler(
       filename = function() {
-        glue::glue("{ table_detailed() }_{ min(y()) }_{ max(y()) }.{ format() }")
+        glue::glue("{ table_detailed() }_{ r_iso() }_{ p_iso() }_{ min(y()) }_{ max(y()) }.{ format() }")
       },
       content = function(filename) {
         if (format() == "csv") {
@@ -1437,27 +1419,27 @@ shinyServer(
       },
       contentType = "application/zip"
     )
-
+    
     # Cite output -------------------------------------------------------------
-
+    
     output$cite_subtitle <- renderText({
       cite_subtitle()
     })
-
+    
     output$cite <- renderText({
       cite()
     })
-
+    
     output$cite_bibtex_subtitle <- renderText({
       cite_bibtex_subtitle()
     })
-
+    
     output$cite_bibtex <- renderText({
       cite_bibtex()
     })
-
+    
     # Bookmarking -------------------------------------------------------------
-
+    
     observe({
       # Trigger this observer every time an input changes
       # strip shiny related URL parameters
@@ -1466,7 +1448,7 @@ shinyServer(
                            "UrlExportsMaxYear", "UrlExportsMinYear", "UrlImportsMaxYear", "UrlImportsMinYear", "format", "format-selectized"))
       session$doBookmark()
     })
-
+    
     onBookmarked(function(url) {
       updateQueryString(url)
     })
