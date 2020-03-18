@@ -40,17 +40,9 @@ shinyServer(
 
     table_aggregated <- reactive({
       if (p_iso() == "all") {
-        "yr"
+        "yr-short"
       } else {
         "yrp"
-      }
-    })
-
-    table_detailed <- reactive({
-      if (p_iso() == "all") {
-        "yrc"
-      } else {
-        "yrpc"
       }
     })
 
@@ -86,7 +78,7 @@ shinyServer(
     
     trade_exchange_title <- eventReactive(input$go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("{ r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
+             "yr-short" = glue::glue("{ r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
              "yrp" = glue::glue("{ r_name() } and { p_name() } exchange between { min(y()) } and { max(y()) }")
       )
     })

@@ -30,19 +30,11 @@ shinyServer(
         as.character()
     })
 
-    table_aggregated <- reactive({
-      if (p_iso() == "all") {
-        "yr"
-      } else {
-        "yrp"
-      }
-    })
-
     table_detailed <- reactive({
       if (p_iso() == "all") {
-        "yrc"
+        "yrc-ca"
       } else {
-        "yrpc"
+        "yrpc-ca"
       }
     })
 
@@ -65,8 +57,8 @@ shinyServer(
         years = y(),
         reporters = r_iso(),
         partners = p_iso(),
-        include_shortnames = TRUE,
-        include_communities = TRUE,
+        include_shortnames = FALSE,
+        include_communities = FALSE,
         table = table_detailed()
       ) %>% 
         filter(import_value_usd > 0) %>% 
@@ -95,8 +87,8 @@ shinyServer(
     imports_title <- eventReactive(input$go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Imports of { r_name() } from the rest of the world in { y() }"),
-        "yrpc" = glue::glue("Imports of { r_name() } from { p_name() } in { y() }")
+        "yrc-ca" = glue::glue("Imports of { r_name() } from the rest of the world in { y() }"),
+        "yrpc-ca" = glue::glue("Imports of { r_name() } from { p_name() } in { y() }")
       )
     })
     

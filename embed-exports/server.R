@@ -30,19 +30,11 @@ shinyServer(
         as.character()
     })
 
-    table_aggregated <- reactive({
-      if (p_iso() == "all") {
-        "yr"
-      } else {
-        "yrp"
-      }
-    })
-
     table_detailed <- reactive({
       if (p_iso() == "all") {
-        "yrc"
+        "yrc-ca"
       } else {
-        "yrpc"
+        "yrpc-ca"
       }
     })
 
@@ -66,7 +58,7 @@ shinyServer(
         reporters = r_iso(),
         partners = p_iso(),
         include_shortnames = FALSE,
-        include_communities = TRUE,
+        include_communities = FALSE,
         table = table_detailed()
       ) %>% 
         filter(export_value_usd > 0) %>% 
@@ -86,8 +78,8 @@ shinyServer(
     exports_title <- eventReactive(input$go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Exports of { r_name() } to the rest of the world in { y() }"),
-        "yrpc" = glue::glue("Exports of { r_name() } to { p_name() } in { y() }")
+        "yrc-ca" = glue::glue("Exports of { r_name() } to the rest of the world in { y() }"),
+        "yrpc-ca" = glue::glue("Exports of { r_name() } to { p_name() } in { y() }")
       )
     })
     
