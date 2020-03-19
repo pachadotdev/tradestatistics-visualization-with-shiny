@@ -9,7 +9,7 @@ library(tradestatistics)
 
 # URLs --------------------------------------------------------------------
 
-running_on_server <- F
+running_on_server <- T
 
 if (running_on_server == TRUE) {
   base_url <- "http://localhost:8080"
@@ -118,22 +118,22 @@ styles <- list(
 hc_export_menu <- list(
   list(
     text = "Download PNG image",
-    onclick = JS("function () { 
+    onclick = JS("function () {
                   this.exportChart({ type: 'image/png' }); }")
   ),
   list(
     text = "Download JPEG image",
-    onclick = JS("function () { 
+    onclick = JS("function () {
                   this.exportChart({ type: 'image/jpeg' }); }")
   ),
   list(
     text = "Download SVG vector image",
-    onclick = JS("function () { 
+    onclick = JS("function () {
                   this.exportChart({ type: 'image/svg+xml' }); }")
   ),
   list(
     text = "Download PDF document",
-    onclick = JS("function () { 
+    onclick = JS("function () {
                   this.exportChart({ type: 'application/pdf' }); }")
   )
 )

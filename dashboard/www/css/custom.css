@@ -75,4 +75,5 @@ blockquote.twitter-tweet a:focus {
   color: #000000;
   background-color: #f9fbfc;
   z-index: 800;
+  border-left: 1px solid #d8dee9;
 }
