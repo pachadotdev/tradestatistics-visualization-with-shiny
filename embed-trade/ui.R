@@ -4,10 +4,10 @@ shinyUI(
   function(request) {
     fluidPage(
       theme = "css/custom.min.css",
-      
+
       fluidRow(
         useShinyjs(),
-        
+
         div(
           id = "content",
           column(
@@ -18,14 +18,14 @@ shinyUI(
             p("Source: Open Trade Statistics.")
           )
         ),
-        
+
         hidden(
           div(
             id = "controls",
             column(
               4,
               # Controls ----------------------------------------------------------------
-              
+
               selectInput(
                 "y1",
                 "Year 1:",
@@ -33,7 +33,7 @@ shinyUI(
                 selected = NULL,
                 selectize = FALSE
               ),
-              
+
               selectInput(
                 "y2",
                 "Year 2:",
@@ -42,7 +42,7 @@ shinyUI(
                 selectize = FALSE
               )
             ),
-            
+
             column(
               4,
               selectInput(
@@ -53,7 +53,7 @@ shinyUI(
                 selectize = FALSE
               )
             ),
-            
+
             column(
               4,
               selectInput(
@@ -64,7 +64,7 @@ shinyUI(
                 selectize = FALSE
               )
             ),
-            
+
             column(
               12,
               align = "center",
@@ -72,7 +72,7 @@ shinyUI(
             )
           )
         ),
-        
+
         tags$footer(
           tags$link(rel = "shortcut icon", href = "https://tradestatistics.io/images/favicon.ico"),
           tags$script(src = "js/copy-url.js")

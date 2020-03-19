@@ -29,9 +29,10 @@ countries <- ots_countries %>%
 # Paragraphs format -------------------------------------------------------
 
 show_dollars <- function(x) {
-  ifelse(x %/% 10e8 >= 1, 
-         paste0(round(x / 10e8, 2), "B"), 
-         paste0(round(x / 10e5, 2), "M"))
+  ifelse(x %/% 10e8 >= 1,
+    paste0(round(x / 10e8, 2), "B"),
+    paste0(round(x / 10e5, 2), "M")
+  )
 }
 
 show_percentage <- function(x) {
@@ -45,20 +46,24 @@ growth_rate <- function(p, q, t) {
 # Custom value boxes ------------------------------------------------------
 
 customValueBox <- function(value, subtitle, icon = NULL, color = "aqua", width = 4,
-                     href = NULL, inputId = NULL) {
-  boxContent <- div(id = inputId, class = paste0("small-box bg-", color),
-                    div(class = "inner",
-                        h3(class = "value-box-value", value),
-                        p(subtitle)
-                    ),
-                    if (!is.null(icon)) div(class = "icon-large", icon)
+                           href = NULL, inputId = NULL) {
+  boxContent <- div(
+    id = inputId, class = paste0("small-box bg-", color),
+    div(
+      class = "inner",
+      h3(class = "value-box-value", value),
+      p(subtitle)
+    ),
+    if (!is.null(icon)) div(class = "icon-large", icon)
   )
-  
-  if (!is.null(href))
+
+  if (!is.null(href)) {
     boxContent <- a(href = href, boxContent)
-  
-  div(class = if (!is.null(width)) paste0("col-sm-", width),
-      boxContent
+  }
+
+  div(
+    class = if (!is.null(width)) paste0("col-sm-", width),
+    boxContent
   )
 }
 
@@ -111,16 +116,24 @@ styles <- list(
 # Highcharts --------------------------------------------------------------
 
 hc_export_menu <- list(
-  list(text="Download PNG image",
-       onclick=JS("function () { 
-                  this.exportChart({ type: 'image/png' }); }")),
-  list(text="Download JPEG image",
-       onclick=JS("function () { 
-                  this.exportChart({ type: 'image/jpeg' }); }")),
-  list(text="Download SVG vector image",
-       onclick=JS("function () { 
-                  this.exportChart({ type: 'image/svg+xml' }); }")),
-  list(text="Download PDF document",
-       onclick=JS("function () { 
-                  this.exportChart({ type: 'application/pdf' }); }"))
-       )
+  list(
+    text = "Download PNG image",
+    onclick = JS("function () { 
+                  this.exportChart({ type: 'image/png' }); }")
+  ),
+  list(
+    text = "Download JPEG image",
+    onclick = JS("function () { 
+                  this.exportChart({ type: 'image/jpeg' }); }")
+  ),
+  list(
+    text = "Download SVG vector image",
+    onclick = JS("function () { 
+                  this.exportChart({ type: 'image/svg+xml' }); }")
+  ),
+  list(
+    text = "Download PDF document",
+    onclick = JS("function () { 
+                  this.exportChart({ type: 'application/pdf' }); }")
+  )
+)

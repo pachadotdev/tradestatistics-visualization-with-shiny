@@ -1,5 +1,5 @@
 # Deploy a Prod-Ready, Robust Shiny Application.
-# 
+#
 # 4. Test my package
 
 devtools::test()

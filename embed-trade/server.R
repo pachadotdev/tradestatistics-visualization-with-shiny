@@ -11,11 +11,11 @@ shinyServer(
     y2 <- reactive({
       input$y2
     })
-    
+
     y <- reactive({
       input$y1:input$y2
     })
-      
+
     r_iso <- reactive({
       input$r
     })
@@ -55,7 +55,7 @@ shinyServer(
         ""
       }
     })
-    
+
     title <- eventReactive(input$go, {
       glue::glue("Trade between { text_add_the() } { r_name() } and { text_add_the() } { p_name() } from { y1() } to { y2() }, aggregated")
     })
@@ -75,11 +75,11 @@ shinyServer(
       data_aggregated() %>%
         select(year, export_value_usd, import_value_usd)
     })
-    
+
     trade_exchange_title <- eventReactive(input$go, {
       switch(table_aggregated(),
-             "yr-short" = glue::glue("{ r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
-             "yrp" = glue::glue("{ r_name() } and { p_name() } exchange between { min(y()) } and { max(y()) }")
+        "yr-short" = glue::glue("{ r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
+        "yrp" = glue::glue("{ r_name() } and { p_name() } exchange between { min(y()) } and { max(y()) }")
       )
     })
 
@@ -94,10 +94,10 @@ shinyServer(
           `Year` = year,
           group = key
         )
-      
-      hchart(d, "line", hcaes(x = `Year`, y = `Trade Value`, group = group)) %>% 
-        hc_colors(c("#4d6fd0", "#bf3251")) %>% 
-        hc_title(text = trade_exchange_title()) %>% 
+
+      hchart(d, "line", hcaes(x = `Year`, y = `Trade Value`, group = group)) %>%
+        hc_colors(c("#4d6fd0", "#bf3251")) %>%
+        hc_title(text = trade_exchange_title()) %>%
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
 

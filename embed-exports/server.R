@@ -47,7 +47,7 @@ shinyServer(
         ""
       }
     })
-    
+
     title <- eventReactive(input$go, {
       glue::glue("Exports of { text_add_the() } { r_name() } from { text_add_the() } { p_name() } in { y() }, grouped by product community")
     })
@@ -60,18 +60,18 @@ shinyServer(
         include_shortnames = FALSE,
         include_communities = FALSE,
         table = table_detailed()
-      ) %>% 
-        filter(export_value_usd > 0) %>% 
-        group_by(community_name, community_color) %>% 
-        summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>% 
-        ungroup() %>% 
+      ) %>%
+        filter(export_value_usd > 0) %>%
+        group_by(community_name, community_color) %>%
+        summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>%
+        ungroup() %>%
         mutate(
           share = export_value_usd / sum(export_value_usd),
           community_name = ifelse(share < 0.01, "Others >1% each", community_name),
           community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
-        ) %>% 
-        group_by(community_name, community_color) %>% 
-        summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>% 
+        ) %>%
+        group_by(community_name, community_color) %>%
+        summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>%
         ungroup()
     })
 
@@ -82,29 +82,32 @@ shinyServer(
         "yrpc-ca" = glue::glue("Exports of { r_name() } to { p_name() } in { y() }")
       )
     })
-    
+
     exports_treemap_detailed <- eventReactive(input$go, {
-      d <- data_detailed() %>% 
+      d <- data_detailed() %>%
         mutate(
-          share = paste0(round(100 * export_value_usd / sum(export_value_usd), 2),"%"),
+          share = paste0(round(100 * export_value_usd / sum(export_value_usd), 2), "%"),
           community_name = paste0(community_name, "<br>", share)
-        ) %>% 
+        ) %>%
         rename(
           value = export_value_usd,
-          name = community_name, 
+          name = community_name,
           color = community_color
         )
-      
+
       highchart() %>%
-        hc_chart(type = "treemap") %>% 
-        hc_xAxis(categories = d$name) %>% 
-        hc_add_series(d, 
-                      name = "Export Value USD", 
-                      showInLegend = FALSE,
-                      dataLabels = list(verticalAlign = "top",
-                                        align = "left",
-                                        style = list(textOutline = FALSE))) %>% 
-        hc_title(text = exports_title()) %>% 
+        hc_chart(type = "treemap") %>%
+        hc_xAxis(categories = d$name) %>%
+        hc_add_series(d,
+          name = "Export Value USD",
+          showInLegend = FALSE,
+          dataLabels = list(
+            verticalAlign = "top",
+            align = "left",
+            style = list(textOutline = FALSE)
+          )
+        ) %>%
+        hc_title(text = exports_title()) %>%
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
 
