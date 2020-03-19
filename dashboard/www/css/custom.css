@@ -1,7 +1,12 @@
 @import url('https://code.cdn.mozilla.net/fonts/fira.css');
-* { font-family: 'Fira Sans', sans-serif; }
 
-.sidebar { color: #333333; }
+* {
+  font-family: 'Fira Sans', sans-serif;
+}
+
+.sidebar {
+  color: #333333;
+}
 
 .btn-icon-right {
   float: right !important;
@@ -56,4 +61,18 @@ blockquote.twitter-tweet a:focus {
 
 .irs-from, .irs-to, .irs-single {
   background: #38598a;
+}
+
+#loading {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100vh;
+  padding-top: 100px;
+  text-align: center;
+  font-size: 100%;
+  color: #000000;
+  background-color: #f9fbfc;
+  z-index: 800;
 }

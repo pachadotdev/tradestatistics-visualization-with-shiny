@@ -1,16 +1,15 @@
 # Packages ----------------------------------------------------------------
 
 library(shiny)
-library(shinyjs)
 library(shinydashboard)
 library(dplyr)
 library(tidyr)
 library(highcharter)
-library(tradestatistics) # from github.com/tradestatistics/tradestatistics
+library(tradestatistics)
 
 # URLs --------------------------------------------------------------------
 
-running_on_server <- T
+running_on_server <- F
 
 if (running_on_server == TRUE) {
   base_url <- "http://localhost:8080"
@@ -46,7 +45,7 @@ growth_rate <- function(p, q, t) {
 # Custom value boxes ------------------------------------------------------
 
 customValueBox <- function(value, subtitle, icon = NULL, color = "aqua", width = 4,
-                     href = NULL, inputId = NULL)
+                           href = NULL, inputId = NULL)
 {
   boxContent <- div(id = inputId, class = paste0("small-box bg-", color),
                     div(class = "inner",
@@ -125,4 +124,4 @@ hc_export_menu <- list(
   list(text="Download PDF document",
        onclick=JS("function () { 
                   this.exportChart({ type: 'application/pdf' }); }"))
-       )
+)

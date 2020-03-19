@@ -22,35 +22,31 @@ shinyUI(
             max = available_years_max,
             value = c(available_years_max - 4, available_years_max),
             sep = "",
-            step = 1,
+            step = 2,
             ticks = FALSE
-
+            
           ),
           
           selectInput(
-              "r",
-              "Reporter:",
-              choices = available_reporters_iso[available_reporters_iso != "all"],
-              selected = "usa",
-              selectize = TRUE
-            ),
+            "r",
+            "Reporter:",
+            choices = available_reporters_iso[available_reporters_iso != "all"],
+            selected = "usa",
+            selectize = TRUE
+          ),
           
-            selectInput(
-              "p",
-              "Partner:",
-              choices = available_reporters_iso,
-              selected = "all",
-              selectize = TRUE
-            ),
-          
-          actionButton("go", "Go!")
+          selectInput(
+            "p",
+            "Partner:",
+            choices = available_reporters_iso,
+            selected = "",
+            selectize = TRUE
+          )
         )
       ),
       
       dashboardBody(
         fluidRow(
-          useShinyjs(),
-          
           div(
             id = "contents",
             
@@ -120,53 +116,52 @@ shinyUI(
             
             # URL and download buttons ------------------------------------------------
             
-            hidden(
-              div(
-                id = "share_download_cite",
-                column(
-                  12,
-                  htmlOutput("share_download_cite_subtitle", container = tags$h2),
-                  br()
+            div(
+              id = "share_download_cite",
+              column(
+                12,
+                htmlOutput("share_download_cite_subtitle", container = tags$h2),
+                br()
+              ),
+              
+              column(
+                12,
+                htmlOutput("url"),
+                br(),
+                br()
+              ),
+              
+              column(
+                12,
+                selectInput(
+                  "format",
+                  "Download data as:",
+                  choices = available_formats,
+                  selected = NULL,
+                  selectize = TRUE
                 ),
                 
-                column(
-                  12,
-                  htmlOutput("url"),
-                  br(),
-                  br()
-                ),
+                downloadButton("download_aggregated", "Aggregated data"),
+                downloadButton("download_detailed", "Detailed data"),
                 
-                column(
-                  12,
-                  selectInput(
-                    "format",
-                    "Download data as:",
-                    choices = available_formats,
-                    selected = NULL,
-                    selectize = TRUE
-                  ),
-                  
-                  downloadButton("download_aggregated", "Aggregated data"),
-                  downloadButton("download_detailed", "Detailed data"),
-                  
-                  br(),
-                  br()
-                ),
-                
-                column(
-                  12,
-                  htmlOutput("cite_subtitle", container = tags$h3),
-                  htmlOutput("cite", container = tags$p),
-                  htmlOutput("cite_bibtex_subtitle", container = tags$h3),
-                  verbatimTextOutput("cite_bibtex")
-                )
+                br(),
+                br()
+              ),
+              
+              column(
+                12,
+                htmlOutput("cite_subtitle", container = tags$h3),
+                htmlOutput("cite", container = tags$p),
+                htmlOutput("cite_bibtex_subtitle", container = tags$h3),
+                verbatimTextOutput("cite_bibtex")
               )
             )
           ),
           
           # Loading ----------------------------------------------------------------
           
-          hidden(
+          conditionalPanel(
+            condition = "$('html').hasClass('shiny-busy')",
             div(
               id = "loading",
               img(src = "img/loading_icon.gif", width = "100"),
