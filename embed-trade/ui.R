@@ -7,7 +7,6 @@ shinyUI(
 
       fluidRow(
         useShinyjs(),
-
         div(
           id = "content",
           column(
@@ -63,12 +62,6 @@ shinyUI(
                 selected = NULL,
                 selectize = FALSE
               )
-            ),
-
-            column(
-              12,
-              align = "center",
-              actionButton("go", "Go!")
             )
           )
         ),

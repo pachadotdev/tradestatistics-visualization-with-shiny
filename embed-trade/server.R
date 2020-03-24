@@ -56,11 +56,11 @@ shinyServer(
       }
     })
 
-    title <- eventReactive(input$go, {
+    title <- reactive({
       glue::glue("Trade between { text_add_the() } { r_name() } and { text_add_the() } { p_name() } from { y1() } to { y2() }, aggregated")
     })
 
-    data_aggregated <- eventReactive(input$go, {
+    data_aggregated <- reactive({
       ots_create_tidy_data(
         years = y(),
         reporters = r_iso(),
@@ -71,19 +71,19 @@ shinyServer(
       )
     })
 
-    trade_table_aggregated <- eventReactive(input$go, {
+    trade_table_aggregated <- reactive({
       data_aggregated() %>%
         select(year, export_value_usd, import_value_usd)
     })
 
-    trade_exchange_title <- eventReactive(input$go, {
+    trade_exchange_title <- reactive({
       switch(table_aggregated(),
         "yr-short" = glue::glue("{ r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
         "yrp" = glue::glue("{ r_name() } and { p_name() } exchange between { min(y()) } and { max(y()) }")
       )
     })
 
-    trade_aggregated <- eventReactive(input$go, {
+    trade_aggregated <- reactive({
       d <- trade_table_aggregated() %>%
         gather(key, value, -year) %>%
         mutate(

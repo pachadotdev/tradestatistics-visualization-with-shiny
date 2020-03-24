@@ -32,59 +32,62 @@ shinyServer(
 
     table_detailed <- reactive({
       if (p_iso() == "all") {
-        "yrc-ca"
+        "yrc-gca"
       } else {
-        "yrpc-ca"
+        "yrpc-gca"
       }
     })
 
     # Data --------------------------------------------------------------------
 
-    text_add_the <- reactive({
-      if (substr(p_name(), 1, 6) == "United" | substr(p_name(), 1, 3) == "USA") {
-        "the "
-      } else {
-        ""
-      }
-    })
-
-    title <- eventReactive(input$go, {
-      glue::glue("Exports of { text_add_the() } { r_name() } from { text_add_the() } { p_name() } in { y() }, grouped by product community")
-    })
-
-    data_detailed <- eventReactive(input$go, {
+    data_detailed <- reactive({
       ots_create_tidy_data(
         years = y(),
         reporters = r_iso(),
         partners = p_iso(),
         include_shortnames = FALSE,
         include_communities = FALSE,
-        table = table_detailed()
-      ) %>%
-        filter(export_value_usd > 0) %>%
-        group_by(community_name, community_color) %>%
-        summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>%
-        ungroup() %>%
-        mutate(
-          share = export_value_usd / sum(export_value_usd),
-          community_name = ifelse(share < 0.01, "Others >1% each", community_name),
-          community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
-        ) %>%
-        group_by(community_name, community_color) %>%
-        summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>%
-        ungroup()
+        table = table_detailed(),
+        use_localhost = use_localhost
+      ) %>% 
+        select(group_name, community_name, community_color, export_value_usd) %>%
+        filter(export_value_usd > 0)
     })
-
-    exports_title <- eventReactive(input$go, {
+    
+    r_add_the <- reactive({
+      if (substr(r_name(), 1, 6) == "United" | substr(r_name(), 1, 3) == "USA") {
+        "the"
+      } else {
+        ""
+      }
+    })
+    
+    p_add_the <- reactive({
+      if (substr(p_name(), 1, 6) == "United" | substr(p_name(), 1, 3) == "USA") {
+        "the"
+      } else {
+        ""
+      }
+    })
+    
+    exports_title <- reactive({
       switch(
         table_detailed(),
-        "yrc-ca" = glue::glue("Exports of { r_name() } to the rest of the world in { y() }"),
-        "yrpc-ca" = glue::glue("Exports of { r_name() } to { p_name() } in { y() }")
+        "yrc-gca" = glue::glue("Exports of { r_add_the() } { r_name() } to the rest of the World in { y() }"),
+        "yrpc-gca" = glue::glue("Exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } in { y() }")
       )
     })
 
-    exports_treemap_detailed <- eventReactive(input$go, {
+    exports_treemap_detailed <- reactive({
       d <- data_detailed() %>%
+        mutate(
+          share = export_value_usd / sum(export_value_usd)
+          # community_name = ifelse(share < 0.01, "Others <1% each", community_name),
+          # community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
+        ) %>%
+        group_by(community_name, community_color) %>%
+        summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>%
+        ungroup() %>%
         mutate(
           share = paste0(round(100 * export_value_usd / sum(export_value_usd), 2), "%"),
           community_name = paste0(community_name, "<br>", share)
@@ -94,18 +97,18 @@ shinyServer(
           name = community_name,
           color = community_color
         )
-
+      
       highchart() %>%
         hc_chart(type = "treemap") %>%
         hc_xAxis(categories = d$name) %>%
         hc_add_series(d,
-          name = "Export Value USD",
-          showInLegend = FALSE,
-          dataLabels = list(
-            verticalAlign = "top",
-            align = "left",
-            style = list(textOutline = FALSE)
-          )
+                      name = "Export Value USD",
+                      showInLegend = FALSE,
+                      dataLabels = list(
+                        verticalAlign = "top",
+                        align = "left",
+                        style = list(textOutline = FALSE)
+                      )
         ) %>%
         hc_title(text = exports_title()) %>%
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
