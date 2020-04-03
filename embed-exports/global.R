@@ -26,8 +26,6 @@ countries <- ots_countries %>%
 products <- ots_products %>%
   arrange(product_code)
 
-communities <- ots_communities
-
 # Choices -----------------------------------------------------------------
 
 # choices trick by Andrea Gao

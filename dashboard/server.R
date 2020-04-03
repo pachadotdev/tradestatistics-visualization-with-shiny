@@ -76,7 +76,7 @@ shinyServer(
     
     table_aggregated <- reactive({
       if (p_iso() == "all") {
-        "yr-ca"
+        "yr-sa"
       } else {
         "yrp"
       }
@@ -84,9 +84,9 @@ shinyServer(
     
     table_detailed <- reactive({
       if (p_iso() == "all") {
-        "yrc-gca"
+        "yrc"
       } else {
-        "yrpc-gca"
+        "yrpc"
       }
     })
     
@@ -127,8 +127,8 @@ shinyServer(
     title <- reactive({
       switch(
         table_detailed(),
-        "yrc-gca" = glue::glue("<h1>{ r_add_proper_the() } { r_name() } multilateral trade between { min(y()) } and { max(y()) }</h1>"),
-        "yrpc-gca" = glue::glue("<h1>{ r_add_proper_the() } { r_name() } and { p_add_the() } { p_name() } between { min(y()) } and { max(y()) }</h1>")
+        "yrc" = glue::glue("<h1>{ r_add_proper_the() } { r_name() } multilateral trade between { min(y()) } and { max(y()) }</h1>"),
+        "yrpc" = glue::glue("<h1>{ r_add_proper_the() } { r_name() } and { p_add_the() } { p_name() } between { min(y()) } and { max(y()) }</h1>")
       )
     })
     
@@ -150,8 +150,6 @@ shinyServer(
         years = y(),
         reporters = r_iso(),
         partners = p_iso(),
-        include_shortnames = FALSE,
-        include_communities = FALSE,
         table = table_aggregated(),
         use_localhost = use_localhost
       )
@@ -162,8 +160,6 @@ shinyServer(
         years = y(),
         reporters = r_iso(),
         partners = p_iso(),
-        include_shortnames = FALSE,
-        include_communities = FALSE,
         table = table_detailed(),
         use_localhost = use_localhost
       )
@@ -174,8 +170,6 @@ shinyServer(
         years = c(min(y()), max(y())),
         reporters = r_iso(),
         partners = "all",
-        include_shortnames = FALSE,
-        include_communities = FALSE,
         table = "yrp",
         use_localhost = use_localhost
       ) %>%
@@ -190,8 +184,6 @@ shinyServer(
         years = c(min(y()), max(y())),
         reporters = r_iso(),
         partners = p_iso(),
-        include_shortnames = FALSE,
-        include_communities = FALSE,
         table = "yrp",
         use_localhost = use_localhost
       ) %>%
@@ -203,9 +195,7 @@ shinyServer(
           ots_create_tidy_data(
             years = c(min(y()), max(y())),
             reporters = r_iso(),
-            include_shortnames = FALSE,
-            include_communities = FALSE,
-            table = "yr-ca",
+            table = "yr-sa",
             use_localhost = use_localhost
           )
         ) %>%
@@ -214,21 +204,17 @@ shinyServer(
           top_import_to_total_imports = top_import_trade_value_usd / import_value_usd
         ) %>%
         left_join(
-          ots_communities %>%
-            select(community_code, community_name) %>%
-            distinct() %>%
+          ots_sections_shortnames %>%
             rename(
-              top_export_community_code = community_code,
-              top_export_community_name = community_name
+              top_export_section_code = section_code,
+              top_export_section_name = section_shortname_english
             )
         ) %>%
         left_join(
-          ots_communities %>%
-            select(community_code, community_name) %>%
-            distinct() %>%
+          ots_sections_shortnames %>%
             rename(
-              top_import_community_code = community_code,
-              top_import_community_name = community_name
+              top_import_section_code = section_code,
+              top_import_section_name = section_shortname_english
             )
         )
     })
@@ -237,9 +223,7 @@ shinyServer(
       ots_create_tidy_data(
         years = c(min(y()), max(y())),
         reporters = r_iso(),
-        include_shortnames = FALSE,
-        include_communities = FALSE,
-        table = "yr-ca",
+        table = "yr-sa",
         use_localhost = use_localhost
       ) %>%
         mutate(
@@ -247,21 +231,17 @@ shinyServer(
           top_import_to_total_imports = top_import_trade_value_usd / import_value_usd
         ) %>%
         left_join(
-          ots_communities %>%
-            select(community_code, community_name) %>%
-            distinct() %>%
+          ots_sections_shortnames %>%
             rename(
-              top_export_community_code = community_code,
-              top_export_community_name = community_name
+              top_export_section_code = section_code,
+              top_export_section_name = section_shortname_english
             )
         ) %>%
         left_join(
-          ots_communities %>%
-            select(community_code, community_name) %>%
-            distinct() %>%
+          ots_sections_shortnames %>%
             rename(
-              top_import_community_code = community_code,
-              top_import_community_name = community_name
+              top_import_section_code = section_code,
+              top_import_section_name = section_shortname_english
             )
         )
     })
@@ -373,11 +353,11 @@ shinyServer(
         p_iso() == "all",
         top_imports_exports_total() %>%
           filter(year == min(y())) %>%
-          select(top_export_community_name) %>%
+          select(top_export_section_name) %>%
           as.character(),
         top_imports_exports_bilateral() %>%
           filter(year == min(y())) %>%
-          select(top_export_community_name) %>%
+          select(top_export_section_name) %>%
           as.character()
       )
     })
@@ -430,7 +410,7 @@ shinyServer(
     top_export_name_paragraph_max_year <- reactive({
       top_imports_exports_total() %>%
         filter(year == max(y())) %>%
-        select(top_export_community_name) %>%
+        select(top_export_section_name) %>%
         as.character()
     })
     
@@ -606,11 +586,11 @@ shinyServer(
         p_iso() == "all",
         top_imports_exports_total() %>%
           filter(year == min(y())) %>%
-          select(top_import_community_name) %>%
+          select(top_import_section_name) %>%
           as.character(),
         top_imports_exports_bilateral() %>%
           filter(year == min(y())) %>%
-          select(top_import_community_name) %>%
+          select(top_import_section_name) %>%
           as.character()
       )
     })
@@ -670,7 +650,7 @@ shinyServer(
     top_import_name_paragraph_max_year <- reactive({
       top_imports_exports_total() %>%
         filter(year == max(y())) %>%
-        select(top_import_community_name) %>%
+        select(top_import_section_name) %>%
         as.character()
     })
     
@@ -759,7 +739,7 @@ shinyServer(
     
     trade_paragraph_exports_1 <- reactive({
       switch(table_aggregated(),
-             "yr-ca" = glue::glue("Exports: From { exports_total_value_paragraph_min_year_2() } in { min(y()) } to { exports_total_value_paragraph_max_year_2() } in { max(y()) }"),
+             "yr-sa" = glue::glue("Exports: From { exports_total_value_paragraph_min_year_2() } in { min(y()) } to { exports_total_value_paragraph_max_year_2() } in { max(y()) }"),
              
              "yrp" = glue::glue("Exports: From { exports_value_paragraph_min_year_2() } in { min(y()) } to { exports_value_paragraph_max_year_2() } in { max(y()) }")
       )
@@ -767,7 +747,7 @@ shinyServer(
     
     trade_paragraph_exports_2 <- reactive({
       switch(table_aggregated(),
-             "yr-ca" = glue::glue("The exports of { r_add_the() } { r_name() } to the World { exports_growth_in_or_decreased_paragraph() } at
+             "yr-sa" = glue::glue("The exports of { r_add_the() } { r_name() } to the World { exports_growth_in_or_decreased_paragraph() } at
                                an annualized rate of { exports_growth_paragraph_2() }."),
              
              "yrp" = glue::glue("The exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } { exports_growth_in_or_decreased_paragraph() } at
@@ -779,7 +759,7 @@ shinyServer(
     
     trade_paragraph_imports_1 <- reactive({
       switch(table_aggregated(),
-             "yr-ca" = glue::glue("Imports: From { imports_total_value_paragraph_min_year_2() } in { min(y()) } to { imports_total_value_paragraph_max_year_2() } in { max(y()) }"),
+             "yr-sa" = glue::glue("Imports: From { imports_total_value_paragraph_min_year_2() } in { min(y()) } to { imports_total_value_paragraph_max_year_2() } in { max(y()) }"),
              
              "yrp" = glue::glue("Imports: From { imports_value_paragraph_min_year_2() } in { min(y()) } to { imports_value_paragraph_max_year_2() } in { max(y()) }")
       )
@@ -787,7 +767,7 @@ shinyServer(
     
     trade_paragraph_imports_2 <- reactive({
       switch(table_aggregated(),
-             "yr-ca" = glue::glue("The imports of { r_add_the() } { r_name() } from the World { imports_growth_in_or_decreased_paragraph() } at
+             "yr-sa" = glue::glue("The imports of { r_add_the() } { r_name() } from the World { imports_growth_in_or_decreased_paragraph() } at
                                an annualized rate of { imports_growth_paragraph_2() }."),
              
              "yrp" = glue::glue("The imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } { imports_growth_in_or_decreased_paragraph() } at
@@ -799,7 +779,7 @@ shinyServer(
     
     trade_exchange_lines_title <- reactive({
       switch(table_aggregated(),
-             "yr-ca" = glue::glue("{ r_add_proper_the() } { r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
+             "yr-sa" = glue::glue("{ r_add_proper_the() } { r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
              "yrp" = glue::glue("{ r_add_proper_the() } { r_name() } and { p_add_the() } { p_name() } exchange between { min(y()) } and { max(y()) }")
       )
     })
@@ -828,17 +808,17 @@ shinyServer(
     exports_table_detailed_min_year <- reactive({
       data_detailed() %>%
         filter(year == min(y())) %>%
-        select(group_name, community_name, community_color, export_value_usd) %>%
+        select(section_shortname_english, section_color, export_value_usd) %>%
         filter(export_value_usd > 0)
     })
     
     exports_subtitle <- reactive({
-      "<hr/>Exports, grouped by product community"
+      "<hr/>Exports, grouped by section"
     })
     
     exports_paragraph_min_year <- reactive({
       switch(table_aggregated(),
-             "yr-ca" = glue::glue("Represented { top_export_total_share_paragraph_min_year_2() } of the total exports of { r_add_the() } { r_name() } to the World."),
+             "yr-sa" = glue::glue("Represented { top_export_total_share_paragraph_min_year_2() } of the total exports of { r_add_the() } { r_name() } to the World."),
              
              "yrp" = glue::glue("Represented { top_export_total_share_paragraph_min_year_2() } of the total exports of { r_add_the() } { r_name() } to the World,
                                 and { top_export_bilateral_share_paragraph_min_year_2() } of the total exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() }.")
@@ -847,7 +827,7 @@ shinyServer(
     
     exports_paragraph_max_year <- reactive({
       switch(table_aggregated(),
-             "yr-ca" = glue::glue("Represented { top_export_total_share_paragraph_max_year_2() } of the total exports of { r_add_the() } { r_name() } to the World."),
+             "yr-sa" = glue::glue("Represented { top_export_total_share_paragraph_max_year_2() } of the total exports of { r_add_the() } { r_name() } to the World."),
              
              "yrp" = glue::glue("Represented { top_export_total_share_paragraph_max_year_2() } of the total exports of { r_add_the() } { r_name() } to the World,
                                 and { top_export_bilateral_share_paragraph_max_year_2() } of the total exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() }.")
@@ -857,8 +837,8 @@ shinyServer(
     exports_title_min_year <- reactive({
       switch(
         table_detailed(),
-        "yrc-gca" = glue::glue("Exports of { r_add_the() } { r_name() } to the rest of the World in { min(y()) }"),
-        "yrpc-gca" = glue::glue("Exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } in { min(y()) }")
+        "yrc" = glue::glue("Exports of { r_add_the() } { r_name() } to the rest of the World in { min(y()) }"),
+        "yrpc" = glue::glue("Exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } in { min(y()) }")
       )
     })
     
@@ -866,37 +846,37 @@ shinyServer(
       # d <- exports_table_detailed_min_year() %>%
       #   mutate(share = export_value_usd / sum(export_value_usd))
       # 
-      # d2 <- d %>% 
-      #   group_by(community_name) %>%
+      # d2 <- d %>%
+      #   group_by(section_shortname_english) %>%
       #   summarise(export_value_usd0 = sum(export_value_usd, na.rm = T)) %>%
-      #   ungroup() %>% 
+      #   ungroup() %>%
       #   mutate(share0 = export_value_usd0 / sum(export_value_usd0))
       # 
-      # d <- d %>% 
-      #   left_join(d2) %>% 
+      # d <- d %>%
+      #   left_join(d2) %>%
       #   mutate(
-      #     community_name = paste0(community_name, "<br>",
+      #     section_shortname_english = paste0(section_shortname_english, "<br>",
       #                             paste0(round(100 * share0, 2), "%")),
-      #     community_name = ifelse(share0 < 0.01, "Others <1% each", community_name),
-      #     community_color = ifelse(share0 < 0.01, "#d3d3d3", community_color)
-      #   ) %>% 
-      #   
-      #   group_by(group_name, community_name, community_color) %>%
+      #     section_shortname_english = ifelse(share0 < 0.01, "Others <1% each", section_shortname_english),
+      #     section_color = ifelse(share0 < 0.01, "#d3d3d3", section_color)
+      #   ) %>%
+      # 
+      #   group_by(group_name, section_shortname_english, section_color) %>%
       #   summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>%
       #   ungroup() %>%
-      #   
+      # 
       #   mutate(
       #     share = paste0(round(100 * export_value_usd / sum(export_value_usd), 2), "%"),
       #     group_name = paste0(group_name, "<br>", share)
-      #   ) %>% 
-      #   
+      #   ) %>%
+      # 
       #   rename(
-      #     index1 = community_name,
+      #     index1 = section_shortname_english,
       #     index2 = group_name,
       #     size = export_value_usd
       #   )
       # 
-      # tm <- d %>% 
+      # tm <- d %>%
       #   treemap::treemap(
       #     index = c("index1", "index2"),
       #     vSize = "size",
@@ -906,12 +886,12 @@ shinyServer(
       # 
       # tm$tm <- tm$tm %>%
       #   tbl_df() %>%
-      #   left_join(d %>% select(index1, community_color) %>% distinct(), by = "index1") %>%
-      #   mutate(color = community_color) %>% 
-      #   select(-community_color)
+      #   left_join(d %>% select(index1, section_color) %>% distinct(), by = "index1") %>%
+      #   mutate(color = section_color) %>%
+      #   select(-section_color)
       # 
       # highchart() %>%
-      #   hc_add_series_treemap(tm, 
+      #   hc_add_series_treemap(tm,
       #                         allowDrillToNode = TRUE,
       #                         layoutAlgorithm = "squarified",
       #                         dataLabels = list(enabled = FALSE),
@@ -926,27 +906,27 @@ shinyServer(
       #                               style = list(fontSize = "12px", textOutline = FALSE)
       #                             )
       #                           )
-      #                         )) %>% 
+      #                         )) %>%
       #   hc_title(text = exports_title_min_year()) %>%
       #   hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
       
       d <- exports_table_detailed_min_year() %>%
         mutate(
           share = export_value_usd / sum(export_value_usd)
-          # community_name = ifelse(share < 0.01, "Others <1% each", community_name),
-          # community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
+          # section_shortname_english = ifelse(share < 0.01, "Others <1% each", section_shortname_english),
+          # section_color = ifelse(share < 0.01, "#d3d3d3", section_color)
         ) %>%
-        group_by(community_name, community_color) %>%
+        group_by(section_shortname_english, section_color) %>%
         summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>%
         ungroup() %>%
         mutate(
           share = paste0(round(100 * export_value_usd / sum(export_value_usd), 2), "%"),
-          community_name = paste0(community_name, "<br>", share)
+          section_shortname_english = paste0(section_shortname_english, "<br>", share)
         ) %>%
         rename(
           value = export_value_usd,
-          name = community_name,
-          color = community_color
+          name = section_shortname_english,
+          color = section_color
         )
 
       highchart() %>%
@@ -954,7 +934,7 @@ shinyServer(
         hc_xAxis(categories = d$name) %>%
         hc_add_series(d,
           name = "Export Value USD", showInLegend = FALSE,
-          dataLabels = list(verticalAlign = "top", align = "left", style = list(textOutline = FALSE))
+          dataLabels = list(verticalAlign = "top", align = "left", style = list(fontSize = "12px", textOutline = FALSE))
         ) %>%
         hc_title(text = exports_title_min_year()) %>%
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
@@ -963,15 +943,15 @@ shinyServer(
     exports_title_max_year <- reactive({
       switch(
         table_detailed(),
-        "yrc-gca" = glue::glue("Exports of { r_add_the() } { r_name() } to the rest of the World { max(y()) }"),
-        "yrpc-gca" = glue::glue("Exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } in { max(y()) }")
+        "yrc" = glue::glue("Exports of { r_add_the() } { r_name() } to the rest of the World { max(y()) }"),
+        "yrpc" = glue::glue("Exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } in { max(y()) }")
       )
     })
     
     exports_table_detailed_max_year <- reactive({
       data_detailed() %>%
         filter(year == max(y())) %>%
-        select(group_name, community_name, community_color, export_value_usd) %>%
+        select(section_shortname_english, section_color, export_value_usd) %>%
         filter(export_value_usd > 0)
     })
     
@@ -979,20 +959,20 @@ shinyServer(
       d <- exports_table_detailed_max_year() %>%
         mutate(
           share = export_value_usd / sum(export_value_usd)
-          # community_name = ifelse(share < 0.01, "Others <1% each", community_name),
-          # community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
+          # section_shortname_english = ifelse(share < 0.01, "Others <1% each", section_shortname_english),
+          # section_color = ifelse(share < 0.01, "#d3d3d3", section_color)
         ) %>%
-        group_by(community_name, community_color) %>%
+        group_by(section_shortname_english, section_color) %>%
         summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>%
         ungroup() %>%
         mutate(
           share = paste0(round(100 * export_value_usd / sum(export_value_usd), 2), "%"),
-          community_name = paste0(community_name, "<br>", share)
+          section_shortname_english = paste0(section_shortname_english, "<br>", share)
         ) %>%
         rename(
           value = export_value_usd,
-          name = community_name,
-          color = community_color
+          name = section_shortname_english,
+          color = section_color
         )
       
       highchart() %>%
@@ -1000,7 +980,7 @@ shinyServer(
         hc_xAxis(categories = d$name) %>%
         hc_add_series(d,
                       name = "Export Value USD", showInLegend = FALSE,
-                      dataLabels = list(verticalAlign = "top", align = "left", style = list(textOutline = FALSE))
+                      dataLabels = list(verticalAlign = "top", align = "left", style = list(fontSize = "12px", textOutline = FALSE))
         ) %>%
         hc_title(text = exports_title_min_year()) %>%
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
@@ -1009,12 +989,12 @@ shinyServer(
     # Imports -----------------------------------------------------------------
     
     imports_subtitle <- reactive({
-      "<hr/>Imports, grouped by product community"
+      "<hr/>Imports, grouped by section"
     })
     
     imports_paragraph_min_year <- reactive({
       switch(table_aggregated(),
-             "yr-ca" = glue::glue("Represented { top_import_total_share_paragraph_min_year_2() } of the total imports of { r_add_the() } { r_name() } from the World."),
+             "yr-sa" = glue::glue("Represented { top_import_total_share_paragraph_min_year_2() } of the total imports of { r_add_the() } { r_name() } from the World."),
              
              "yrp" = glue::glue("Represented { top_import_total_share_paragraph_min_year_2() } of the total imports of { r_add_the() } { r_name() } from the World,
                                 and { top_import_bilateral_share_paragraph_min_year_2() } of the total imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() }.")
@@ -1023,7 +1003,7 @@ shinyServer(
     
     imports_paragraph_max_year <- reactive({
       switch(table_aggregated(),
-             "yr-ca" = glue::glue("Represented { top_import_total_share_paragraph_max_year_2() } of the total imports of { r_add_the() } { r_name() } from the World."),
+             "yr-sa" = glue::glue("Represented { top_import_total_share_paragraph_max_year_2() } of the total imports of { r_add_the() } { r_name() } from the World."),
              
              "yrp" = glue::glue("Represented { top_import_total_share_paragraph_max_year_2() } of the total imports of { r_add_the() } { r_name() } to the World,
                                 and { top_import_bilateral_share_paragraph_max_year_2() } of the total imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() }.")
@@ -1033,15 +1013,15 @@ shinyServer(
     imports_title_min_year <- reactive({
       switch(
         table_detailed(),
-        "yrc-gca" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { min(y()) }"),
-        "yrpc-gca" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { min(y()) }")
+        "yrc" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { min(y()) }"),
+        "yrpc" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { min(y()) }")
       )
     })
     
     imports_table_detailed_min_year <- reactive({
       data_detailed() %>%
         filter(year == min(y())) %>%
-        select(group_name, community_name, community_color, import_value_usd) %>%
+        select(section_shortname_english, section_color, import_value_usd) %>%
         filter(import_value_usd > 0)
     })
     
@@ -1049,20 +1029,20 @@ shinyServer(
       d <- imports_table_detailed_min_year() %>%
         mutate(
           share = import_value_usd / sum(import_value_usd)
-          # community_name = ifelse(share < 0.01, "Others <1% each", community_name),
-          # community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
+          # section_shortname_english = ifelse(share < 0.01, "Others <1% each", section_shortname_english),
+          # section_color = ifelse(share < 0.01, "#d3d3d3", section_color)
         ) %>%
-        group_by(community_name, community_color) %>%
+        group_by(section_shortname_english, section_color) %>%
         summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>%
         ungroup() %>%
         mutate(
           share = paste0(round(100 * import_value_usd / sum(import_value_usd), 2), "%"),
-          community_name = paste0(community_name, "<br>", share)
+          section_shortname_english = paste0(section_shortname_english, "<br>", share)
         ) %>%
         rename(
           value = import_value_usd,
-          name = community_name,
-          color = community_color
+          name = section_shortname_english,
+          color = section_color
         )
       
       highchart() %>%
@@ -1074,7 +1054,7 @@ shinyServer(
                       dataLabels = list(
                         verticalAlign = "top",
                         align = "left",
-                        style = list(textOutline = FALSE)
+                        style = list(fontSize = "12px", textOutline = FALSE)
                       )
         ) %>%
         hc_title(text = imports_title_min_year()) %>%
@@ -1084,23 +1064,23 @@ shinyServer(
     imports_title_max_year <- reactive({
       switch(
         table_detailed(),
-        "yrc-gca" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { max(y()) }"),
-        "yrpc-gca" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { max(y()) }")
+        "yrc" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { max(y()) }"),
+        "yrpc" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { max(y()) }")
       )
     })
     
     imports_title_max_year <- reactive({
       switch(
         table_detailed(),
-        "yrc-gca" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { max(y()) }"),
-        "yrpc-gca" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { max(y()) }")
+        "yrc" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { max(y()) }"),
+        "yrpc" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { max(y()) }")
       )
     })
     
     imports_table_detailed_max_year <- reactive({
       data_detailed() %>%
         filter(year == max(y())) %>%
-        select(group_name, community_name, community_color, import_value_usd) %>%
+        select(section_shortname_english, section_color, import_value_usd) %>%
         filter(import_value_usd > 0)
     })
     
@@ -1108,20 +1088,20 @@ shinyServer(
       d <- imports_table_detailed_max_year() %>%
         mutate(
           share = import_value_usd / sum(import_value_usd)
-          # community_name = ifelse(share < 0.01, "Others <1% each", community_name),
-          # community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
+          # section_shortname_english = ifelse(share < 0.01, "Others <1% each", section_shortname_english),
+          # section_color = ifelse(share < 0.01, "#d3d3d3", section_color)
         ) %>%
-        group_by(community_name, community_color) %>%
+        group_by(section_shortname_english, section_color) %>%
         summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>%
         ungroup() %>%
         mutate(
           share = paste0(round(100 * import_value_usd / sum(import_value_usd), 2), "%"),
-          community_name = paste0(community_name, "<br>", share)
+          section_shortname_english = paste0(section_shortname_english, "<br>", share)
         ) %>%
         rename(
           value = import_value_usd,
-          name = community_name,
-          color = community_color
+          name = section_shortname_english,
+          color = section_color
         )
       
       highchart() %>%
@@ -1133,7 +1113,7 @@ shinyServer(
                       dataLabels = list(
                         verticalAlign = "top",
                         align = "left",
-                        style = list(textOutline = FALSE)
+                        style = list(fontSize = "12px", textOutline = FALSE)
                       )
         ) %>%
         hc_title(text = imports_title_min_year()) %>%
@@ -1264,7 +1244,7 @@ shinyServer(
     
     output$exports_box_min_year <- renderValueBox({
       customValueBox(
-        h4(glue::glue("Most exported community in { min(y()) }: { top_export_name_paragraph_min_year() } ({ top_export_bilateral_value_paragraph_min_year_2() })")),
+        h4(glue::glue("Most exported section in { min(y()) }: { top_export_name_paragraph_min_year() } ({ top_export_bilateral_value_paragraph_min_year_2() })")),
         exports_paragraph_min_year(),
         icon = icon("chart-line"),
         color = "valueboxgreen1"
@@ -1273,7 +1253,7 @@ shinyServer(
     
     output$exports_box_max_year <- renderValueBox({
       customValueBox(
-        h4(glue::glue("Most exported community in { max(y()) }: { top_export_name_paragraph_max_year() } ({ top_export_bilateral_value_paragraph_max_year_2() })")),
+        h4(glue::glue("Most exported section in { max(y()) }: { top_export_name_paragraph_max_year() } ({ top_export_bilateral_value_paragraph_max_year_2() })")),
         exports_paragraph_max_year(),
         icon = icon("chart-line"),
         color = "valueboxgreen2"
@@ -1298,7 +1278,7 @@ shinyServer(
     
     output$imports_box_min_year <- renderValueBox({
       customValueBox(
-        h4(glue::glue("Most imported community in { min(y()) }: { top_import_name_paragraph_min_year() } ({ top_import_bilateral_value_paragraph_min_year_2() })")),
+        h4(glue::glue("Most imported section in { min(y()) }: { top_import_name_paragraph_min_year() } ({ top_import_bilateral_value_paragraph_min_year_2() })")),
         imports_paragraph_min_year(),
         icon = icon("chart-line"),
         color = "valueboxred1"
@@ -1307,7 +1287,7 @@ shinyServer(
     
     output$imports_box_max_year <- renderValueBox({
       customValueBox(
-        h4(glue::glue("Most imported community in { max(y()) }: { top_import_name_paragraph_max_year() } ({ top_import_bilateral_value_paragraph_max_year_2() })")),
+        h4(glue::glue("Most imported section in { max(y()) }: { top_import_name_paragraph_max_year() } ({ top_import_bilateral_value_paragraph_max_year_2() })")),
         imports_paragraph_max_year(),
         icon = icon("chart-line"),
         color = "valueboxred2"

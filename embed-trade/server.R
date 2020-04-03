@@ -65,8 +65,6 @@ shinyServer(
         years = y(),
         reporters = r_iso(),
         partners = p_iso(),
-        include_shortnames = FALSE,
-        include_communities = FALSE,
         table = table_aggregated()
       )
     })

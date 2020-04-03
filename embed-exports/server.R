@@ -32,9 +32,9 @@ shinyServer(
 
     table_detailed <- reactive({
       if (p_iso() == "all") {
-        "yrc-gca"
+        "yrc"
       } else {
-        "yrpc-gca"
+        "yrpc"
       }
     })
 
@@ -45,12 +45,10 @@ shinyServer(
         years = y(),
         reporters = r_iso(),
         partners = p_iso(),
-        include_shortnames = FALSE,
-        include_communities = FALSE,
         table = table_detailed(),
         use_localhost = use_localhost
       ) %>% 
-        select(group_name, community_name, community_color, export_value_usd) %>%
+        select(section_shortname_english, section_color, export_value_usd) %>%
         filter(export_value_usd > 0)
     })
     
@@ -73,8 +71,8 @@ shinyServer(
     exports_title <- reactive({
       switch(
         table_detailed(),
-        "yrc-gca" = glue::glue("Exports of { r_add_the() } { r_name() } to the rest of the World in { y() }"),
-        "yrpc-gca" = glue::glue("Exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } in { y() }")
+        "yrc" = glue::glue("Exports of { r_add_the() } { r_name() } to the rest of the World in { y() }"),
+        "yrpc" = glue::glue("Exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } in { y() }")
       )
     })
 
@@ -82,20 +80,20 @@ shinyServer(
       d <- data_detailed() %>%
         mutate(
           share = export_value_usd / sum(export_value_usd)
-          # community_name = ifelse(share < 0.01, "Others <1% each", community_name),
-          # community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
+          # section_shortname_english = ifelse(share < 0.01, "Others <1% each", section_shortname_english),
+          # section_color = ifelse(share < 0.01, "#d3d3d3", section_color)
         ) %>%
-        group_by(community_name, community_color) %>%
+        group_by(section_shortname_english, section_color) %>%
         summarise(export_value_usd = sum(export_value_usd, na.rm = T)) %>%
         ungroup() %>%
         mutate(
           share = paste0(round(100 * export_value_usd / sum(export_value_usd), 2), "%"),
-          community_name = paste0(community_name, "<br>", share)
+          section_shortname_english = paste0(section_shortname_english, "<br>", share)
         ) %>%
         rename(
           value = export_value_usd,
-          name = community_name,
-          color = community_color
+          name = section_shortname_english,
+          color = section_color
         )
       
       highchart() %>%
@@ -107,7 +105,7 @@ shinyServer(
                       dataLabels = list(
                         verticalAlign = "top",
                         align = "left",
-                        style = list(textOutline = FALSE)
+                        style = list(fontSize = "12px", textOutline = FALSE)
                       )
         ) %>%
         hc_title(text = exports_title()) %>%

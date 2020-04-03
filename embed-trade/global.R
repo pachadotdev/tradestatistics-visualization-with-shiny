@@ -28,8 +28,6 @@ products <- ots_products %>%
   filter(stringr::str_length(product_code) %in% c(2, 4)) %>%
   arrange(product_code)
 
-communities <- ots_communities
-
 # Choices -----------------------------------------------------------------
 
 # choices trick by Andrea Gao
