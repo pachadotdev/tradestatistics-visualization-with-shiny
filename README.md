@@ -1,5 +1,7 @@
 # Open Trade Statistics Shiny Dashboard
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3738793.svg)](https://doi.org/10.5281/zenodo.3738793)
+
 Visit the dashboard website: https://shiny.tradestatistics.io
 
 We created this dashboard as  way to provide a graphical interface to our [API](https://api.tradestatistics.io).
