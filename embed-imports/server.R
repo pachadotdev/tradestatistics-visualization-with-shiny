@@ -48,8 +48,8 @@ shinyServer(
         table = table_detailed(),
         use_localhost = use_localhost
       ) %>% 
-        select(section_shortname_english, section_color, import_value_usd) %>%
-        filter(import_value_usd > 0)
+        select(community_name, community_color, trade_value_usd_imp) %>%
+        filter(trade_value_usd_imp > 0)
     })
     
     r_add_the <- reactive({
@@ -79,21 +79,21 @@ shinyServer(
     imports_treemap_detailed <- reactive({
       d <- data_detailed() %>%
         mutate(
-          share = import_value_usd / sum(import_value_usd)
-          # section_shortname_english = ifelse(share < 0.01, "Others <1% each", section_shortname_english),
-          # section_color = ifelse(share < 0.01, "#d3d3d3", section_color)
+          share = trade_value_usd_imp / sum(trade_value_usd_imp)
+          # community_name = ifelse(share < 0.01, "Others <1% each", community_name),
+          # community_color = ifelse(share < 0.01, "#d3d3d3", community_color)
         ) %>%
-        group_by(section_shortname_english, section_color) %>%
-        summarise(import_value_usd = sum(import_value_usd, na.rm = T)) %>%
+        group_by(community_name, community_color) %>%
+        summarise(trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)) %>%
         ungroup() %>%
         mutate(
-          share = paste0(round(100 * import_value_usd / sum(import_value_usd), 2), "%"),
-          section_shortname_english = paste0(section_shortname_english, "<br>", share)
+          share = paste0(round(100 * trade_value_usd_imp / sum(trade_value_usd_imp), 2), "%"),
+          community_name = paste0(community_name, "<br>", share)
         ) %>%
         rename(
-          value = import_value_usd,
-          name = section_shortname_english,
-          color = section_color
+          value = trade_value_usd_imp,
+          name = community_name,
+          color = community_color
         )
       
       highchart() %>%

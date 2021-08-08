@@ -23,8 +23,8 @@ if (running_on_server == TRUE) {
 countries <- ots_countries %>%
   select(country_iso, country_name_english)
 
-products <- ots_products %>%
-  arrange(product_code)
+products <- ots_commodities %>%
+  arrange(commodity_code)
 
 # Choices -----------------------------------------------------------------
 

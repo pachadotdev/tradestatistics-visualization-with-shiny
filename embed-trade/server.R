@@ -71,7 +71,7 @@ shinyServer(
 
     trade_table_aggregated <- reactive({
       data_aggregated() %>%
-        select(year, export_value_usd, import_value_usd)
+        select(year, trade_value_usd_exp, trade_value_usd_imp)
     })
 
     trade_exchange_title <- reactive({
@@ -85,7 +85,7 @@ shinyServer(
       d <- trade_table_aggregated() %>%
         gather(key, value, -year) %>%
         mutate(
-          key = ifelse(key == "export_value_usd", "Exports", "Imports")
+          key = ifelse(key == "trade_value_usd_exp", "Exports", "Imports")
         ) %>%
         rename(
           `Trade Value` = value,
