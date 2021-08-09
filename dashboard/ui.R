@@ -18,9 +18,10 @@ shinyUI(
           sliderInput(
             "y",
             "Years:",
-            min = available_years_min,
+            # min = available_years_min,
+            min = 1990,
             max = available_years_max,
-            value = c(available_years_max - 4, available_years_max),
+            value = c(available_years_max - 4, 2019),
             sep = "",
             step = 2,
             ticks = FALSE
@@ -57,13 +58,24 @@ shinyUI(
               htmlOutput("title_legend", container = tags$i)
             ),
 
+
+            # Summary -----------------------------------------------------------------
+
+            column(
+              3,
+              hr(),
+              h2("Summary"),
+              h3("Exports"),
+              htmlOutput("trade_summary_exp", container = tags$p),
+              h3("Imports"),
+              htmlOutput("trade_summary_imp", container = tags$p)
+            ),
+            
             # Trade -------------------------------------------------------------------
 
             column(
-              12,
+              9,
               htmlOutput("trade_subtitle", container = tags$h2),
-              valueBoxOutput("trade_box_exports", width = 6),
-              valueBoxOutput("trade_box_imports", width = 6),
               br(),
               highchartOutput("trade_exchange_lines_aggregated", height = "500px"),
               htmlOutput("url_trade")
@@ -74,8 +86,6 @@ shinyUI(
             column(
               12,
               htmlOutput("exports_subtitle", container = tags$h2),
-              valueBoxOutput("exports_box_min_year", width = 6),
-              valueBoxOutput("exports_box_max_year", width = 6),
               br()
             ),
 
@@ -96,8 +106,6 @@ shinyUI(
             column(
               12,
               htmlOutput("imports_subtitle", container = tags$h2),
-              valueBoxOutput("imports_box_min_year", width = 6),
-              valueBoxOutput("imports_box_max_year", width = 6),
               br()
             ),
 

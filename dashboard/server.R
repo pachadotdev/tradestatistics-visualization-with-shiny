@@ -179,160 +179,6 @@ shinyServer(
         )
     })
     
-    # Exports elements for texts ----------------------------------------------
-    
-    exports_value_paragraph_min_year <- reactive({
-      trade_rankings() %>%
-        filter(
-          year == min(y()),
-          reporter_iso == r_iso(),
-          partner_iso == p_iso()
-        ) %>%
-        select(trade_value_usd_exp) %>%
-        as.numeric()
-    })
-    
-    exports_value_paragraph_min_year_2 <- reactive({
-      show_dollars(exports_value_paragraph_min_year())
-    })
-    
-    exports_value_paragraph_max_year <- reactive({
-      trade_rankings() %>%
-        filter(
-          year == max(y()),
-          reporter_iso == r_iso(),
-          partner_iso == p_iso()
-        ) %>%
-        select(trade_value_usd_exp) %>%
-        as.numeric()
-    })
-    
-    exports_value_paragraph_max_year_2 <- reactive({
-      show_dollars(exports_value_paragraph_max_year())
-    })
-    
-    exports_rank_paragraph_max_year <- reactive({
-      trade_rankings() %>%
-        filter(
-          year == max(y()),
-          reporter_iso == r_iso(),
-          partner_iso == p_iso()
-        ) %>%
-        select(exp_rank) %>%
-        as.character()
-    })
-    
-    top_export_value_paragraph_min_year <- reactive({
-      top_imports_exports_bilateral() %>%
-        filter(year == min(y())) %>%
-        select(top_export_trade_value_usd) %>%
-        as.character()
-    })
-    
-    top_export_value_paragraph_min_year_2 <- reactive({
-      show_dollars(stop_export_value_paragraph_min_year())
-    })
-    
-    top_export_bilateral_value_paragraph_min_year <- reactive({
-      top_imports_exports_total() %>%
-        filter(year == min(y())) %>%
-        select(top_export_trade_value_usd) %>%
-        as.numeric()
-    })
-    
-    top_export_bilateral_value_paragraph_min_year_2 <- reactive({
-      show_dollars(top_export_bilateral_value_paragraph_min_year())
-    })
-    
-    top_export_bilateral_share_paragraph_min_year <- reactive({
-      top_export_bilateral_value_paragraph_min_year() /
-        sum(
-          data_aggregated() %>% filter(year == min(y())) %>% select(trade_value_usd_exp) %>% pull(),
-          na.rm = T
-        )
-    })
-    
-    top_export_bilateral_share_paragraph_min_year_2 <- reactive({
-      show_percentage(top_export_bilateral_share_paragraph_min_year())
-    })
-    
-    top_export_bilateral_share_paragraph_max_year <- reactive({
-      top_export_bilateral_value_paragraph_max_year() /
-        sum(
-          data_aggregated() %>% filter(year == max(y())) %>% select(trade_value_usd_exp) %>% pull(),
-          na.rm = T
-        )
-    })
-    
-    top_export_bilateral_share_paragraph_max_year_2 <- reactive({
-      show_percentage(top_export_bilateral_share_paragraph_max_year())
-    })
-    
-    top_export_total_share_paragraph_max_year <- reactive({
-      top_imports_exports_total() %>%
-        filter(year == max(y())) %>%
-        select(top_export_to_total_exports) %>%
-        as.numeric()
-    })
-    
-    top_export_total_share_paragraph_max_year_2 <- reactive({
-      show_percentage(top_export_total_share_paragraph_max_year())
-    })
-    
-    # Imports elements for texts ----------------------------------------------
-    
-    imports_value_paragraph_min_year <- reactive({
-      trade_rankings() %>%
-        filter(
-          year == min(y()),
-          reporter_iso == r_iso(),
-          partner_iso == p_iso()
-        ) %>%
-        select(trade_value_usd_imp) %>%
-        as.numeric()
-    })
-    
-    imports_value_paragraph_min_year_2 <- reactive({
-      show_dollars(imports_value_paragraph_min_year())
-    })
-    
-    imports_value_paragraph_max_year <- reactive({
-      trade_rankings() %>%
-        filter(
-          year == max(y()),
-          reporter_iso == r_iso(),
-          partner_iso == p_iso()
-        ) %>%
-        select(trade_value_usd_imp) %>%
-        as.numeric()
-    })
-    
-    imports_value_paragraph_max_year_2 <- reactive({
-      show_dollars(imports_value_paragraph_max_year())
-    })
-    
-    imports_rank_paragraph_min_year <- reactive({
-      trade_rankings() %>%
-        filter(
-          year == min(y()),
-          reporter_iso == r_iso(),
-          partner_iso == p_iso()
-        ) %>%
-        select(imp_rank) %>%
-        as.character()
-    })
-    
-    imports_rank_paragraph_max_year <- reactive({
-      trade_rankings() %>%
-        filter(
-          year == max(y()),
-          reporter_iso == r_iso(),
-          partner_iso == p_iso()
-        ) %>%
-        select(imp_rank) %>%
-        as.character()
-    })
-    
     # Trade -------------------------------------------------------------------
     
     trade_table_aggregated <- reactive({
@@ -341,49 +187,237 @@ shinyServer(
     })
     
     trade_subtitle <- reactive({
-      "<hr/>Exports and Imports, grouped by year"
+      "<hr/>Total Exports and Imports"
     })
     
-    trade_paragraph_exports_1 <- reactive({
-      switch(table_aggregated(),
-             "yr" = glue::glue("Exports: From ... in { min(y()) } to ... in { max(y()) }"),
-             
-             "yrp" = glue::glue("Exports: From ... in { min(y()) } to ... in { max(y()) }")
+    exports_value_min_year <- reactive({
+      trade_table_aggregated() %>%
+        filter(year == min(y())) %>%
+        select(trade_value_usd_exp) %>%
+        as.numeric()
+    })
+    
+    exports_value_max_year <- reactive({
+      trade_table_aggregated() %>%
+        filter(year == max(y())) %>%
+        select(trade_value_usd_exp) %>%
+        as.numeric()
+    })
+    
+    imports_value_min_year <- reactive({
+      trade_table_aggregated() %>%
+        filter(year == min(y())) %>%
+        select(trade_value_usd_imp) %>%
+        as.numeric()
+    })
+    
+    imports_value_max_year <- reactive({
+      trade_table_aggregated() %>%
+        filter(year == max(y())) %>%
+        select(trade_value_usd_imp) %>%
+        as.numeric()
+    })
+    
+    exports_value_min_year_2 <- reactive({
+      show_dollars(exports_value_min_year())
+    })
+    
+    exports_value_max_year_2 <- reactive({
+      show_dollars(exports_value_max_year())
+    })
+    
+    imports_value_min_year_2 <- reactive({
+      show_dollars(imports_value_min_year())
+    })
+    
+    imports_value_max_year_2 <- reactive({
+      show_dollars(imports_value_max_year())
+    })
+    
+    exports_growth <- reactive({
+      growth_rate(
+        exports_value_max_year(), exports_value_min_year(), y()
       )
     })
     
-    trade_paragraph_exports_2 <- reactive({
-      switch(table_aggregated(),
-             "yr" = glue::glue("The exports of { r_add_the() } { r_name() } to the World ... at
-                               an annualized rate of ..."),
-             
-             "yrp" = glue::glue("The exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } ... at
-                                an annualized rate of ... { p_add_proper_the() } { p_name() } moved from No. ... 
-                                exports destination to No. { exports_rank_paragraph_max_year() }, representing ...
-                                and ... of the exports of { r_add_the() } { r_name() }.")
+    exports_growth_2 <- reactive({
+      show_percentage(exports_growth())
+    })
+    
+    exports_growth_increase_decrease <- reactive({
+      ifelse(exports_growth() >= 0, "increased", "decreased")
+    })
+    
+    exports_growth_increase_decrease_2 <- reactive({
+      ifelse(exports_growth() >= 0, "increase", "decrease")
+    })
+    
+    imports_growth <- reactive({
+      growth_rate(
+        imports_value_max_year(), imports_value_min_year(), y()
       )
     })
     
-    trade_paragraph_imports_1 <- reactive({
-      switch(table_aggregated(),
-             "yr" = glue::glue("Imports: From ... in { min(y()) } to ...in { max(y()) }"),
-             
-             "yrp" = glue::glue("Imports: From ... in { min(y()) } to ... in { max(y()) }")
+    imports_growth_2 <- reactive({
+      show_percentage(imports_growth())
+    })
+    
+    imports_growth_increase_decrease <- reactive({
+      ifelse(imports_growth() >= 0, "increased", "decreased")
+    })
+    
+    imports_growth_increase_decrease_2 <- reactive({
+      ifelse(imports_growth() >= 0, "increase", "decrease")
+    })
+    
+    trade_rankings <- reactive({
+      ots_create_tidy_data(
+        years = c(min(y()), max(y())),
+        reporters = r_iso(),
+        partners = "all",
+        table = "yrp",
+        use_localhost = use_localhost
+      ) %>%
+        filter(partner_iso != "0-unspecified") %>% 
+        mutate(
+          trade_value_usd_bal = trade_value_usd_exp + trade_value_usd_imp
+        ) %>% 
+        group_by(year) %>% 
+        mutate(
+          bal_rank = dense_rank(desc(trade_value_usd_bal)),
+          exp_share = trade_value_usd_exp / sum(trade_value_usd_exp),
+          imp_share = trade_value_usd_imp / sum(trade_value_usd_imp)
+        )
+    })
+    
+    trade_rankings_no_min_year <- reactive({
+      trade_rankings() %>%
+        ungroup() %>% 
+        filter(
+          year == min(y()),
+          reporter_iso == r_iso(),
+          partner_iso == p_iso()
+        ) %>%
+        select(bal_rank) %>%
+        as.character()
+    })
+    
+    trade_rankings_no_max_year <- reactive({
+      trade_rankings() %>%
+        ungroup() %>% 
+        filter(
+          year == max(y()),
+          reporter_iso == r_iso(),
+          partner_iso == p_iso()
+        ) %>%
+        select(bal_rank) %>%
+        as.character()
+    })
+    
+    trade_rankings_remained <- reactive({
+      ifelse(
+        trade_rankings_no_min_year() == trade_rankings_no_max_year(),
+        "remained", 
+        "moved to"
       )
     })
     
-    trade_paragraph_imports_2 <- reactive({
+    trade_rankings_exp_share_min_year <- reactive({
+      trade_rankings() %>%
+        ungroup() %>% 
+        filter(
+          year == min(y()),
+          reporter_iso == r_iso(),
+          partner_iso == p_iso()
+        ) %>%
+        select(exp_share) %>%
+        as.numeric()
+    })
+    
+    trade_rankings_exp_share_min_year_2 <- reactive({
+      show_percentage(trade_rankings_exp_share_min_year())
+    })
+    
+    trade_rankings_exp_share_max_year <- reactive({
+      trade_rankings() %>%
+        ungroup() %>% 
+        filter(
+          year == max(y()),
+          reporter_iso == r_iso(),
+          partner_iso == p_iso()
+        ) %>%
+        select(exp_share) %>%
+        as.numeric()
+    })
+    
+    trade_rankings_exp_share_max_year_2 <- reactive({
+      show_percentage(trade_rankings_exp_share_max_year())
+    })
+    
+    trade_rankings_imp_share_min_year <- reactive({
+      trade_rankings() %>%
+        ungroup() %>% 
+        filter(
+          year == min(y()),
+          reporter_iso == r_iso(),
+          partner_iso == p_iso()
+        ) %>%
+        select(imp_share) %>%
+        as.numeric()
+    })
+    
+    trade_rankings_imp_share_min_year_2 <- reactive({
+      show_percentage(trade_rankings_imp_share_min_year())
+    })
+    
+    trade_rankings_imp_share_max_year <- reactive({
+      trade_rankings() %>%
+        ungroup() %>% 
+        filter(
+          year == max(y()),
+          reporter_iso == r_iso(),
+          partner_iso == p_iso()
+        ) %>%
+        select(imp_share) %>%
+        as.numeric()
+    })
+    
+    trade_rankings_imp_share_max_year_2 <- reactive({
+      show_percentage(trade_rankings_imp_share_max_year())
+    })
+    
+    trade_summary_text_exp <- reactive({
       switch(table_aggregated(),
-             "yr" = glue::glue("The imports of { r_add_the() } { r_name() } from the World ... at
-                               an annualized rate of ..."),
+             "yr" = glue::glue("The exports of { r_add_the() } { r_name() } to the World { exports_growth_increase_decrease() } from 
+                               { exports_value_min_year_2() } in { min(y()) } to { exports_value_max_year_2() } in { max(y()) } 
+                               (annualized { exports_growth_increase_decrease_2() } of { exports_growth_2() })."),
              
-             "yrp" = glue::glue("The imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } ... at
-                                an annualized rate of ... { p_add_proper_the() } { p_name() } moved from No. { imports_rank_paragraph_min_year() } 
-                                imports destination to No. { imports_rank_paragraph_max_year() }, representing ...
-                                and ... of the imports of { r_add_the() } { r_name() }.")
+             "yrp" = glue::glue("The exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } { exports_growth_increase_decrease() } from 
+                                { exports_value_min_year_2() } in { min(y()) } 
+                                to { exports_value_max_year_2() } in { max(y()) } (annualized { exports_growth_increase_decrease_2() } of 
+                                { exports_growth_2() }). { p_add_the() } { p_name() } was the No. { trade_rankings_no_min_year() } trading partner of 
+                                { r_add_the() } { r_name() } in { min(y()) } (represented { trade_rankings_exp_share_min_year_2() } of its exports), and 
+                                then { trade_rankings_remained() } No. { trade_rankings_no_max_year() } in { max(y()) } (represented { trade_rankings_exp_share_max_year_2() } 
+                                of its exports).")
       )
     })
     
+    trade_summary_text_imp <- reactive({
+      switch(table_aggregated(),
+             "yr" = glue::glue("The imports of { r_add_the() } { r_name() } to the World { imports_growth_increase_decrease() } from 
+                               { imports_value_min_year_2() } in { min(y()) } to { imports_value_max_year_2() } in { max(y()) } 
+                               (annualized { imports_growth_increase_decrease_2() } of { imports_growth_2() })."),
+             
+             "yrp" = glue::glue("The imports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() } { imports_growth_increase_decrease() } from 
+                                { imports_value_min_year_2() } in { min(y()) } 
+                                to { imports_value_max_year_2() } in { max(y()) } (annualized { imports_growth_increase_decrease_2() } of 
+                                { imports_growth_2() }). { p_add_the() } { p_name() } was the No. { trade_rankings_no_min_year() } trading partner of 
+                                { r_add_the() } { r_name() } in { min(y()) } (represented { trade_rankings_imp_share_min_year_2() } of its imports), and 
+                                then { trade_rankings_remained() } No. { trade_rankings_no_max_year() } in { max(y()) } (represented { trade_rankings_imp_share_max_year_2() } 
+                                of its imports).")
+      )
+    })
+
     trade_exchange_lines_title <- reactive({
       switch(table_aggregated(),
              "yr" = glue::glue("{ r_add_proper_the() } { r_name() } multilateral trade between { min(y()) } and { max(y()) }"),
@@ -420,25 +454,7 @@ shinyServer(
     })
     
     exports_subtitle <- reactive({
-      "<hr/>Exports, grouped by section"
-    })
-    
-    exports_paragraph_min_year <- reactive({
-      switch(table_aggregated(),
-             "yr" = glue::glue("... of the total exports of { r_add_the() } { r_name() } to the World."),
-             
-             "yrp" = glue::glue("... of the total exports of { r_add_the() } { r_name() } to the World,
-                                ... of the total exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() }.")
-      )
-    })
-    
-    exports_paragraph_max_year <- reactive({
-      switch(table_aggregated(),
-             "yr" = glue::glue("... of the total exports of { r_add_the() } { r_name() } to the World."),
-             
-             "yrp" = glue::glue("... of the total exports of { r_add_the() } { r_name() } to the World,
-                                ... of the total exports of { r_add_the() } { r_name() } to { p_add_the() } { p_name() }.")
-      )
+      "<hr/>Detailed Exports"
     })
     
     exports_title_min_year <- reactive({
@@ -528,34 +544,16 @@ shinyServer(
                       name = "Export Value USD", showInLegend = FALSE,
                       dataLabels = list(verticalAlign = "top", align = "left", style = list(fontSize = "12px", textOutline = FALSE))
         ) %>%
-        hc_title(text = exports_title_min_year()) %>%
+        hc_title(text = exports_title_max_year()) %>%
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
     
     # Imports -----------------------------------------------------------------
     
     imports_subtitle <- reactive({
-      "<hr/>Imports, grouped by section"
+      "<hr/>Detailed Imports"
     })
-    
-    imports_paragraph_min_year <- reactive({
-      switch(table_aggregated(),
-             "yr" = glue::glue("... of the total imports of { r_add_the() } { r_name() } from the World."),
-             
-             "yrp" = glue::glue("... of the total imports of { r_add_the() } { r_name() } from the World,
-                                ... of the total imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() }.")
-      )
-    })
-    
-    imports_paragraph_max_year <- reactive({
-      switch(table_aggregated(),
-             "yr" = glue::glue("... of the total imports of { r_add_the() } { r_name() } from the World."),
-             
-             "yrp" = glue::glue("... of the total imports of { r_add_the() } { r_name() } to the World,
-                                ... of the total imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() }.")
-      )
-    })
-    
+
     imports_title_min_year <- reactive({
       switch(
         table_detailed(),
@@ -610,11 +608,11 @@ shinyServer(
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
     
-    imports_title_max_year <- reactive({
+    imports_title_min_year <- reactive({
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { max(y()) }"),
-        "yrpc" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { max(y()) }")
+        "yrc" = glue::glue("Imports of { r_add_the() } { r_name() } from the rest of the World in { min(y()) }"),
+        "yrpc" = glue::glue("Imports of { r_add_the() } { r_name() } from { p_add_the() } { p_name() } in { min(y()) }")
       )
     })
     
@@ -668,7 +666,7 @@ shinyServer(
                         style = list(fontSize = "12px", textOutline = FALSE)
                       )
         ) %>%
-        hc_title(text = imports_title_min_year()) %>%
+        hc_title(text = imports_title_max_year()) %>%
         hc_exporting(enabled = TRUE, buttons = list(contextButton = list(menuItems = hc_export_menu)))
     })
     
@@ -767,23 +765,8 @@ shinyServer(
     
     output$trade_subtitle <- renderText(trade_subtitle())
     
-    output$trade_box_exports <- renderValueBox({
-      customValueBox(
-        h4(trade_paragraph_exports_1()),
-        trade_paragraph_exports_2(),
-        icon = icon("chart-line"),
-        color = "valueboxgreen1"
-      )
-    })
-    
-    output$trade_box_imports <- renderValueBox({
-      customValueBox(
-        h4(trade_paragraph_imports_1()),
-        trade_paragraph_imports_2(),
-        icon = icon("chart-line"),
-        color = "valueboxred1"
-      )
-    })
+    output$trade_summary_exp <- renderText(trade_summary_text_exp())
+    output$trade_summary_imp <- renderText(trade_summary_text_imp())
     
     output$trade_title <- renderText(trade_title())
     
@@ -794,24 +777,6 @@ shinyServer(
     # Exports output ----------------------------------------------------------
     
     output$exports_subtitle <- renderText(exports_subtitle())
-    
-    output$exports_box_min_year <- renderValueBox({
-      customValueBox(
-        h4(glue::glue("In { min(y()) } ...")),
-        exports_paragraph_min_year(),
-        icon = icon("chart-line"),
-        color = "valueboxgreen1"
-      )
-    })
-    
-    output$exports_box_max_year <- renderValueBox({
-      customValueBox(
-        h4(glue::glue("In { max(y()) } ...")),
-        exports_paragraph_max_year(),
-        icon = icon("chart-line"),
-        color = "valueboxgreen2"
-      )
-    })
     
     output$exports_title_min_year <- renderText(exports_title_min_year())
     
@@ -828,24 +793,6 @@ shinyServer(
     # Imports output ----------------------------------------------------------
     
     output$imports_subtitle <- renderText(imports_subtitle())
-    
-    output$imports_box_min_year <- renderValueBox({
-      customValueBox(
-        h4(glue::glue("In { min(y()) }: ...")),
-        imports_paragraph_min_year(),
-        icon = icon("chart-line"),
-        color = "valueboxred1"
-      )
-    })
-    
-    output$imports_box_max_year <- renderValueBox({
-      customValueBox(
-        h4(glue::glue("In { max(y()) } ...")),
-        imports_paragraph_max_year(),
-        icon = icon("chart-line"),
-        color = "valueboxred2"
-      )
-    })
     
     output$imports_title_min_year <- renderText(imports_title_min_year())
     
