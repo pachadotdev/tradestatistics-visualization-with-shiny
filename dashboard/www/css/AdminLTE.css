@@ -20,7 +20,6 @@ body {
 }
 
 body {
-  font-family: 'Fira Sans', Helvetica, Arial, sans-serif;
   font-weight: 400;
   overflow-x: hidden;
   overflow-y: auto;
@@ -110,7 +109,7 @@ body {
 .content-wrapper,
 .right-side {
   min-height: 250px;
-  background-color: #f9fbfc;
+  background-color: #fafafa;
   z-index: 800;
 }
 
@@ -172,22 +171,6 @@ body.hold-transition .main-header .logo {
   margin-left: auto;
   padding-left: 15px;
   padding-right: 15px;
-}
-
-/* H1 - H6 font */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-.h1,
-.h2,
-.h3,
-.h4,
-.h5,
-.h6 {
-  font-family: 'Fira Sans', sans-serif;
 }
 
 /* General Links */
@@ -345,9 +328,7 @@ a:focus {
   line-height: 50px;
   text-align: center;
   width: 230px;
-  font-family: 'Fira Sans', Helvetica, Arial, sans-serif;
   padding: 0 15px;
-  font-weight: 300;
   overflow: hidden;
 }
 
