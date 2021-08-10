@@ -133,7 +133,7 @@ shinyServer(
     })
     
     title_legend <- reactive({
-      "The information displayed here is based on <a href='https://comtrade.un.org/'>UN COMTRADE</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
+      "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
       of restrictions and applicable licenses."
     })
     
