@@ -14,7 +14,7 @@ shinyUI(
             style = "height:100vh",
             htmlOutput("title", container = tags$h2),
             highchartOutput("exports_treemap_detailed", height = "92%"),
-            p("Source: Open Trade Statistics, based on UN COMTRADE data.")
+            p("Source: Open Trade Statistics, based on UN Comtrade data.")
           )
         ),
 

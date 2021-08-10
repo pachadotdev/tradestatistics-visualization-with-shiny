@@ -40,7 +40,7 @@ shinyServer(
 
     table_aggregated <- reactive({
       if (p_iso() == "all") {
-        "yr-short"
+        "yr"
       } else {
         "yrp"
       }
