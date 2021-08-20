@@ -454,7 +454,7 @@ shinyServer(
     })
     
     exports_subtitle <- reactive({
-      "<hr/>Detailed Exports"
+      sprintf("<hr/>Detailed Exports %s-%s", min(y()), max(y()))
     })
     
     exports_title_min_year <- reactive({
@@ -551,7 +551,7 @@ shinyServer(
     # Imports -----------------------------------------------------------------
     
     imports_subtitle <- reactive({
-      "<hr/>Detailed Imports"
+      sprintf("<hr/>Detailed Imports %s-%s", min(y()), max(y()))
     })
 
     imports_title_min_year <- reactive({
@@ -949,6 +949,13 @@ shinyServer(
     
     output$cite_bibtex <- renderText({
       cite_bibtex()
+    })
+    
+    output$site_footer <- renderText({
+      sprintf(
+        "<center><i>Open Trade Statistics %s.</i></center>",
+        lubridate::year(Sys.Date())
+      )
     })
     
     # Bookmarking -------------------------------------------------------------

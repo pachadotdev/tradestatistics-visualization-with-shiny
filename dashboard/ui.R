@@ -15,6 +15,8 @@ shinyUI(
         sidebarMenu(
           # Controls ----------------------------------------------------------------
 
+          HTML("<center><h4>Filter</h4></center>"),
+          
           sliderInput(
             "y",
             "Years:",
@@ -26,7 +28,7 @@ shinyUI(
             step = 2,
             ticks = FALSE
           ),
-
+          
           selectInput(
             "r",
             "Reporter:",
@@ -41,25 +43,31 @@ shinyUI(
             choices = available_reporters_iso,
             selected = "",
             selectize = TRUE
-          )
+          ),
+          
+          hr(),
+          HTML("<center><h4>Explore</h4></center>"),
+          
+          menuItem("Visualize", tabName = "visualize"),
+          
+          menuItem("Model", tabName = "model", badgeLabel = "new", badgeColor = "green"),
+      
+          menuItem("Share, download or cite", tabName = "sharedownloadcite")
         )
       ),
 
       dashboardBody(
-        fluidRow(
-          div(
-            id = "contents",
-
-            # Title -------------------------------------------------------------------
-
-            column(
-              12,
-              htmlOutput("title", container = tags$p),
-              htmlOutput("title_legend", container = tags$i)
-            ),
-
-
-            # Summary -----------------------------------------------------------------
+        column(
+          12,
+          htmlOutput("title", container = tags$p),
+          htmlOutput("title_legend", container = tags$i)
+        ),
+        
+        tabItems(
+          #div(
+          #  id = "contents",
+          tabItem(
+            tabName = "visualize",
 
             column(
               3,
@@ -119,25 +127,29 @@ shinyUI(
               6,
               highchartOutput("imports_treemap_detailed_max_year", height = "500px"),
               htmlOutput("url_imports_max_year")
-            ),
-
-            # URL and download buttons ------------------------------------------------
-
+            )
+          ),
+          
+          # URL and download buttons ------------------------------------------------
+          
+          tabItem(
+            tabName = "sharedownloadcite",
             div(
               id = "share_download_cite",
+              
               column(
                 12,
                 htmlOutput("share_download_cite_subtitle", container = tags$h2),
                 br()
               ),
-
+              
               column(
                 12,
                 htmlOutput("url"),
                 br(),
                 br()
               ),
-
+              
               column(
                 12,
                 selectInput(
@@ -147,14 +159,14 @@ shinyUI(
                   selected = NULL,
                   selectize = TRUE
                 ),
-
+                
                 downloadButton("download_aggregated", "Aggregated data"),
                 downloadButton("download_detailed", "Detailed data"),
-
+                
                 br(),
                 br()
               ),
-
+              
               column(
                 12,
                 htmlOutput("cite_subtitle", container = tags$h3),
@@ -163,26 +175,32 @@ shinyUI(
                 verbatimTextOutput("cite_bibtex")
               )
             )
-          ),
-
-          # Loading ----------------------------------------------------------------
-
-          conditionalPanel(
-            condition = "$('html').hasClass('shiny-busy')",
-            div(
-              id = "loading",
-              img(src = "img/loading_icon.gif", width = "100"),
-              p("Loading..."),
-              align = "center"
-            )
-          ),
-
-          # Footer ------------------------------------------------------------------
-
-          tags$footer(
-            tags$link(rel = "shortcut icon", href = "img/favicon.ico"),
-            tags$script(src = "js/copy-url.js")
           )
+        ),
+        
+        column(
+          12,
+          hr(),
+          htmlOutput("site_footer", container = tags$p)
+        ),
+        
+        # Loading ----------------------------------------------------------------
+        
+        conditionalPanel(
+          condition = "$('html').hasClass('shiny-busy')",
+          div(
+            id = "loading",
+            img(src = "img/loading_icon.gif", width = "100"),
+            p("Loading..."),
+            align = "center"
+          )
+        ),
+        
+        # Footer ------------------------------------------------------------------
+        
+        tags$footer(
+          tags$link(rel = "shortcut icon", href = "img/favicon.ico"),
+          tags$script(src = "js/copy-url.js")
         )
       )
     )
