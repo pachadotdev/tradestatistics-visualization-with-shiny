@@ -35,58 +35,70 @@ shinyUI(
           htmlOutput("title_legend", container = tags$i)
         ),
         
+        column(
+          12,
+          hr(),
+          h2("Filter")
+        ),
+        
+        column(
+          4,
+          sliderInput(
+            "y",
+            "Years:",
+            # min = available_years_min,
+            min = 1990,
+            max = available_years_max,
+            value = c(available_years_max - 4, 2019),
+            sep = "",
+            step = 1,
+            ticks = FALSE,
+            width = "100%"
+          ),
+          sliderInput(
+            "y_sep",
+            "Separate years by:",
+            # min = available_years_min,
+            min = 1,
+            max = 5,
+            value = 1,
+            sep = "",
+            step = 1,
+            ticks = FALSE,
+            width = "100%"
+          )
+        ),
+        
+        column(
+          4,
+          selectInput(
+            "r",
+            "Reporter:",
+            choices = available_reporters_iso[available_reporters_iso != "all"],
+            selected = "usa",
+            selectize = TRUE,
+            width = "100%"
+          )
+        ),
+        
+        column(
+          4,
+          selectInput(
+            "p",
+            "Partner:",
+            choices = available_reporters_iso,
+            selected = "",
+            selectize = TRUE,
+            width = "100%"
+          )
+        ),
+        
         tabItems(
           #div(
           #  id = "contents",
           tabItem(
             tabName = "visualize",
 
-            column(
-              12,
-              hr(),
-              h2("Filter")
-            ),
-            
-            column(
-              4,
-              sliderInput(
-                "y",
-                "Years:",
-                # min = available_years_min,
-                min = 1990,
-                max = available_years_max,
-                value = c(available_years_max - 4, 2019),
-                sep = "",
-                step = 2,
-                ticks = FALSE,
-                width = "100%"
-              )
-            ),
-              
-            column(
-              4,
-              selectInput(
-                "r",
-                "Reporter:",
-                choices = available_reporters_iso[available_reporters_iso != "all"],
-                selected = "usa",
-                selectize = TRUE,
-                width = "100%"
-              )
-            ),
-             
-            column(
-              4,
-              selectInput(
-                "p",
-                "Partner:",
-                choices = available_reporters_iso,
-                selected = "",
-                selectize = TRUE,
-                width = "100%"
-              )
-            ),
-            
             # Trade -------------------------------------------------------------------
 
             column(
@@ -96,15 +108,19 @@ shinyUI(
             ),
             
             column(
-              3,
+              6,
               h3("Exports"),
-              htmlOutput("trade_summary_exp", container = tags$p),
+              htmlOutput("trade_summary_exp", container = tags$p)
+            ),
+            
+            column(
+              6,
               h3("Imports"),
               htmlOutput("trade_summary_imp", container = tags$p)
             ),
             
             column(
-              9,
+              12,
               htmlOutput("trade_subtitle", container = tags$h2),
               br(),
               highchartOutput("trade_exchange_lines_aggregated", height = "500px"),
@@ -152,30 +168,25 @@ shinyUI(
             )
           ),
           
-          # Share/Download/Cite ----
+          # Share ----
           
           tabItem(
             tabName = "share",
             column(
               12,
-              htmlOutput("share_subtitle", container = tags$h2)
-            ),
-            
-            column(
-              12,
+              htmlOutput("share_subtitle", container = tags$h2),
               htmlOutput("url")
             )
           ),
+          
+          # Download ----
           
           tabItem(
             tabName = "download",
             column(
               12,
-              htmlOutput("download_subtitle", container = tags$h2)
-            ),
-            
-            column(
-              12,
+              htmlOutput("download_subtitle", container = tags$h2),
+              htmlOutput("download_text", container = tags$p),
               selectInput(
                 "format",
                 "Download data as:",
@@ -189,15 +200,13 @@ shinyUI(
             )
           ),
           
+          # Cite ----
+          
           tabItem(
             tabName = "cite",
             column(
               12,
-              htmlOutput("cite_subtitle", container = tags$h2)
-            ),
-            
-            column(
-              12,
+              htmlOutput("cite_subtitle", container = tags$h2),
               htmlOutput("cite_chicago_subtitle", container = tags$h3),
               htmlOutput("cite", container = tags$p),
               htmlOutput("cite_bibtex_subtitle", container = tags$h3),

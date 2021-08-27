@@ -7,9 +7,11 @@ shinyServer(
     y <- reactive({
       y2 <- (min(input$y[1], input$y[2])):(max(input$y[1], input$y[2]))
       
-      if (length(y2) > 5) {
-        y2 <- ceiling(seq(min(y2), max(y2), length.out = 5))
-      }
+      # if (length(y2) > 5) {
+      #   y2 <- ceiling(seq(min(y2), max(y2), length.out = 5))
+      # }
+      
+      y2 <- seq(min(y2), max(y2), by = input$y_sep)
       
       return(y2)
     })
@@ -844,6 +846,8 @@ shinyServer(
     # Download output ----
     
     output$download_subtitle <- renderText({"<hr/>Download"})
+    
+    output$download_text <- renderText({"Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."})
     
     output$url <- reactive({
       glue::glue(
