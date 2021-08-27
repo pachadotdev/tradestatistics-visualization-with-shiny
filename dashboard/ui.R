@@ -15,44 +15,16 @@ shinyUI(
         sidebarMenu(
           # Controls ----------------------------------------------------------------
 
-          HTML("<center><h4>Filter</h4></center>"),
-          
-          sliderInput(
-            "y",
-            "Years:",
-            # min = available_years_min,
-            min = 1990,
-            max = available_years_max,
-            value = c(available_years_max - 4, 2019),
-            sep = "",
-            step = 2,
-            ticks = FALSE
-          ),
-          
-          selectInput(
-            "r",
-            "Reporter:",
-            choices = available_reporters_iso[available_reporters_iso != "all"],
-            selected = "usa",
-            selectize = TRUE
-          ),
-
-          selectInput(
-            "p",
-            "Partner:",
-            choices = available_reporters_iso,
-            selected = "",
-            selectize = TRUE
-          ),
-          
-          hr(),
-          HTML("<center><h4>Explore</h4></center>"),
+          # hr(),
+          # HTML("<center><h4>Explore</h4></center>"),
           
           menuItem("Visualize", tabName = "visualize"),
           
           menuItem("Model", tabName = "model", badgeLabel = "new", badgeColor = "green"),
       
-          menuItem("Share, download or cite", tabName = "sharedownloadcite")
+          menuItem("Share", tabName = "share"),
+          menuItem("Download", tabName = "download"),
+          menuItem("Cite", tabName = "cite")
         )
       ),
 
@@ -70,17 +42,67 @@ shinyUI(
             tabName = "visualize",
 
             column(
-              3,
+              12,
               hr(),
-              h2("Summary"),
+              h2("Filter")
+            ),
+            
+            column(
+              4,
+              sliderInput(
+                "y",
+                "Years:",
+                # min = available_years_min,
+                min = 1990,
+                max = available_years_max,
+                value = c(available_years_max - 4, 2019),
+                sep = "",
+                step = 2,
+                ticks = FALSE,
+                width = "100%"
+              )
+            ),
+              
+            column(
+              4,
+              selectInput(
+                "r",
+                "Reporter:",
+                choices = available_reporters_iso[available_reporters_iso != "all"],
+                selected = "usa",
+                selectize = TRUE,
+                width = "100%"
+              )
+            ),
+             
+            column(
+              4,
+              selectInput(
+                "p",
+                "Partner:",
+                choices = available_reporters_iso,
+                selected = "",
+                selectize = TRUE,
+                width = "100%"
+              )
+            ),
+            
+            # Trade -------------------------------------------------------------------
+
+            column(
+              12,
+              hr(),
+              h2("Summary")
+            ),
+            
+            column(
+              3,
               h3("Exports"),
               htmlOutput("trade_summary_exp", container = tags$p),
               h3("Imports"),
               htmlOutput("trade_summary_imp", container = tags$p)
             ),
             
-            # Trade -------------------------------------------------------------------
-
             column(
               9,
               htmlOutput("trade_subtitle", container = tags$h2),
@@ -130,50 +152,56 @@ shinyUI(
             )
           ),
           
-          # URL and download buttons ------------------------------------------------
+          # Share/Download/Cite ----
           
           tabItem(
-            tabName = "sharedownloadcite",
-            div(
-              id = "share_download_cite",
-              
-              column(
-                12,
-                htmlOutput("share_download_cite_subtitle", container = tags$h2),
-                br()
+            tabName = "share",
+            column(
+              12,
+              htmlOutput("share_subtitle", container = tags$h2)
+            ),
+            
+            column(
+              12,
+              htmlOutput("url")
+            )
+          ),
+          
+          tabItem(
+            tabName = "download",
+            column(
+              12,
+              htmlOutput("download_subtitle", container = tags$h2)
+            ),
+            
+            column(
+              12,
+              selectInput(
+                "format",
+                "Download data as:",
+                choices = available_formats,
+                selected = NULL,
+                selectize = TRUE
               ),
               
-              column(
-                12,
-                htmlOutput("url"),
-                br(),
-                br()
-              ),
-              
-              column(
-                12,
-                selectInput(
-                  "format",
-                  "Download data as:",
-                  choices = available_formats,
-                  selected = NULL,
-                  selectize = TRUE
-                ),
-                
-                downloadButton("download_aggregated", "Aggregated data"),
-                downloadButton("download_detailed", "Detailed data"),
-                
-                br(),
-                br()
-              ),
-              
-              column(
-                12,
-                htmlOutput("cite_subtitle", container = tags$h3),
-                htmlOutput("cite", container = tags$p),
-                htmlOutput("cite_bibtex_subtitle", container = tags$h3),
-                verbatimTextOutput("cite_bibtex")
-              )
+              downloadButton("download_aggregated", "Aggregated data"),
+              downloadButton("download_detailed", "Detailed data")
+            )
+          ),
+          
+          tabItem(
+            tabName = "cite",
+            column(
+              12,
+              htmlOutput("cite_subtitle", container = tags$h2)
+            ),
+            
+            column(
+              12,
+              htmlOutput("cite_chicago_subtitle", container = tags$h3),
+              htmlOutput("cite", container = tags$p),
+              htmlOutput("cite_bibtex_subtitle", container = tags$h3),
+              verbatimTextOutput("cite_bibtex")
             )
           )
         ),

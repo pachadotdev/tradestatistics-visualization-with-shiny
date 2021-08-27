@@ -52,9 +52,7 @@ shinyServer(
     #   )
     # })
     
-    r_iso <- reactive({
-      input$r
-    })
+    r_iso <- reactive({ input$r })
     
     r_name <- reactive({
       reporters_to_display %>%
@@ -63,9 +61,7 @@ shinyServer(
         as.character()
     })
     
-    p_iso <- reactive({
-      input$p
-    })
+    p_iso <- reactive({ input$p })
     
     p_name <- reactive({
       reporters_to_display %>%
@@ -75,19 +71,11 @@ shinyServer(
     })
     
     table_aggregated <- reactive({
-      if (p_iso() == "all") {
-        "yr"
-      } else {
-        "yrp"
-      }
+      if (p_iso() == "all") { "yr" } else { "yrp" }
     })
     
     table_detailed <- reactive({
-      if (p_iso() == "all") {
-        "yrc"
-      } else {
-        "yrpc"
-      }
+      if (p_iso() == "all") { "yrc" } else { "yrpc" }
     })
     
     # Title -------------------------------------------------------------------
@@ -132,16 +120,9 @@ shinyServer(
       )
     })
     
-    title_legend <- reactive({
-      "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
-      of restrictions and applicable licenses."
-    })
-    
     # Format ------------------------------------------------------------------
     
-    format <- reactive({
-      input$format
-    })
+    format <- reactive({ input$format })
     
     # Data --------------------------------------------------------------------
     
@@ -184,10 +165,6 @@ shinyServer(
     trade_table_aggregated <- reactive({
       data_aggregated() %>%
         select(year, trade_value_usd_exp, trade_value_usd_imp)
-    })
-    
-    trade_subtitle <- reactive({
-      "<hr/>Total Exports and Imports"
     })
     
     exports_value_min_year <- reactive({
@@ -702,10 +679,6 @@ shinyServer(
       )
     })
     
-    share_download_cite_subtitle <- reactive({
-      "<hr/>Share, download or cite"
-    })
-    
     url <- reactive({
       glue::glue(
         "{ site_url }/dashboard/?_inputs_&y=[{ min(y()) },{ max(y()) }]&r=%22{ r_iso() }%22&p=%22{ p_iso() }%22"
@@ -713,10 +686,6 @@ shinyServer(
     })
     
     # Cite --------------------------------------------------------------------
-    
-    cite_subtitle <- reactive({
-      "Chicago citation"
-    })
     
     cite <- reactive({
       sprintf(
@@ -727,11 +696,7 @@ shinyServer(
         site_url
       )
     })
-    
-    cite_bibtex_subtitle <- reactive({
-      "BibTeX entry"
-    })
-    
+
     cite_bibtex <- reactive({
       sprintf(
         "@misc{open_trade_statistics_2021,
@@ -758,12 +723,13 @@ shinyServer(
     })
     
     output$title_legend <- renderText({
-      title_legend()
+      "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
+      of restrictions and applicable licenses."
     })
     
     # Trade output ------------------------------------------------------------
     
-    output$trade_subtitle <- renderText(trade_subtitle())
+    output$trade_subtitle <- renderText("<hr/>Total Exports and Imports")
     
     output$trade_summary_exp <- renderText(trade_summary_text_exp())
     output$trade_summary_imp <- renderText(trade_summary_text_imp())
@@ -806,7 +772,7 @@ shinyServer(
       imports_treemap_detailed_max_year()
     })
     
-    # URL and downloads output ------------------------------------------------
+    # Share output ----
     
     output$url_trade <- reactive({
       glue::glue(
@@ -873,14 +839,16 @@ shinyServer(
       )
     })
     
-    output$share_download_cite_subtitle <- renderText({
-      share_download_cite_subtitle()
-    })
+    output$share_subtitle <- renderText({"<hr/>Share"})
+    
+    # Download output ----
+    
+    output$download_subtitle <- renderText({"<hr/>Download"})
     
     output$url <- reactive({
       glue::glue(
         "
-        <p><b>Link sharing:</b></p>
+        <p>The next link allows to share the dashboard with all the options exactly as you moved them, and is formatted in a way that you can paste it on LinkedIn, Twitter, or other social media platforms.</p>
         <div class='input-group'>
         <input type='text' class='form-control' value='{ url() }' id='Url'>
         <span class='input-group-btn'>
@@ -933,10 +901,12 @@ shinyServer(
       contentType = "application/zip"
     )
     
-    # Cite output -------------------------------------------------------------
+    # Cite output ----
     
-    output$cite_subtitle <- renderText({
-      cite_subtitle()
+    output$cite_subtitle <- renderText({"<hr/>Cite"})
+    
+    output$cite_chicago_subtitle <- renderText({
+      "Chicago citation"
     })
     
     output$cite <- renderText({
@@ -944,7 +914,7 @@ shinyServer(
     })
     
     output$cite_bibtex_subtitle <- renderText({
-      cite_bibtex_subtitle()
+      "BibTeX entry"
     })
     
     output$cite_bibtex <- renderText({
