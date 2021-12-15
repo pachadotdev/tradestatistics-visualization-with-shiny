@@ -22,7 +22,6 @@ shinyUI(
           
           menuItem("Model", tabName = "model", badgeLabel = "new", badgeColor = "green"),
       
-          menuItem("Share", tabName = "share"),
           menuItem("Cite", tabName = "cite")
         )
       ),
@@ -412,17 +411,6 @@ shinyUI(
               ),
               
               downloadButton("download_model_detailed", "Detailed data")
-            )
-          ),
-          
-          # Share ----
-          
-          tabItem(
-            tabName = "share",
-            column(
-              12,
-              htmlOutput("share_subtitle", container = tags$h2),
-              htmlOutput("url")
             )
           ),
           

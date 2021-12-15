@@ -1140,7 +1140,7 @@ shinyServer(
     
     output$trade_title <- renderText(trade_title())
     
-    output$trade_exchange_lines_aggregated <- render_d3po({
+    output$trade_exchange_lines_aggregated <- renderHighchart({
       trade_exchange_lines_aggregated()
     })
     
@@ -1153,13 +1153,13 @@ shinyServer(
     
     output$exports_title_min_year <- renderText(exports_title_min_year())
     
-    output$exports_treemap_detailed_min_year <- render_d3po({
+    output$exports_treemap_detailed_min_year <- renderHighchart({
       exports_treemap_detailed_min_year()
     })
     
     output$exports_title_max_year <- renderText(exports_title_max_year())
     
-    output$exports_treemap_detailed_max_year <- render_d3po({
+    output$exports_treemap_detailed_max_year <- renderHighchart({
       exports_treemap_detailed_max_year()
     })
     
@@ -1172,13 +1172,13 @@ shinyServer(
     
     output$imports_title_min_year <- renderText(imports_title_min_year())
     
-    output$imports_treemap_detailed_min_year <- render_d3po({
+    output$imports_treemap_detailed_min_year <- renderHighchart({
       imports_treemap_detailed_min_year()
     })
     
     output$imports_title_max_year <- renderText(imports_title_max_year())
     
-    output$imports_treemap_detailed_max_year <- render_d3po({
+    output$imports_treemap_detailed_max_year <- renderHighchart({
       imports_treemap_detailed_max_year()
     })
     
@@ -1252,89 +1252,6 @@ shinyServer(
     
     output$model_summary <- renderPrint(model_summary())
     
-    # Share output ----
-    
-    output$url_trade <- reactive({
-      glue::glue(
-        "
-        <div class='input-group'>
-        <input type='text' class='form-control' value='{ url_trade() }' id='UrlTrade'>
-        <span class='input-group-btn'>
-        <button class='btn btn-default' type='button' onclick='copyUrlTrade()'><i class='fas fa-copy'></i> Copy</button>
-        </span>
-        </div>
-        "
-      )
-    })
-    
-    output$url_exports_min_year <- reactive({
-      glue::glue(
-        "
-        <div class='input-group'>
-        <input type='text' class='form-control' value='{ url_exports_min_year() }' id='UrlExportsMinYear'>
-        <span class='input-group-btn'>
-        <button class='btn btn-default' type='button' onclick='copyUrlExportsMinYear()'><i class='fas fa-copy'></i> Copy</button>
-        </span>
-        </div>
-        "
-      )
-    })
-    
-    output$url_exports_max_year <- reactive({
-      glue::glue(
-        "
-        <div class='input-group'>
-        <input type='text' class='form-control' value='{ url_exports_max_year() }' id='UrlExportsMaxYear'>
-        <span class='input-group-btn'>
-        <button class='btn btn-default' type='button' onclick='copyUrlExportsMaxYear()'><i class='fas fa-copy'></i> Copy</button>
-        </span>
-        </div>
-        "
-      )
-    })
-    
-    output$url_imports_min_year <- reactive({
-      glue::glue(
-        "
-        <div class='input-group'>
-        <input type='text' class='form-control' value='{ url_imports_min_year() }' id='UrlImportsMinYear'>
-        <span class='input-group-btn'>
-        <button class='btn btn-default' type='button' onclick='copyUrlImportsMinYear()'><i class='fas fa-copy'></i> Copy</button>
-        </span>
-        </div>
-        "
-      )
-    })
-    
-    output$url_imports_max_year <- reactive({
-      glue::glue(
-        "
-        <div class='input-group'>
-        <input type='text' class='form-control' value='{ url_imports_max_year() }' id='UrlImportsMaxYear'>
-        <span class='input-group-btn'>
-        <button class='btn btn-default' type='button' onclick='copyUrlImportsMaxYear()'><i class='fas fa-copy'></i> Copy</button>
-        </span>
-        </div>
-        "
-      )
-    })
-    
-    output$share_subtitle <- renderText({"<hr/>Share"})
-    
-    output$url <- reactive({
-      glue::glue(
-        "
-        <p>The next link allows to share the dashboard with all the options exactly as you moved them, and is formatted in a way that you can paste it on LinkedIn, Twitter, or other social media platforms.</p>
-        <div class='input-group'>
-        <input type='text' class='form-control' value='{ url() }' id='Url'>
-        <span class='input-group-btn'>
-        <button class='btn btn-default' type='button' onclick='copyUrl()'><i class='fas fa-copy'></i> Copy</button>
-        </span>
-        </div>
-        "
-      )
-    })
-    
     # Download output ----
     
     ## Visualize ----
@@ -1365,7 +1282,7 @@ shinyServer(
     
     ## Model ----
     
-    output$download_model_subtitle <- renderText({"<hr/>Download modelled data"})
+    output$download_model_subtitle <- renderText({"<hr/>Download model data"})
     
     output$download_model_text <- renderText({"Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."})
     
