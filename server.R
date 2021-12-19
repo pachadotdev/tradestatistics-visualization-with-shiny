@@ -385,7 +385,19 @@ shinyServer(
                                { exports_value_min_year_2() } in { min(input_visualize_y()) } to { exports_value_max_year_2() } in { max(input_visualize_y()) } 
                                (annualized { exports_growth_increase_decrease_2() } of { exports_growth_2() })."),
              
+             "yr-imputed" = glue::glue("The exports of { reporter_add_the() } { reporter_name() } to the World { exports_growth_increase_decrease() } from 
+                               { exports_value_min_year_2() } in { min(input_visualize_y()) } to { exports_value_max_year_2() } in { max(input_visualize_y()) } 
+                               (annualized { exports_growth_increase_decrease_2() } of { exports_growth_2() })."),
+             
              "yrp" = glue::glue("The exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { exports_growth_increase_decrease() } from 
+                                { exports_value_min_year_2() } in { min(input_visualize_y()) } 
+                                to { exports_value_max_year_2() } in { max(input_visualize_y()) } (annualized { exports_growth_increase_decrease_2() } of 
+                                { exports_growth_2() }). { partner_add_the() } { partner_name() } was the No. { trade_rankings_no_min_year() } trading partner of 
+                                { reporter_add_the() } { reporter_name() } in { min(input_visualize_y()) } (represented { trade_rankings_exp_share_min_year_2() } of its exports), and 
+                                then { trade_rankings_remained() } No. { trade_rankings_no_max_year() } in { max(input_visualize_y()) } (represented { trade_rankings_exp_share_max_year_2() } 
+                                of its exports)."),
+             
+             "yrp-imputed" = glue::glue("The exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { exports_growth_increase_decrease() } from 
                                 { exports_value_min_year_2() } in { min(input_visualize_y()) } 
                                 to { exports_value_max_year_2() } in { max(input_visualize_y()) } (annualized { exports_growth_increase_decrease_2() } of 
                                 { exports_growth_2() }). { partner_add_the() } { partner_name() } was the No. { trade_rankings_no_min_year() } trading partner of 
@@ -401,7 +413,19 @@ shinyServer(
                                { imports_value_min_year_2() } in { min(input_visualize_y()) } to { imports_value_max_year_2() } in { max(input_visualize_y()) } 
                                (annualized { imports_growth_increase_decrease_2() } of { imports_growth_2() })."),
              
+             "yr-imputed" = glue::glue("The imports of { reporter_add_the() } { reporter_name() } to the World { imports_growth_increase_decrease() } from 
+                               { imports_value_min_year_2() } in { min(input_visualize_y()) } to { imports_value_max_year_2() } in { max(input_visualize_y()) } 
+                               (annualized { imports_growth_increase_decrease_2() } of { imports_growth_2() })."),
+             
              "yrp" = glue::glue("The imports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { imports_growth_increase_decrease() } from 
+                                { imports_value_min_year_2() } in { min(input_visualize_y()) } 
+                                to { imports_value_max_year_2() } in { max(input_visualize_y()) } (annualized { imports_growth_increase_decrease_2() } of 
+                                { imports_growth_2() }). { partner_add_the() } { partner_name() } was the No. { trade_rankings_no_min_year() } trading partner of 
+                                { reporter_add_the() } { reporter_name() } in { min(input_visualize_y()) } (represented { trade_rankings_imp_share_min_year_2() } of its imports), and 
+                                then { trade_rankings_remained() } No. { trade_rankings_no_max_year() } in { max(input_visualize_y()) } (represented { trade_rankings_imp_share_max_year_2() } 
+                                of its imports)."),
+             
+             "yrp-imputed" = glue::glue("The imports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { imports_growth_increase_decrease() } from 
                                 { imports_value_min_year_2() } in { min(input_visualize_y()) } 
                                 to { imports_value_max_year_2() } in { max(input_visualize_y()) } (annualized { imports_growth_increase_decrease_2() } of 
                                 { imports_growth_2() }). { partner_add_the() } { partner_name() } was the No. { trade_rankings_no_min_year() } trading partner of 
