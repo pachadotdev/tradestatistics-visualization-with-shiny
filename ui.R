@@ -340,7 +340,7 @@ shinyUI(
             ),
             
             column(6,
-                   fileInput('mod_own', 'Upload your own variables:',
+                   fileInput('mod_own', 'Upload your own data:',
                              accept = c(
                                'text/csv',
                                'text/comma-separated-values',
@@ -370,7 +370,7 @@ shinyUI(
             
             column(12,
                    p("The max size 100MB and this works with csv, tsv, xlsx, sav or dta only."),
-                   HTML("<p>You can download an example of custom variables that work with UN COMTRADE data from INSERT LINK. See the <i>cepiigeodist</i> package documentation for the details.</p>")
+                   HTML("<p>You can download an example of custom variables that work with UN COMTRADE data from <a href='https://github.com/pachadotdev/tradestatistics-visualization-with-shiny/blob/master/custom_variables_for_modelling_demo.csv?raw=true'>here</a>. See the <i>cepiigeodist</i> package documentation for the details.</p>")
             ),
             
             column(
