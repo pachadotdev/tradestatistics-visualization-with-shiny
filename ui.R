@@ -275,7 +275,7 @@ shinyUI(
                 choiceNames = list("Yes",
                                    "No"),
                 choiceValues = list("yes", "no"),
-                selected = c("yes"),
+                selected = c("no"),
                 width = "100%",
               ),
               radioButtons(
@@ -340,7 +340,7 @@ shinyUI(
             ),
             
             column(6,
-                   fileInput('mod_f', 'Upload your own variables:',
+                   fileInput('mod_own', 'Upload your own variables:',
                              accept = c(
                                'text/csv',
                                'text/comma-separated-values',
@@ -359,7 +359,7 @@ shinyUI(
               8,
               textInput(
                 "mod_s",
-                "Custom columns subset (use ';' to separate):",
+                "Subset your data (optional, use ';' to separate):",
                 width = "100%"
               )
             ),
@@ -393,6 +393,7 @@ shinyUI(
               h2("Data preview"),
               tableOutput("data_detailed_model_preview"),
               h2("Model summary"),
+              p("WIP: some selections create errors messages such as 'contrasts can be applied only to factors with 2 or more levels' but Shiny hides those."),
               verbatimTextOutput("model_summary")
             ),
             

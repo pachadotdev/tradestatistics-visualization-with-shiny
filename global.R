@@ -11,7 +11,7 @@ library(cepiigeodist)
 
 # URLs --------------------------------------------------------------------
 
-running_on_server <- T
+running_on_server <- F
 
 if (running_on_server == TRUE) {
   base_url <- "http://localhost:8080"

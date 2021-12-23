@@ -718,7 +718,7 @@ shinyServer(
     # Model ----
   
     model_custom_data <- reactive({
-      uploaded_file <- input$mod_f
+      uploaded_file <- input$mod_own
       
       if(!is.null(uploaded_file)) {
         input_data <- rio::import(file = uploaded_file$datapath, format = tools::file_ext(uploaded_file$name)) %>%
@@ -1354,7 +1354,7 @@ shinyServer(
       # strip shiny related URL parameters
       reactiveValuesToList(input)
       setBookmarkExclude(c(
-        "mod_f", "vis_f", "go", "sidebarCollapsed", "sidebarItemExpanded"
+        "mod_own", "mod_f", "vis_f", "go", "sidebarCollapsed", "sidebarItemExpanded"
       ))
       session$doBookmark()
     })
