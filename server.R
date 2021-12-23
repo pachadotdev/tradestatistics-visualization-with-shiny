@@ -134,7 +134,9 @@ shinyServer(
       switch(
         table_detailed(),
         "yrc" = glue::glue("<h1>{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_visualize_y()) } and { max(input_visualize_y()) }</h1>"),
-        "yrpc" = glue::glue("<h1>{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_visualize_y()) } and { max(input_visualize_y()) }</h1>")
+        "yrc-imputed" = glue::glue("<h1>{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_visualize_y()) } and { max(input_visualize_y()) }</h1>"),
+        "yrpc" = glue::glue("<h1>{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_visualize_y()) } and { max(input_visualize_y()) }</h1>"),
+        "yrpc-imputed" = glue::glue("<h1>{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_visualize_y()) } and { max(input_visualize_y()) }</h1>")
       )
     })
     
