@@ -11,7 +11,7 @@ library(cepiigeodist)
 
 # URLs --------------------------------------------------------------------
 
-running_on_server <- F
+running_on_server <- T
 
 if (running_on_server == TRUE) {
   base_url <- "http://localhost:8080"
@@ -95,7 +95,48 @@ download_button <- function(outputId, label = "Download", class = NULL, ...) {
 
 colors_jbk <- c("#037a7e", "#e6929a")
 
-groups_colors <- read.csv("groups_colors.csv")
+# groups_colors <- read.csv("groups_colors.csv")
+
+# sections_colors <- tradestatistics::ots_commodities %>% 
+#   select(section_fullname_english) %>% 
+#   distinct()
+# 
+# sections_colors <- sections_colors %>% 
+#   mutate(
+#     section_fullname_english = case_when(
+#       is.na(section_fullname_english) ~ "Unspecified",
+#       TRUE ~ section_fullname_english
+#     )
+#   )
+#
+# sections_colors <- sections_colors %>% 
+#   mutate(
+#     section_color = c("#bf616e",
+#                      "#7ab93d",
+#                      "#8b60da",
+#                      "#cd9931",
+#                      "#5a7fde",
+#                      "#cd5b2f",
+#                      "#4eadd3",
+#                      "#d53b57",
+#                      "#52a667",
+#                      "#c251bb",
+#                      "#79943f",
+#                      "#d53d8b",
+#                      "#45ac95",
+#                      "#c86eb9",
+#                      "#a8844d",
+#                      "#7c5db2",
+#                      "#ca685a",
+#                      "#638bd1",
+#                      "#9d446b",
+#                      "#9082c0",
+#                      "#e17da6",
+#                      "#b57aa9")
+#   )
+# readr::write_csv(sections_colors, "sections_colors.csv")
+
+sections_colors <- read.csv("sections_colors.csv")
 
 # Bookmarking -------------------------------------------------------------
 

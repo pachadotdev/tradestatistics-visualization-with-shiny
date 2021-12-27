@@ -462,21 +462,21 @@ shinyServer(
     exports_table_detailed_min_year <- reactive({
       d <- data_detailed() %>%
         filter(year == min(input_visualize_y())) %>%
-        select(group_fullname_english, trade_value_usd_exp) %>%
+        select(section_fullname_english, trade_value_usd_exp) %>%
         filter(trade_value_usd_exp > 0) %>% 
-        group_by(group_fullname_english) %>% 
+        group_by(section_fullname_english) %>% 
         summarise(trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T)) %>% 
         arrange(-trade_value_usd_exp)
       
       d <- d %>% 
         mutate(
-          group_fullname_english = case_when(
-            row_number() > 9 ~ "Others",
-            TRUE ~ group_fullname_english
+          section_fullname_english = case_when(
+            is.na(section_fullname_english) ~ "Unspecified",
+            TRUE ~ section_fullname_english
           )) %>% 
-        group_by(group_fullname_english) %>% 
+        group_by(section_fullname_english) %>% 
         summarise(trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T)) %>% 
-        left_join(groups_colors)
+        left_join(sections_colors)
       
       return(d)
     })
@@ -497,20 +497,20 @@ shinyServer(
     
     exports_treemap_detailed_min_year <- reactive({
       d <- exports_table_detailed_min_year() %>%
-        group_by(group_fullname_english, group_color) %>%
+        group_by(section_fullname_english, section_color) %>%
         summarise(trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T)) %>%
         ungroup() %>% 
-        group_by(group_fullname_english, group_color) %>%
+        group_by(section_fullname_english, section_color) %>%
         summarise(trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T)) %>%
         ungroup() %>% 
         mutate(
           share = paste0(round(100 * trade_value_usd_exp / sum(trade_value_usd_exp), 2), "%"),
-          group_fullname_english = paste0(group_fullname_english, "<br>", share)
+          section_fullname_english = paste0(section_fullname_english, "<br>", share)
         ) %>%
         rename(
           value = trade_value_usd_exp,
-          name = group_fullname_english,
-          color = group_color
+          name = section_fullname_english,
+          color = section_color
         )
       
       highchart() %>%
@@ -536,41 +536,41 @@ shinyServer(
     exports_table_detailed_max_year <- reactive({
       d <- data_detailed() %>%
         filter(year == max(input_visualize_y())) %>%
-        select(group_fullname_english, trade_value_usd_exp) %>%
+        select(section_fullname_english, trade_value_usd_exp) %>%
         filter(trade_value_usd_exp > 0) %>% 
-        group_by(group_fullname_english) %>% 
+        group_by(section_fullname_english) %>% 
         summarise(trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T)) %>% 
         arrange(-trade_value_usd_exp)
       
       d <- d %>% 
         mutate(
-          group_fullname_english = case_when(
-            row_number() > 9 ~ "Others",
-            TRUE ~ group_fullname_english
+          section_fullname_english = case_when(
+            is.na(section_fullname_english) ~ "Unspecified",
+            TRUE ~ section_fullname_english
           )) %>% 
-        group_by(group_fullname_english) %>% 
+        group_by(section_fullname_english) %>% 
         summarise(trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T)) %>% 
-        left_join(groups_colors)
+        left_join(sections_colors)
       
       return(d)
     })
     
     exports_treemap_detailed_max_year <- reactive({
       d <- exports_table_detailed_max_year() %>%
-        group_by(group_fullname_english, group_color) %>%
+        group_by(section_fullname_english, section_color) %>%
         summarise(trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T)) %>%
         ungroup() %>% 
-        group_by(group_fullname_english, group_color) %>%
+        group_by(section_fullname_english, section_color) %>%
         summarise(trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T)) %>%
         ungroup() %>% 
         mutate(
           share = paste0(round(100 * trade_value_usd_exp / sum(trade_value_usd_exp), 2), "%"),
-          group_fullname_english = paste0(group_fullname_english, "<br>", share)
+          section_fullname_english = paste0(section_fullname_english, "<br>", share)
         ) %>%
         rename(
           value = trade_value_usd_exp,
-          name = group_fullname_english,
-          color = group_color
+          name = section_fullname_english,
+          color = section_color
         )
       
       highchart() %>%
@@ -602,41 +602,41 @@ shinyServer(
     imports_table_detailed_min_year <- reactive({
       d <- data_detailed() %>%
         filter(year == min(input_visualize_y())) %>%
-        select(group_fullname_english, trade_value_usd_imp) %>%
+        select(section_fullname_english, trade_value_usd_imp) %>%
         filter(trade_value_usd_imp > 0) %>% 
-        group_by(group_fullname_english) %>% 
+        group_by(section_fullname_english) %>% 
         summarise(trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)) %>% 
         arrange(-trade_value_usd_imp)
       
       d <- d %>% 
         mutate(
-          group_fullname_english = case_when(
-            row_number() > 9 ~ "Others",
-            TRUE ~ group_fullname_english
+          section_fullname_english = case_when(
+            is.na(section_fullname_english) ~ "Unspecified",
+            TRUE ~ section_fullname_english
           )) %>% 
-        group_by(group_fullname_english) %>% 
+        group_by(section_fullname_english) %>% 
         summarise(trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)) %>% 
-        left_join(groups_colors)
+        left_join(sections_colors)
       
       return(d)
     })
     
     imports_treemap_detailed_min_year <- reactive({
       d <- imports_table_detailed_min_year() %>%
-        group_by(group_fullname_english, group_color) %>%
+        group_by(section_fullname_english, section_color) %>%
         summarise(trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)) %>%
         ungroup() %>% 
-        group_by(group_fullname_english, group_color) %>%
+        group_by(section_fullname_english, section_color) %>%
         summarise(trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)) %>%
         ungroup() %>% 
         mutate(
           share = paste0(round(100 * trade_value_usd_imp / sum(trade_value_usd_imp), 2), "%"),
-          group_fullname_english = paste0(group_fullname_english, "<br>", share)
+          section_fullname_english = paste0(section_fullname_english, "<br>", share)
         ) %>%
         rename(
           value = trade_value_usd_imp,
-          name = group_fullname_english,
-          color = group_color
+          name = section_fullname_english,
+          color = section_color
         )
       
       highchart() %>%
@@ -677,41 +677,41 @@ shinyServer(
     imports_table_detailed_max_year <- reactive({
       d <- data_detailed() %>%
         filter(year == max(input_visualize_y())) %>%
-        select(group_fullname_english, trade_value_usd_imp) %>%
+        select(section_fullname_english, trade_value_usd_imp) %>%
         filter(trade_value_usd_imp > 0) %>% 
-        group_by(group_fullname_english) %>% 
+        group_by(section_fullname_english) %>% 
         summarise(trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)) %>% 
         arrange(-trade_value_usd_imp)
       
       d <- d %>% 
         mutate(
-          group_fullname_english = case_when(
-            row_number() > 9 ~ "Others",
-            TRUE ~ group_fullname_english
+          section_fullname_english = case_when(
+            is.na(section_fullname_english) ~ "Unspecified",
+            TRUE ~ section_fullname_english
           )) %>% 
-        group_by(group_fullname_english) %>% 
+        group_by(section_fullname_english) %>% 
         summarise(trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)) %>% 
-        left_join(groups_colors)
+        left_join(sections_colors)
       
       return(d)
     })
     
     imports_treemap_detailed_max_year <- reactive({
       d <- imports_table_detailed_max_year() %>%
-        group_by(group_fullname_english, group_color) %>%
+        group_by(section_fullname_english, section_color) %>%
         summarise(trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)) %>%
         ungroup() %>% 
-        group_by(group_fullname_english, group_color) %>%
+        group_by(section_fullname_english, section_color) %>%
         summarise(trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)) %>%
         ungroup() %>% 
         mutate(
           share = paste0(round(100 * trade_value_usd_imp / sum(trade_value_usd_imp), 2), "%"),
-          group_fullname_english = paste0(group_fullname_english, "<br>", share)
+          section_fullname_english = paste0(section_fullname_english, "<br>", share)
         ) %>%
         rename(
           value = trade_value_usd_imp,
-          name = group_fullname_english,
-          color = group_color
+          name = section_fullname_english,
+          color = section_color
         )
       
       highchart() %>%
@@ -1186,7 +1186,7 @@ shinyServer(
     
     output$exports_subtitle <- renderText(exports_subtitle())
     output$exports_note <- renderText(
-      "The official HS groups were grouped to show the top ten to make the charts clearer. Any exported group below the 9th place was added to 'Others'. You can download the product level data at the bottom of the page. You can download the product level data at the bottom of the page."
+      "The data was grouped by official HS sections to make the charts clearer. You can download the product level data at the bottom of the page."
     )
     
     output$exports_title_min_year <- renderText(exports_title_min_year())
@@ -1205,7 +1205,7 @@ shinyServer(
     
     output$imports_subtitle <- renderText(imports_subtitle())
     output$imports_note <- renderText(
-      "The official HS groups were grouped to show the top ten to make the charts clearer. Any imported group below the 9th place was added to 'Others'. You can download the product level data at the bottom of the page."
+      "The data was grouped by official HS sections to make the charts clearer. You can download the product level data at the bottom of the page."
     )
     
     output$imports_title_min_year <- renderText(imports_title_min_year())
