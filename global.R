@@ -11,7 +11,7 @@ library(cepiigeodist)
 
 # URLs --------------------------------------------------------------------
 
-running_on_server <- T
+running_on_server <- F
 
 if (running_on_server == TRUE) {
   base_url <- "http://localhost:8080"
@@ -145,7 +145,7 @@ enableBookmarking(store = "url")
 # Styles ------------------------------------------------------------------
 
 styles <- list(
-  skin_color = "green-light",
+  skin_color = "blue",
   css_files = c("css/AdminLTE.min.css", "css/_all-skins.min.css", "css/custom.min.css",
                 "css/ion.rangeSlider.min.css")
 )

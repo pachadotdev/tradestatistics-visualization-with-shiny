@@ -179,9 +179,9 @@
 .irs--shiny .irs-bar {
   top: 25px;
   height: 8px;
-  border-top: 1px solid #333333;
-  border-bottom: 1px solid #333333;
-  background: #333333;
+  border-top: 1px solid #020b3b;
+  border-bottom: 1px solid #020b3b;
+  background: #020b3b;
 }
 
 .irs--shiny .irs-bar--single {
@@ -235,7 +235,7 @@
   color: #fff;
   text-shadow: none;
   padding: 1px 3px;
-  background-color: #333333;
+  background-color: #020b3b;
   border-radius: 3px;
   font-size: 11px;
   line-height: 1.333;

@@ -339,7 +339,7 @@ shinyUI(
               )
             ),
             
-            column(6,
+            column(4,
                    fileInput('mod_own', 'Upload your own data:',
                              accept = c(
                                'text/csv',
@@ -383,7 +383,7 @@ shinyUI(
               12,
               align="center",
               actionButton("go", "Give me the results for this model",
-                           class = "btn-warning")
+                           class = "btn-default")
             ),
             
             ## Model results ----
@@ -451,8 +451,7 @@ shinyUI(
         # Footer ----
         
         tags$footer(
-          tags$link(rel = "shortcut icon", href = "img/favicon.ico"),
-          tags$script(src = "js/copy-url.js")
+          tags$link(rel = "shortcut icon", href = "img/favicon.ico")
         )
       )
     )
