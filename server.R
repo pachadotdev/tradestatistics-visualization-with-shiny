@@ -78,6 +78,7 @@ shinyServer(
     })
     
     input_model_product_filter <- reactive({ input$mod_pf })
+    input_model_custom_product_filter <- reactive({ input$mod_cpf })
     input_model_type <- reactive({ input$mod_t })
     input_model_dist <- reactive({ input$mod_d })
     input_model_bin <- reactive({ input$mod_b })
@@ -765,32 +766,25 @@ shinyServer(
       
       # 2. apply filters
       
-      if (!any(input_model_product_filter() %in% c("All Products"))) {
-        if (any(input_model_product_filter() %in% "Vaccine Inputs")) {
-          d <- d %>% 
-            mutate(
-              group_fullname_english = case_when(
-                commodity_code %in% c("170199", "220710", "220720", "220890", "250100", 
-                                      "280610", "281121", "281511", "281512", "282731", 
-                                      "283330", "283522", "283524", "285210", "285390", 
-                                      "290544", "290613", "291211", "291521", "291529", 
-                                      "291814", "291815", "292219", "292249", "292250", 
-                                      "292320", "293329", "294190", "300220", "300510", 
-                                      "310420", "340213", "350300", "350510", "350790", 
-                                      "382100", "382200", "391740", "392310", "392321", 
-                                      "392329", "392330", "392690", "401511", "401519", 
-                                      "401699", "482110", "482190", "701090", "701710", 
-                                      "701720", "701790", "830990", "841830", "841840", 
-                                      "841920", "841989", "842129", "842230", "847982", 
-                                      "847989", "854370", "901831", "901832", "902720", 
-                                      "902790", "903289") ~ "Vaccine Inputs",
-                TRUE ~ group_fullname_english
-              )
-            )
-        }
-        
+      if (length(input_model_custom_product_filter()) > 0) {
         d <- d %>% 
-          filter(group_fullname_english %in% input_model_product_filter())
+          filter(commodity_code %in% input_model_custom_product_filter()) 
+      } else {
+        if (!any(input_model_product_filter() %in% c("All Products"))) {
+          if (any(input_model_product_filter() %in% "Vaccine Inputs")) {
+            vaccine_codes <- read.csv("vaccine_codes.csv")
+            d <- d %>% 
+              mutate(
+                group_fullname_english = case_when(
+                  commodity_code %in% vaccine_codes$commodity_code ~ "Vaccine Inputs",
+                  TRUE ~ group_fullname_english
+                )
+              )
+          }
+          
+          d <- d %>% 
+            filter(group_fullname_english %in% input_model_product_filter())
+        }
       }
       
       if (any(input_model_ctn() %in% "mfn")) {

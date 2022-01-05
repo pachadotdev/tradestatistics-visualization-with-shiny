@@ -66,6 +66,11 @@ reporters_to_display <- tibble(
   available_reporters_names = names(available_reporters_iso)
 )
 
+available_commodities <- ots_commodities$commodity_code
+names(available_commodities) <- paste(ots_commodities$commodity_code,
+                                      ots_commodities$commodity_fullname_english,
+                                      sep = " - ")
+
 available_models <- list("ols", "olsrem", "olsfe", "ppml")
 names(available_models) <- c("OLS", "OLS (Remoteness Index)", "OLS (Fixed Effects)", "Poisson Pseudo Maximum Likelihood (PPML)")
 
@@ -85,56 +90,7 @@ download_button <- function(outputId, label = "Download", class = NULL, ...) {
   )
 }
 
-# Colors for group visualization (instead of communities) -----------------
-
-# colors_jbk <- c("#037a7e", "#89bda7", "#c0bda8", "#e6929a", "#429c91",
-#                 "#8f9e98", "#c0d6b8", "#f2a6a3", "#67b1a4", "#a3dbbe")
-
-# colors_escap <- c("#1a3668", "#ea1c2d", "#d19f2a", "#2d9a47", "#c22033",
-#                   "#ef412a", "#00add8", "#fdb714", "#8f1838", "#8f1838")
-
-colors_jbk <- c("#037a7e", "#e6929a")
-
-# groups_colors <- read.csv("groups_colors.csv")
-
-# sections_colors <- tradestatistics::ots_commodities %>% 
-#   select(section_fullname_english) %>% 
-#   distinct()
-# 
-# sections_colors <- sections_colors %>% 
-#   mutate(
-#     section_fullname_english = case_when(
-#       is.na(section_fullname_english) ~ "Unspecified",
-#       TRUE ~ section_fullname_english
-#     )
-#   )
-#
-# sections_colors <- sections_colors %>% 
-#   mutate(
-#     section_color = c("#bf616e",
-#                      "#7ab93d",
-#                      "#8b60da",
-#                      "#cd9931",
-#                      "#5a7fde",
-#                      "#cd5b2f",
-#                      "#4eadd3",
-#                      "#d53b57",
-#                      "#52a667",
-#                      "#c251bb",
-#                      "#79943f",
-#                      "#d53d8b",
-#                      "#45ac95",
-#                      "#c86eb9",
-#                      "#a8844d",
-#                      "#7c5db2",
-#                      "#ca685a",
-#                      "#638bd1",
-#                      "#9d446b",
-#                      "#9082c0",
-#                      "#e17da6",
-#                      "#b57aa9")
-#   )
-# readr::write_csv(sections_colors, "sections_colors.csv")
+# Colors for group visualization ------------------------------------------
 
 sections_colors <- read.csv("sections_colors.csv")
 

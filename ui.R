@@ -330,9 +330,22 @@ shinyUI(
               8,
               selectInput(
                 "mod_pf",
-                "Product filter:",
+                "Product filter (i.e. HS section subset):",
                 choice = available_groups,
                 selected = "All Products",
+                selectize = TRUE,
+                width = "100%",
+                multiple = TRUE
+              )
+            ),
+            
+            column(
+              12,
+              selectInput(
+                "mod_cpf",
+                "Custom product filter (optional, overwrites section filter):",
+                choices = available_commodities,
+                selected = NULL,
                 selectize = TRUE,
                 width = "100%",
                 multiple = TRUE
