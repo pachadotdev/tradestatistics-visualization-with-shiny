@@ -477,7 +477,7 @@ shinyServer(
           )) %>% 
         group_by(section_fullname_english) %>% 
         summarise(trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T)) %>% 
-        left_join(sections_colors)
+        left_join(ots_sections_colors)
       
       return(d)
     })
@@ -551,7 +551,7 @@ shinyServer(
           )) %>% 
         group_by(section_fullname_english) %>% 
         summarise(trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T)) %>% 
-        left_join(sections_colors)
+        left_join(ots_sections_colors)
       
       return(d)
     })
@@ -617,7 +617,7 @@ shinyServer(
           )) %>% 
         group_by(section_fullname_english) %>% 
         summarise(trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)) %>% 
-        left_join(sections_colors)
+        left_join(ots_sections_colors)
       
       return(d)
     })
@@ -692,7 +692,7 @@ shinyServer(
           )) %>% 
         group_by(section_fullname_english) %>% 
         summarise(trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)) %>% 
-        left_join(sections_colors)
+        left_join(ots_sections_colors)
       
       return(d)
     })

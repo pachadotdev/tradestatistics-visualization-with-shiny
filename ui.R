@@ -5,7 +5,6 @@ shinyUI(
     dashboardPage(
       skin = styles$skin_color,
       theme = styles$css_files,
-      sidebar_mini = FALSE,
 
       dashboardHeader(
         title = "OTS beta dashboard"

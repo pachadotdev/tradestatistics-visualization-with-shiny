@@ -90,10 +90,6 @@ download_button <- function(outputId, label = "Download", class = NULL, ...) {
   )
 }
 
-# Colors for group visualization ------------------------------------------
-
-sections_colors <- read.csv("sections_colors.csv")
-
 # Bookmarking -------------------------------------------------------------
 
 enableBookmarking(store = "url")
