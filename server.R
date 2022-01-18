@@ -101,7 +101,7 @@ shinyServer(
       if (input_visualize_partner_iso() == "all") { 
         if (input_visualize_imputed_data() == "yes") "yrc-imputed" else "yrc"
       } else {
-        if (input_visualize_imputed_data() == "yes") "yrpc-imputed" else "yrpc"
+        if (input_visualize_imputed_data() == "yes") "yrpc-imputed-parquet" else "yrpc-parquet"
       }
     })
     
@@ -136,8 +136,8 @@ shinyServer(
         table_detailed(),
         "yrc" = glue::glue("<h1>{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_visualize_y()) } and { max(input_visualize_y()) }</h1>"),
         "yrc-imputed" = glue::glue("<h1>{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_visualize_y()) } and { max(input_visualize_y()) }</h1>"),
-        "yrpc" = glue::glue("<h1>{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_visualize_y()) } and { max(input_visualize_y()) }</h1>"),
-        "yrpc-imputed" = glue::glue("<h1>{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_visualize_y()) } and { max(input_visualize_y()) }</h1>")
+        "yrpc-parquet" = glue::glue("<h1>{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_visualize_y()) } and { max(input_visualize_y()) }</h1>"),
+        "yrpc-imputed-parquet" = glue::glue("<h1>{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_visualize_y()) } and { max(input_visualize_y()) }</h1>")
       )
     })
     
@@ -491,8 +491,8 @@ shinyServer(
         table_detailed(),
         "yrc" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_visualize_y()) }"),
         "yrc-imputed" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_visualize_y()) }"),
-        "yrpc" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { min(input_visualize_y()) }"),
-        "yrpc-imputed" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { min(input_visualize_y()) }")
+        "yrpc-parquet" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { min(input_visualize_y()) }"),
+        "yrpc-imputed-parquet" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { min(input_visualize_y()) }")
       )
     })
     
@@ -529,8 +529,8 @@ shinyServer(
         table_detailed(),
         "yrc" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World { max(input_visualize_y()) }"),
         "yrc-imputed" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World { max(input_visualize_y()) }"),
-        "yrpc" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { max(input_visualize_y()) }"),
-        "yrpc-imputed" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { max(input_visualize_y()) }")
+        "yrpc-parquet" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { max(input_visualize_y()) }"),
+        "yrpc-imputed-parquet" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { max(input_visualize_y()) }")
       )
     })
     
@@ -595,8 +595,8 @@ shinyServer(
         table_detailed(),
         "yrc" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_visualize_y()) }"),
         "yrc-imputed" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_visualize_y()) }"),
-        "yrpc" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_visualize_y()) }"),
-        "yrpc-imputed" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_visualize_y()) }")
+        "yrpc-parquet" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_visualize_y()) }"),
+        "yrpc-imputed-parquet" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_visualize_y()) }")
       )
     })
     
@@ -660,8 +660,8 @@ shinyServer(
         table_detailed(),
         "yrc" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_visualize_y()) }"),
         "yrc-imputed" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_visualize_y()) }"),
-        "yrpc" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_visualize_y()) }"),
-        "yrpc-imputed" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_visualize_y()) }")
+        "yrpc-parquet" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_visualize_y()) }"),
+        "yrpc-imputed-parquet" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_visualize_y()) }")
       )
     })
     
@@ -670,8 +670,8 @@ shinyServer(
         table_detailed(),
         "yrc" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { max(input_visualize_y()) }"),
         "yrc-imputed" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { max(input_visualize_y()) }"),
-        "yrpc" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { max(input_visualize_y()) }"),
-        "yrpc-imputed" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { max(input_visualize_y()) }")
+        "yrpc-parquet" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { max(input_visualize_y()) }"),
+        "yrpc-imputed-parquet" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { max(input_visualize_y()) }")
       )
     })
     
@@ -749,7 +749,7 @@ shinyServer(
       # 1. read from API
       
       table_model <- reactive({
-        if (input_model_imputed_data() == "yes") "yrpc-imputed" else "yrpc"
+        if (input_model_imputed_data() == "yes") "yrpc-imputed-parquet" else "yrpc-parquet"
       })
       
       d <- ots_create_tidy_data(
