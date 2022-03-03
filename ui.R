@@ -14,10 +14,7 @@ shinyUI(
         sidebarMenu(
           # Tabs ----
 
-          # hr(),
-          # HTML("<center><h4>Explore</h4></center>"),
-          
-          menuItem("Visualize", tabName = "visualize"),
+          menuItem("Country profile", tabName = "country_profile"),
           
           menuItem("Model", tabName = "model", badgeLabel = "new", badgeColor = "green"),
       
@@ -28,14 +25,14 @@ shinyUI(
       dashboardBody(
         tabItems(
           tabItem(
-            tabName = "visualize",
+            tabName = "country_profile",
 
-            # Visualize ----
+            # Country profile ----
 
             column(
               12,
-              htmlOutput("title_visualize", container = tags$p),
-              htmlOutput("title_visualize_legend", container = tags$p)
+              htmlOutput("title_country_profile", container = tags$p),
+              htmlOutput("title_country_profile_legend", container = tags$p)
             ),
             
             column(
@@ -47,7 +44,7 @@ shinyUI(
             column(
               4,
               sliderInput(
-                "vis_y",
+                "cp_y",
                 "Years:",
                 # min = available_years_min,
                 min = 2002,
@@ -59,7 +56,7 @@ shinyUI(
                 width = "100%"
               ),
               sliderInput(
-                "vis_y_sep",
+                "cp_y_sep",
                 "Separate years by:",
                 # min = available_years_min,
                 min = 1,
@@ -75,7 +72,7 @@ shinyUI(
             column(
               4,
               selectInput(
-                "vis_r",
+                "cp_r",
                 "Reporter:",
                 choices = available_reporters_iso[available_reporters_iso != "all"],
                 selected = "can",
@@ -87,7 +84,7 @@ shinyUI(
             column(
               4,
               selectInput(
-                "vis_p",
+                "cp_p",
                 "Partner:",
                 choices = available_reporters_iso,
                 selected = "",
@@ -99,13 +96,25 @@ shinyUI(
             column(
               4,
               radioButtons(
-                "vis_i",
+                "cp_i",
                 "Use imputed data:",
                 choiceNames = list("Yes, use gravity-imputed UN COMTRADE data",
                                    "No, use raw UN COMTRADE data"),
                 choiceValues = list("yes", "no"),
                 selected = c("no"),
                 width = "100%",
+              )
+            ),
+            
+            column(
+              4,
+              selectInput(
+                "cp_a",
+                "Convert to constant dollars of the year:",
+                choices = c("No conversion", 2000:2019),
+                selected = "",
+                selectize = TRUE,
+                width = "100%"
               )
             ),
             
@@ -126,23 +135,54 @@ shinyUI(
               9,
               highchartOutput("trade_exchange_lines_aggregated", height = "500px")
             ),
+            
+            column(
+              12,
+              htmlOutput("trade_partners_title", container = tags$h2),
+              htmlOutput("trade_partners_note", container = tags$p)
+            ),
+            
+            column(
+              6,
+              htmlOutput("trade_exports_min_year_subtitle", container = tags$h3),
+              highchartOutput("exports_treemap_destinations_min_year", height = "500px")
+            ),
+            
+            column(
+              6,
+              htmlOutput("trade_exports_max_year_subtitle", container = tags$h3),
+              highchartOutput("exports_treemap_destinations_max_year", height = "500px")
+            ),
+            
+            column(
+              6,
+              htmlOutput("trade_imports_min_year_subtitle", container = tags$h3),
+              highchartOutput("imports_treemap_origins_min_year", height = "500px")
+            ),
+            
+            column(
+              6,
+              htmlOutput("trade_imports_max_year_subtitle", container = tags$h3),
+              highchartOutput("imports_treemap_origins_max_year", height = "500px")
+            ),
 
             ## Exports ----
 
             column(
               12,
               htmlOutput("exports_subtitle", container = tags$h2),
-              htmlOutput("exports_note", container = tags$p),
-              br()
+              htmlOutput("exports_note", container = tags$p)
             ),
 
             column(
               6,
+              htmlOutput("exports_title_min_year", container = tags$h3),
               highchartOutput("exports_treemap_detailed_min_year", height = "500px")
             ),
 
             column(
               6,
+              htmlOutput("exports_title_max_year", container = tags$h3),
               highchartOutput("exports_treemap_detailed_max_year", height = "500px")
             ),
 
@@ -151,17 +191,18 @@ shinyUI(
             column(
               12,
               htmlOutput("imports_subtitle", container = tags$h2),
-              htmlOutput("imports_note", container = tags$p),
-              br()
+              htmlOutput("imports_note", container = tags$p)
             ),
-
+            
             column(
               6,
+              htmlOutput("imports_title_min_year", container = tags$h3),
               highchartOutput("imports_treemap_detailed_min_year", height = "500px")
             ),
-
+            
             column(
               6,
+              htmlOutput("imports_title_max_year", container = tags$h3),
               highchartOutput("imports_treemap_detailed_max_year", height = "500px")
             ),
             
@@ -169,18 +210,18 @@ shinyUI(
             
             column(
               12,
-              htmlOutput("download_visualize_subtitle", container = tags$h2),
-              htmlOutput("download_visualize_text", container = tags$p),
+              htmlOutput("download_country_profile_subtitle", container = tags$h2),
+              htmlOutput("download_country_profile_text", container = tags$p),
               selectInput(
-                "vis_f",
+                "cp_f",
                 "Download data as:",
                 choices = available_formats,
                 selected = NULL,
                 selectize = TRUE
               ),
               
-              downloadButton("download_visualize_aggregated", "Aggregated data"),
-              downloadButton("download_visualize_detailed", "Detailed data")
+              downloadButton("download_country_profile_aggregated", "Aggregated data"),
+              downloadButton("download_country_profile_detailed", "Detailed data")
             )
           ),
           
