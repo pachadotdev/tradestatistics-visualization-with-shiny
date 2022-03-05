@@ -539,15 +539,15 @@ shinyServer(
     
     exports_treemap_destinations_min_year <- reactive({
       d <- exports_table_destinations_min_year() %>%
-        add_share_and_continent_exp()
+        od_add_share_and_continent()
       
-      cols <- d %>% cols_exp()
+      colors <- d %>% od_colors()
         
       d <- d %>% 
-        add_labels_exp()
+        od_add_labels()
         
       hchart(
-        data_to_hierarchical(d, c(continent_name, partner_name), trade_value_usd_exp, colors = cols),
+        data_to_hierarchical(d, c(continent_name, partner_name), trade_value, colors = colors),
         type = "treemap",
         levelIsConstant = FALSE,
         allowDrillToNode = TRUE,
@@ -614,15 +614,15 @@ shinyServer(
     
     exports_treemap_destinations_max_year <- reactive({
       d <- exports_table_destinations_max_year() %>%
-        add_share_and_continent_exp()
+        od_add_share_and_continent()
       
-      cols <- d %>% cols_exp()
+      colors <- d %>% od_colors()
       
       d <- d %>% 
-        add_labels_exp()
+        od_add_labels()
       
       hchart(
-        data_to_hierarchical(d, c(continent_name, partner_name), trade_value_usd_exp, colors = cols),
+        data_to_hierarchical(d, c(continent_name, partner_name), trade_value, colors = colors),
         type = "treemap",
         levelIsConstant = FALSE,
         allowDrillToNode = TRUE,
@@ -765,15 +765,15 @@ shinyServer(
     
     imports_treemap_origins_min_year <- reactive({
       d <- imports_table_origins_min_year() %>%
-        add_share_and_continent_imp()
+        od_add_share_and_continent(col = "trade_value_usd_imp")
       
-      cols <- d %>% cols_imp()
+      colors <- d %>% od_colors()
       
       d <- d %>% 
-        add_labels_imp()
+        od_add_labels()
       
       hchart(
-        data_to_hierarchical(d, c(continent_name, partner_name), trade_value_usd_imp, colors = cols),
+        data_to_hierarchical(d, c(continent_name, partner_name), trade_value, colors = colors),
         type = "treemap",
         levelIsConstant = FALSE,
         allowDrillToNode = TRUE,
@@ -840,15 +840,15 @@ shinyServer(
     
     imports_treemap_origins_max_year <- reactive({
       d <- imports_table_origins_max_year() %>%
-        add_share_and_continent_imp()
+        od_add_share_and_continent(col = "trade_value_usd_imp")
       
-      cols <- d %>% cols_imp()
+      colors <- d %>% od_colors()
       
       d <- d %>% 
-        add_labels_imp()
+        od_add_labels()
       
       hchart(
-        data_to_hierarchical(d, c(continent_name, partner_name), trade_value_usd_imp, colors = cols),
+        data_to_hierarchical(d, c(continent_name, partner_name), trade_value, colors = colors),
         type = "treemap",
         levelIsConstant = FALSE,
         allowDrillToNode = TRUE,

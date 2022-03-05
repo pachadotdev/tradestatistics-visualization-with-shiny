@@ -3,6 +3,7 @@
 library(shiny)
 library(shinydashboard)
 library(dplyr)
+library(rlang)
 library(highcharter)
 library(tradestatistics)
 library(fixest)
