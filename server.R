@@ -33,6 +33,7 @@ shinyServer(
     input_model_imputed_data <- reactive({ input$mod_i })
     
     input_country_profile_convert_dollars <- reactive({ input$cp_a })
+    input_model_convert_dollars <- reactive({ input$mod_a })
     
     partner_name <- reactive({
       reporters_to_display %>%
@@ -117,7 +118,7 @@ shinyServer(
       )
       
       if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, input_country_profile_convert_dollars())
+        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
       }
       
       return(d)
@@ -133,7 +134,7 @@ shinyServer(
       )
       
       if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, input_country_profile_convert_dollars())
+        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
       }
       
       return(d)
@@ -146,15 +147,17 @@ shinyServer(
         partners = "all",
         table = "yrp",
         use_localhost = use_localhost
-      ) %>%
+      )
+      
+      if (input_country_profile_convert_dollars() != "No conversion") {
+        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
+      }
+      
+      d <- d %>% 
         mutate(
           exp_rank = dense_rank(desc(trade_value_usd_exp)),
           imp_rank = dense_rank(desc(trade_value_usd_imp))
         )
-      
-      if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, input_country_profile_convert_dollars())
-      }
       
       return(d)
     })
@@ -255,7 +258,13 @@ shinyServer(
         partners = "all",
         table = "yrp",
         use_localhost = use_localhost
-      ) %>%
+      )
+      
+      if (input_country_profile_convert_dollars() != "No conversion") {
+        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
+      }
+      
+      d <- d %>% 
         # filter(partner_iso != "0-unspecified") %>% 
         mutate(
           trade_value_usd_bal = trade_value_usd_exp + trade_value_usd_imp
@@ -266,10 +275,6 @@ shinyServer(
           exp_share = trade_value_usd_exp / sum(trade_value_usd_exp),
           imp_share = trade_value_usd_imp / sum(trade_value_usd_imp)
         )
-      
-      if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, input_country_profile_convert_dollars())
-      }
       
       return(d)
     })
@@ -460,34 +465,8 @@ shinyServer(
       )
       
       if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, input_country_profile_convert_dollars())
+        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
       }
-      
-      d <- d %>%
-        select(partner_iso, partner_name, trade_value_usd_exp) %>%
-        arrange(-trade_value_usd_exp) %>% 
-        left_join(ots_countries_colors, by = c("partner_iso" = "country_iso")) %>% 
-        mutate(
-          share = trade_value_usd_exp / sum(trade_value_usd_exp),
-          
-          row_number = row_number(),
-          partner_name = case_when(
-            row_number > 10 | share < 0.01 ~ "Other countries/areas (rank below 10 or share below 1%)",
-            TRUE ~ partner_name
-          ),
-          
-          country_color = case_when(
-            partner_name == "Other countries/areas (rank below 10 or share below 1%)" ~ "#d3d3d3",
-            TRUE ~ country_color
-          )
-        ) %>%
-        group_by(partner_name, country_color) %>% 
-        summarise(
-          trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T),
-          share = sum(share, na.rm = T)
-        ) %>% 
-        ungroup() %>% 
-        arrange(-trade_value_usd_exp)
       
       return(d)
     })
@@ -519,34 +498,8 @@ shinyServer(
       )
       
       if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, input_country_profile_convert_dollars())
+        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
       }
-      
-      d <- d %>%
-        select(partner_iso, partner_name, trade_value_usd_exp) %>%
-        arrange(-trade_value_usd_exp) %>% 
-        left_join(ots_countries_colors, by = c("partner_iso" = "country_iso")) %>% 
-        mutate(
-          share = trade_value_usd_exp / sum(trade_value_usd_exp),
-          
-          row_number = row_number(),
-          partner_name = case_when(
-            row_number > 10 | share < 0.01 ~ "Other countries/areas (rank below 10 or share below 1%)",
-            TRUE ~ partner_name
-          ),
-          
-          country_color = case_when(
-            partner_name == "Other countries/areas (rank below 10 or share below 1%)" ~ "#d3d3d3",
-            TRUE ~ country_color
-          )
-        ) %>%
-        group_by(partner_name, country_color) %>% 
-        summarise(
-          trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T),
-          share = sum(share, na.rm = T)
-        ) %>% 
-        ungroup() %>% 
-        arrange(-trade_value_usd_exp)
       
       return(d)
     })
@@ -586,23 +539,21 @@ shinyServer(
     
     exports_treemap_destinations_min_year <- reactive({
       d <- exports_table_destinations_min_year() %>%
-        mutate(
-          share = paste0(round(100 * share, 2), "%"),
-          partner_name = paste0(partner_name, "<br>", share)
-        ) %>%
-        rename(
-          value = trade_value_usd_exp,
-          name = partner_name,
-          color = country_color
-        )
+        add_share_and_continent_exp()
       
-      highchart() %>%
-        hc_chart(type = "treemap") %>%
-        hc_xAxis(categories = d$name) %>%
-        hc_add_series(d,
-                      name = "Export Value USD", showInLegend = FALSE,
-                      dataLabels = list(verticalAlign = "top", align = "left", style = list(fontSize = "12px", textOutline = FALSE))
-        )
+      cols <- d %>% cols_exp()
+        
+      d <- d %>% 
+        add_labels_exp()
+        
+      hchart(
+        data_to_hierarchical(d, c(continent_name, partner_name), trade_value_usd_exp, colors = cols),
+        type = "treemap",
+        levelIsConstant = FALSE,
+        allowDrillToNode = TRUE,
+        levels = lvl_opts,
+        tooltip = list(valueDecimals = FALSE)
+      )
     })
     
     exports_treemap_detailed_min_year <- reactive({
@@ -663,23 +614,21 @@ shinyServer(
     
     exports_treemap_destinations_max_year <- reactive({
       d <- exports_table_destinations_max_year() %>%
-        mutate(
-          share = paste0(round(100 * share, 2), "%"),
-          partner_name = paste0(partner_name, "<br>", share)
-        ) %>%
-        rename(
-          value = trade_value_usd_exp,
-          name = partner_name,
-          color = country_color
-        )
+        add_share_and_continent_exp()
       
-      highchart() %>%
-        hc_chart(type = "treemap") %>%
-        hc_xAxis(categories = d$name) %>%
-        hc_add_series(d,
-                      name = "Export Value USD", showInLegend = FALSE,
-                      dataLabels = list(verticalAlign = "top", align = "left", style = list(fontSize = "12px", textOutline = FALSE))
-        )
+      cols <- d %>% cols_exp()
+      
+      d <- d %>% 
+        add_labels_exp()
+      
+      hchart(
+        data_to_hierarchical(d, c(continent_name, partner_name), trade_value_usd_exp, colors = cols),
+        type = "treemap",
+        levelIsConstant = FALSE,
+        allowDrillToNode = TRUE,
+        levels = lvl_opts,
+        tooltip = list(valueDecimals = FALSE)
+      )
     })
     
     exports_treemap_detailed_max_year <- reactive({
@@ -732,7 +681,7 @@ shinyServer(
     
     ### Tables ----
     
-    imports_table_destinations_min_year <- reactive({
+    imports_table_origins_min_year <- reactive({
       d <- ots_create_tidy_data(
         years = min(input_country_profile_y()),
         reporters = input_country_profile_reporter_iso(),
@@ -742,34 +691,8 @@ shinyServer(
       )
       
       if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, input_country_profile_convert_dollars())
+        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
       }
-      
-      d <- d %>%
-        select(partner_iso, partner_name, trade_value_usd_imp) %>%
-        arrange(-trade_value_usd_imp) %>% 
-        left_join(ots_countries_colors, by = c("partner_iso" = "country_iso")) %>% 
-        mutate(
-          share = trade_value_usd_imp / sum(trade_value_usd_imp),
-          
-          row_number = row_number(),
-          partner_name = case_when(
-            row_number > 10 | share < 0.01 ~ "Other countries/areas (rank below 10 or share below 1%)",
-            TRUE ~ partner_name
-          ),
-          
-          country_color = case_when(
-            partner_name == "Other countries/areas (rank below 10 or share below 1%)" ~ "#d3d3d3",
-            TRUE ~ country_color
-          )
-        ) %>%
-        group_by(partner_name, country_color) %>% 
-        summarise(
-          trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T),
-          share = sum(share, na.rm = T)
-        ) %>% 
-        ungroup() %>% 
-        arrange(-trade_value_usd_imp)
       
       return(d)
     })
@@ -791,7 +714,7 @@ shinyServer(
       return(d)
     })
     
-    imports_table_destinations_max_year <- reactive({
+    imports_table_origins_max_year <- reactive({
       d <- ots_create_tidy_data(
         years = max(input_country_profile_y()),
         reporters = input_country_profile_reporter_iso(),
@@ -801,34 +724,8 @@ shinyServer(
       )
       
       if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, input_country_profile_convert_dollars())
+        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
       }
-      
-      d <- d %>%
-        select(partner_iso, partner_name, trade_value_usd_imp) %>%
-        arrange(-trade_value_usd_imp) %>% 
-        left_join(ots_countries_colors, by = c("partner_iso" = "country_iso")) %>% 
-        mutate(
-          share = trade_value_usd_imp / sum(trade_value_usd_imp),
-          
-          row_number = row_number(),
-          partner_name = case_when(
-            row_number > 10 | share < 0.01 ~ "Other countries/areas (rank below 10 or share below 1%)",
-            TRUE ~ partner_name
-          ),
-          
-          country_color = case_when(
-            partner_name == "Other countries/areas (rank below 10 or share below 1%)" ~ "#d3d3d3",
-            TRUE ~ country_color
-          )
-        ) %>%
-        group_by(partner_name, country_color) %>% 
-        summarise(
-          trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T),
-          share = sum(share, na.rm = T)
-        ) %>% 
-        ungroup() %>% 
-        arrange(-trade_value_usd_imp)
       
       return(d)
     })
@@ -867,24 +764,22 @@ shinyServer(
     })
     
     imports_treemap_origins_min_year <- reactive({
-      d <- imports_table_destinations_min_year() %>%
-        mutate(
-          share = paste0(round(100 * share, 2), "%"),
-          partner_name = paste0(partner_name, "<br>", share)
-        ) %>%
-        rename(
-          value = trade_value_usd_imp,
-          name = partner_name,
-          color = country_color
-        )
+      d <- imports_table_origins_min_year() %>%
+        add_share_and_continent_imp()
       
-      highchart() %>%
-        hc_chart(type = "treemap") %>%
-        hc_xAxis(categories = d$name) %>%
-        hc_add_series(d,
-                      name = "Import Value USD", showInLegend = FALSE,
-                      dataLabels = list(verticalAlign = "top", align = "left", style = list(fontSize = "12px", textOutline = FALSE))
-        )
+      cols <- d %>% cols_imp()
+      
+      d <- d %>% 
+        add_labels_imp()
+      
+      hchart(
+        data_to_hierarchical(d, c(continent_name, partner_name), trade_value_usd_imp, colors = cols),
+        type = "treemap",
+        levelIsConstant = FALSE,
+        allowDrillToNode = TRUE,
+        levels = lvl_opts,
+        tooltip = list(valueDecimals = FALSE)
+      )
     })
     
     imports_treemap_detailed_min_year <- reactive({
@@ -944,24 +839,22 @@ shinyServer(
     })
     
     imports_treemap_origins_max_year <- reactive({
-      d <- imports_table_destinations_max_year() %>%
-        mutate(
-          share = paste0(round(100 * share, 2), "%"),
-          partner_name = paste0(partner_name, "<br>", share)
-        ) %>%
-        rename(
-          value = trade_value_usd_imp,
-          name = partner_name,
-          color = country_color
-        )
+      d <- imports_table_origins_max_year() %>%
+        add_share_and_continent_imp()
       
-      highchart() %>%
-        hc_chart(type = "treemap") %>%
-        hc_xAxis(categories = d$name) %>%
-        hc_add_series(d,
-                      name = "Import Value USD", showInLegend = FALSE,
-                      dataLabels = list(verticalAlign = "top", align = "left", style = list(fontSize = "12px", textOutline = FALSE))
-        )
+      cols <- d %>% cols_imp()
+      
+      d <- d %>% 
+        add_labels_imp()
+      
+      hchart(
+        data_to_hierarchical(d, c(continent_name, partner_name), trade_value_usd_imp, colors = cols),
+        type = "treemap",
+        levelIsConstant = FALSE,
+        allowDrillToNode = TRUE,
+        levels = lvl_opts,
+        tooltip = list(valueDecimals = FALSE)
+      )
     })
     
     imports_treemap_detailed_max_year <- reactive({
@@ -1044,6 +937,10 @@ shinyServer(
         #   partner_iso != "0-unspecified"
         # )
       
+      if (input_model_convert_dollars() != "No conversion") {
+        d <- ots_inflation_adjustment(d, as.integer(input_model_convert_dollars()))
+      }
+      
       # 2. apply filters
       
       if (length(input_model_custom_product_filter()) > 0) {
@@ -1071,7 +968,7 @@ shinyServer(
         # 3.1 read from API
         
         d <- d %>%
-          left_join(
+          inner_join(
             ots_create_tidy_data(
               years = input_model_y(),
               # here we need the applied tariffs when the product gets to destination
@@ -1079,7 +976,8 @@ shinyServer(
               table = "tariffs",
               use_localhost = use_localhost
             ) %>% 
-              select(year, partner_iso = reporter_iso, commodity_code, mfn = simple_average)
+              select(year, partner_iso = reporter_iso, commodity_code, mfn = simple_average),
+            by = c("year", "partner_iso", "commodity_code")
           )
         
         # 3.2. summarise
@@ -1097,7 +995,8 @@ shinyServer(
           group_by(year, reporter_iso, partner_iso) %>% 
           summarise(
             log_mfn = log(weighted.mean(mfn, trade_value_usd_exp, na.rm = T))
-          )
+          ) %>% 
+          ungroup()
         
         d <- d2 %>% left_join(d3); rm(d2,d3)
       } else {
@@ -1109,7 +1008,8 @@ shinyServer(
           summarise(
             trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T),
             trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)
-          )
+          ) %>% 
+          ungroup()
       }
       
       # 4. add geo dist data
@@ -1125,31 +1025,25 @@ shinyServer(
       # 5. add RTA data
       
       if (any(input_model_bin() %in% "rta")) {
-        dc <- d %>%
-          select(reporter_iso, partner_iso) %>%
-          rowwise() %>%
-          mutate(
-            country1 = min(reporter_iso, partner_iso),
-            country2 = max(reporter_iso, partner_iso)
-          ) %>%
-          ungroup() %>%
-          select(country1, country2)
-        
-        # left join because not all countries sign RTAs!
         d <- d %>%
-          bind_cols(dc) %>% 
+          mutate(
+            country1 = pmin(reporter_iso, partner_iso),
+            country2 = pmax(reporter_iso, partner_iso)
+          ) %>%
           left_join(
             ots_create_tidy_data(
               years = input_model_y(),
               table = "rtas",
               use_localhost = use_localhost
+            ),
+            by = c("year", "country1", "country2")
+          ) %>% 
+          mutate(
+            rta = case_when(
+              is.na(rta) & nchar(country1) == 3 & nchar(country2) == 3 ~ 0L,
+              TRUE ~ rta
             )
           )
-        
-        rm(dc)
-        
-        d <- d %>%
-          mutate(rta = ifelse(is.na(rta), 0, rta))
       }
       
       # 6. create remoteness indexes
@@ -1450,9 +1344,9 @@ shinyServer(
     output$trade_partners_title <- reactive({
       sprintf("<hr/>Trading partners %s-%s", min(input_country_profile_y()), max(input_country_profile_y()))
     })
-    output$trade_partners_note <- renderText(
-      "The data was grouped considering a ranking, after the #10 place the data was aggregated for visual clarity."
-    )
+    # output$trade_partners_note <- renderText(
+    #   "The data was grouped considering a ranking, after the #10 place the data was aggregated for visual clarity."
+    # )
     
     output$trade_exports_min_year_subtitle <- reactive({
       glue::glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_country_profile_y()) }, by country/area")

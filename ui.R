@@ -138,8 +138,8 @@ shinyUI(
             
             column(
               12,
-              htmlOutput("trade_partners_title", container = tags$h2),
-              htmlOutput("trade_partners_note", container = tags$p)
+              htmlOutput("trade_partners_title", container = tags$h2)
+              # htmlOutput("trade_partners_note", container = tags$p)
             ),
             
             column(
@@ -267,6 +267,14 @@ shinyUI(
                 sep = "",
                 step = 1,
                 ticks = FALSE,
+                width = "100%"
+              ),
+              selectInput(
+                "mod_a",
+                "Convert to constant dollars of the year:",
+                choices = c("No conversion", 2000:2019),
+                selected = "",
+                selectize = TRUE,
                 width = "100%"
               )
             ),
