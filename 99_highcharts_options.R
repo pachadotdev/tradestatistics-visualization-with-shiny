@@ -1,6 +1,8 @@
 lvl_opts <-  list(
   list(
     level = 1,
+    borderWidth = 0,
+    borderColor = "transparent",
     colorVariation = list(key = "brightness", to = 0.250),
     dataLabels = list(
       enabled = TRUE,
@@ -14,6 +16,8 @@ lvl_opts <-  list(
   ),
   list(
     level = 2,
+    borderWidth = 0,
+    borderColor = "transparent",
     colorVariation = list(key = "brightness", to = 0.250),
     dataLabels = list(enabled = FALSE),
     style = list(

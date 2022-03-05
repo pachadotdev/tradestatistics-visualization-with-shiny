@@ -699,17 +699,7 @@ shinyServer(
     
     imports_table_detailed_min_year <- reactive({
       d <- data_detailed() %>%
-        filter(year == min(input_country_profile_y())) %>%
-        select(section_code, section_name, trade_value_usd_imp) %>%
-        filter(trade_value_usd_imp > 0) %>% 
-        group_by(section_code, section_name) %>% 
-        summarise(trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)) %>% 
-        arrange(-trade_value_usd_imp)
-      
-      d <- d %>% 
-        group_by(section_code, section_name) %>% 
-        summarise(trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)) %>% 
-        left_join(ots_sections_colors)
+        filter(year == min(input_country_profile_y()))
       
       return(d)
     })
@@ -783,49 +773,23 @@ shinyServer(
     })
     
     imports_treemap_detailed_min_year <- reactive({
-      d <- imports_table_detailed_min_year() %>%
-        group_by(section_name, section_color) %>%
-        summarise(
-          trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T),
-          trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)
-        ) %>%
-        ungroup() %>% 
-        mutate(
-          share = trade_value_usd_imp / sum(trade_value_usd_imp),
-          
-          section_name = case_when(
-            share < 0.01 ~ "Other sections (share below 1%)",
-            TRUE ~ section_name
-          ),
-          
-          section_color = case_when(
-            section_name == "Other sections (share below 1%)" ~ "#d3d3d3",
-            TRUE ~ section_color
-          )
-        ) %>% 
-        group_by(section_name, section_color) %>% 
-        summarise(
-          trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T),
-          trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T),
-          share = sum(share, na.rm = T)
-        ) %>%
-        mutate(
-          share = paste0(round(100 * share, 2), "%"),
-          section_name = paste0(section_name, "<br>", share)
-        ) %>%
-        rename(
-          value = trade_value_usd_imp,
-          name = section_name,
-          color = section_color
-        )
+      d <- imports_table_detailed_min_year() %>% 
+        pd_add_share_fix_section(col = "trade_value_usd_imp")
       
-      highchart() %>%
-        hc_chart(type = "treemap") %>%
-        hc_xAxis(categories = d$name) %>%
-        hc_add_series(d,
-                      name = "Import Value USD", showInLegend = FALSE,
-                      dataLabels = list(verticalAlign = "top", align = "left", style = list(fontSize = "12px", textOutline = FALSE))
-        )
+      colors <- d %>% 
+        pd_colors()
+      
+      d <- d %>%
+        pd_add_labels(col = "trade_value_usd_imp")
+      
+      hchart(
+        data_to_hierarchical(d, c(section_name, commodity_name), trade_value, colors = colors),
+        type = "treemap",
+        levelIsConstant = FALSE,
+        allowDrillToNode = TRUE,
+        levels = lvl_opts,
+        tooltip = list(valueDecimals = FALSE)
+      )
     })
     
     imports_title_max_year <- reactive({
