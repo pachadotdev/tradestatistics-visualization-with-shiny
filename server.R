@@ -519,41 +519,20 @@ shinyServer(
     
     exports_treemap_destinations_min_year <- reactive({
       d <- exports_table_destinations_min_year() %>%
-        od_add_share_and_continent()
+        od_order_and_add_continent()
       
-      colors <- d %>% od_colors()
-        
-      d <- d %>% 
-        od_add_labels()
-        
-      hchart(
-        data_to_hierarchical(d, c(continent_name, partner_name), trade_value, colors = colors),
-        type = "treemap",
-        levelIsConstant = FALSE,
-        allowDrillToNode = TRUE,
-        levels = lvl_opts,
-        tooltip = list(valueDecimals = FALSE)
-      )
+      d2 <- od_colors(d)
+      
+      od_to_highcharts(d, d2)
     })
     
     exports_treemap_detailed_min_year <- reactive({
       d <- exports_table_detailed_min_year() %>% 
-        pd_fix_section(col = "trade_value_usd_exp")
+        pd_fix_section_and_aggregate(col = "trade_value_usd_exp")
       
-      colors <- d %>% 
-        pd_colors()
+      d2 <- pd_colors(d)
       
-      d <- d %>%
-        pd_add_labels()
-      
-      hchart(
-        data_to_hierarchical(d, c(section_name, commodity_name), trade_value, colors = colors),
-        type = "treemap",
-        levelIsConstant = FALSE,
-        allowDrillToNode = TRUE,
-        levels = lvl_opts,
-        tooltip = list(valueDecimals = FALSE)
-      )
+      pd_to_highcharts(d, d2)
     })
     
     exports_title_max_year <- reactive({
@@ -568,41 +547,20 @@ shinyServer(
     
     exports_treemap_destinations_max_year <- reactive({
       d <- exports_table_destinations_max_year() %>%
-        od_add_share_and_continent()
+        od_order_and_add_continent()
       
-      colors <- d %>% od_colors()
+      d2 <- od_colors(d)
       
-      d <- d %>% 
-        od_add_labels()
-      
-      hchart(
-        data_to_hierarchical(d, c(continent_name, partner_name), trade_value, colors = colors),
-        type = "treemap",
-        levelIsConstant = FALSE,
-        allowDrillToNode = TRUE,
-        levels = lvl_opts,
-        tooltip = list(valueDecimals = FALSE)
-      )
+      od_to_highcharts(d, d2)
     })
     
     exports_treemap_detailed_max_year <- reactive({
       d <- exports_table_detailed_max_year() %>% 
-        pd_fix_section(col = "trade_value_usd_exp")
+        pd_fix_section_and_aggregate(col = "trade_value_usd_exp")
       
-      colors <- d %>% 
-        pd_colors()
+      d2 <- pd_colors(d)
       
-      d <- d %>%
-        pd_add_labels()
-      
-      hchart(
-        data_to_hierarchical(d, c(section_name, commodity_name), trade_value, colors = colors),
-        type = "treemap",
-        levelIsConstant = FALSE,
-        allowDrillToNode = TRUE,
-        levels = lvl_opts,
-        tooltip = list(valueDecimals = FALSE)
-      )
+      pd_to_highcharts(d, d2)
     })
 
     ## Imports ----
@@ -673,41 +631,21 @@ shinyServer(
     
     imports_treemap_origins_min_year <- reactive({
       d <- imports_table_origins_min_year() %>%
-        od_add_share_and_continent(col = "trade_value_usd_imp")
+        od_order_and_add_continent(col = "trade_value_usd_imp")
       
-      colors <- d %>% od_colors()
+      d2 <- od_colors(d)
       
-      d <- d %>% 
-        od_add_labels()
-      
-      hchart(
-        data_to_hierarchical(d, c(continent_name, partner_name), trade_value, colors = colors),
-        type = "treemap",
-        levelIsConstant = FALSE,
-        allowDrillToNode = TRUE,
-        levels = lvl_opts,
-        tooltip = list(valueDecimals = FALSE)
-      )
+      od_to_highcharts(d, d2)
     })
     
     imports_treemap_detailed_min_year <- reactive({
       d <- imports_table_detailed_min_year() %>% 
-        pd_fix_section(col = "trade_value_usd_imp")
+        pd_fix_section_and_aggregate(col = "trade_value_usd_imp")
       
-      colors <- d %>% 
-        pd_colors()
+      d2 <- pd_colors(d)
       
-      d <- d %>%
-        pd_add_labels()
+      pd_to_highcharts(d, d2)
       
-      hchart(
-        data_to_hierarchical(d, c(section_name, commodity_name), trade_value, colors = colors),
-        type = "treemap",
-        levelIsConstant = FALSE,
-        allowDrillToNode = TRUE,
-        levels = lvl_opts,
-        tooltip = list(valueDecimals = FALSE)
-      )
     })
     
     imports_title_max_year <- reactive({
@@ -722,41 +660,20 @@ shinyServer(
     
     imports_treemap_origins_max_year <- reactive({
       d <- imports_table_origins_max_year() %>%
-        od_add_share_and_continent(col = "trade_value_usd_imp")
+        od_order_and_add_continent(col = "trade_value_usd_imp")
       
-      colors <- d %>% od_colors()
+      d2 <- od_colors(d)
       
-      d <- d %>% 
-        od_add_labels()
-      
-      hchart(
-        data_to_hierarchical(d, c(continent_name, partner_name), trade_value, colors = colors),
-        type = "treemap",
-        levelIsConstant = FALSE,
-        allowDrillToNode = TRUE,
-        levels = lvl_opts,
-        tooltip = list(valueDecimals = FALSE)
-      )
+      od_to_highcharts(d, d2)
     })
     
     imports_treemap_detailed_max_year <- reactive({
       d <- imports_table_detailed_max_year() %>% 
-        pd_fix_section(col = "trade_value_usd_imp")
+        pd_fix_section_and_aggregate(col = "trade_value_usd_imp")
       
-      colors <- d %>% 
-        pd_colors()
+      d2 <- pd_colors(d)
       
-      d <- d %>%
-        pd_add_labels()
-      
-      hchart(
-        data_to_hierarchical(d, c(section_name, commodity_name), trade_value, colors = colors),
-        type = "treemap",
-        levelIsConstant = FALSE,
-        allowDrillToNode = TRUE,
-        levels = lvl_opts,
-        tooltip = list(valueDecimals = FALSE)
-      )
+      pd_to_highcharts(d, d2)
     })
     
     # Model ----

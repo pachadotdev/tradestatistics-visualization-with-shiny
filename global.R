@@ -3,6 +3,7 @@
 library(shiny)
 library(shinydashboard)
 library(dplyr)
+library(purrr)
 library(rlang)
 library(highcharter)
 library(tradestatistics)
