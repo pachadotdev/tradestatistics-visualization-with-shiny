@@ -2,7 +2,7 @@
 
 shinyServer(
   function(input, output, session) {
-    # Input ----
+    # User inputs ----
     
     input_country_profile_y <- reactive({
       y <- (min(input$cp_y[1], input$cp_y[2])):(max(input$cp_y[1], input$cp_y[2]))
@@ -70,7 +70,7 @@ shinyServer(
       }
     })
     
-    # Title ----
+    # Titles ----
     
     reporter_add_the <- reactive({
       if (substr(reporter_name(), 1, 6) == "United" | substr(reporter_name(), 1, 3) == "USA") {
@@ -165,6 +165,8 @@ shinyServer(
     # Country profile ----
     
     ## Trade ----
+    
+    ### Data ----
     
     trade_table_aggregated <- reactive({
       data_aggregated() %>%
@@ -374,6 +376,8 @@ shinyServer(
     trade_rankings_imp_share_max_year_2 <- reactive({
       show_percentage(trade_rankings_imp_share_max_year())
     })
+    
+    ### Text/Visual elements ----
     
     trade_summary_text_exp <- reactive({
       switch(table_aggregated(),
@@ -1091,19 +1095,24 @@ shinyServer(
       )
     })
     
-    # Title output ------------------------------------------------------------
+    # Titles output -----------------------------------------------------------
     
     output$title_country_profile <- renderText({
       title_country_profile()
     })
     
-    output$title_legend <- renderText({
+    output$title_model <- renderText({
+      "<h1>Gravity Models</h1>"
+    })
+    
+    output$title_country_profile_legend <- renderText({
       "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
       of restrictions and applicable licenses."
     })
     
-    output$title_model <- renderText({
-      "<h1>Gravity Models</h1>"
+    output$title_model_legend <- renderText({
+      "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
+      of restrictions and applicable licenses."
     })
     
     # Country profile output ----
@@ -1117,9 +1126,6 @@ shinyServer(
     output$trade_partners_title <- reactive({
       sprintf("<hr/>Trading partners %s-%s", min(input_country_profile_y()), max(input_country_profile_y()))
     })
-    # output$trade_partners_note <- renderText(
-    #   "The data was grouped considering a ranking, after the #10 place the data was aggregated for visual clarity."
-    # )
     
     output$trade_exports_min_year_subtitle <- reactive({
       glue::glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_country_profile_y()) }, by country/area")

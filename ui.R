@@ -37,7 +37,6 @@ shinyUI(
             
             column(
               12,
-              hr(),
               h2("Filter")
             ),
             
@@ -139,7 +138,6 @@ shinyUI(
             column(
               12,
               htmlOutput("trade_partners_title", container = tags$h2)
-              # htmlOutput("trade_partners_note", container = tags$p)
             ),
             
             column(
@@ -232,7 +230,8 @@ shinyUI(
             
             column(
               12,
-              htmlOutput("title_model", container = tags$p)
+              htmlOutput("title_model", container = tags$p),
+              htmlOutput("title_model_legend", container = tags$p)
             ),
             
             ## Model variables ----
