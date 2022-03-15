@@ -31,7 +31,7 @@ shinyUI(
 
             column(
               12,
-              htmlOutput("title_country_profile", container = tags$p),
+              htmlOutput("title_country_profile", container = tags$h1),
               htmlOutput("title_country_profile_legend", container = tags$p)
             ),
             
@@ -216,7 +216,7 @@ shinyUI(
             
             column(
               12,
-              htmlOutput("title_model", container = tags$p),
+              htmlOutput("title_model", container = tags$h1),
               htmlOutput("title_model_legend", container = tags$p)
             ),
             
@@ -353,7 +353,7 @@ shinyUI(
               8,
               selectInput(
                 "mod_pf",
-                "Product filter (i.e. HS section subset):",
+                "Product filter (i.e., HS section subset):",
                 choice = available_groups,
                 selected = "All Products",
                 selectize = TRUE,
@@ -362,18 +362,18 @@ shinyUI(
               )
             ),
             
-            column(
-              12,
-              selectInput(
-                "mod_cpf",
-                "Custom product filter (optional, overwrites section filter):",
-                choices = NULL,
-                selected = NULL,
-                selectize = TRUE,
-                width = "100%",
-                multiple = TRUE
-              )
-            ),
+            # column(
+            #   12,
+            #   selectInput(
+            #     "mod_cpf",
+            #     "Custom product filter (optional, overwrites section filter):",
+            #     choices = NULL,
+            #     selected = NULL,
+            #     selectize = TRUE,
+            #     width = "100%",
+            #     multiple = TRUE
+            #   )
+            # ),
             
             column(4,
                    fileInput('mod_own', 'Upload your own data:',
@@ -423,10 +423,12 @@ shinyUI(
             column(
               12,
               htmlOutput("model_data_subtitle", container = tags$h2),
+              htmlOutput("data_detailed_model_text", container = tags$p),
               tableOutput("data_detailed_model_preview"),
               htmlOutput("model_summary_subtitle", container = tags$h2),
               htmlOutput("model_summary_text", container = tags$p),
-              verbatimTextOutput("model_summary")
+              tableOutput("model_summary_tidy"),
+              tableOutput("model_summary_glance")
             ),
             
             ## Download ----
@@ -436,7 +438,8 @@ shinyUI(
               htmlOutput("download_model_subtitle", container = tags$h2),
               htmlOutput("download_model_text", container = tags$p),
               uiOutput("download_model_format"),
-              uiOutput("download_model_detailed")
+              uiOutput("download_model_detailed"),
+              uiOutput("download_model_fit")
             )
           ),
           

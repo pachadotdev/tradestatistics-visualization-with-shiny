@@ -5,6 +5,8 @@ library(shinydashboard)
 library(dplyr)
 library(purrr)
 library(rlang)
+library(glue)
+library(broom)
 library(highcharter)
 library(tradestatistics)
 library(fixest)
@@ -73,10 +75,10 @@ names(available_commodities) <- paste(ots_commodities$commodity_code,
                                       ots_commodities$commodity_fullname_english,
                                       sep = " - ")
 
+available_groups <- c("All Products", "Vaccine Inputs", ots_sections$section_fullname_english)
+
 available_models <- list("ols", "olsrem", "olsfe", "ppml")
 names(available_models) <- c("OLS", "OLS (Remoteness Index)", "OLS (Fixed Effects)", "Poisson Pseudo Maximum Likelihood (PPML)")
-
-available_groups <- c("All Products", "Vaccine Inputs", sort(unique(ots_commodities$group_fullname_english)))
   
 available_formats <- c("csv", "tsv", "json", "xlsx", "sav", "dta")
 

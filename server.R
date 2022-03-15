@@ -4,7 +4,7 @@ shinyServer(
   function(input, output, session) {
     # User inputs ----
     
-    updateSelectizeInput(session, 'mod_cpf', choices = available_commodities, server = TRUE)
+    # updateSelectizeInput(session, 'mod_cpf', choices = available_commodities, server = TRUE)
     
     input_country_profile_y <- reactive({
       y <- (min(input$cp_y[1], input$cp_y[2])):(max(input$cp_y[1], input$cp_y[2]))
@@ -42,7 +42,7 @@ shinyServer(
     })
     
     input_model_product_filter <- reactive({ input$mod_pf })
-    input_model_custom_product_filter <- reactive({ input$mod_cpf })
+    # input_model_custom_product_filter <- reactive({ input$mod_cpf })
     input_model_type <- reactive({ input$mod_t })
     input_model_dist <- reactive({ input$mod_d })
     input_model_bin <- reactive({ input$mod_b })
@@ -98,8 +98,8 @@ shinyServer(
     title_country_profile <- eventReactive(input$cp_go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("<h1>{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }</h1>"),
-        "yrpc-parquet" = glue::glue("<h1>{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }</h1>")
+        "yrc" = glue("{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }"),
+        "yrpc-parquet" = glue("{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }")
       )
     })
     
@@ -378,40 +378,40 @@ shinyServer(
     
     trade_summary_text_exp <- eventReactive(input$cp_go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("The exports of { reporter_add_the() } { reporter_name() } to the World { exports_growth_increase_decrease() } from 
-                               { exports_value_min_year_2() } in { min(input_country_profile_y()) } to { exports_value_max_year_2() } in { max(input_country_profile_y()) } 
-                               (annualized { exports_growth_increase_decrease_2() } of { exports_growth_2() })."),
+             "yr" = glue("The exports of { reporter_add_the() } { reporter_name() } to the World { exports_growth_increase_decrease() } from 
+                          { exports_value_min_year_2() } in { min(input_country_profile_y()) } to { exports_value_max_year_2() } in { max(input_country_profile_y()) } 
+                          (annualized { exports_growth_increase_decrease_2() } of { exports_growth_2() })."),
              
-             "yrp" = glue::glue("The exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { exports_growth_increase_decrease() } from 
-                                { exports_value_min_year_2() } in { min(input_country_profile_y()) } 
-                                to { exports_value_max_year_2() } in { max(input_country_profile_y()) } (annualized { exports_growth_increase_decrease_2() } of 
-                                { exports_growth_2() }). { partner_add_the() } { partner_name() } was the No. { trade_rankings_no_min_year() } trading partner of 
-                                { reporter_add_the() } { reporter_name() } in { min(input_country_profile_y()) } (represented { trade_rankings_exp_share_min_year_2() } of its exports), and 
-                                then { trade_rankings_remained() } No. { trade_rankings_no_max_year() } in { max(input_country_profile_y()) } (represented { trade_rankings_exp_share_max_year_2() } 
-                                of its exports).")
+             "yrp" = glue("The exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { exports_growth_increase_decrease() } from 
+                          { exports_value_min_year_2() } in { min(input_country_profile_y()) } 
+                          to { exports_value_max_year_2() } in { max(input_country_profile_y()) } (annualized { exports_growth_increase_decrease_2() } of 
+                          { exports_growth_2() }). { partner_add_the() } { partner_name() } was the No. { trade_rankings_no_min_year() } trading partner of 
+                          { reporter_add_the() } { reporter_name() } in { min(input_country_profile_y()) } (represented { trade_rankings_exp_share_min_year_2() } of its exports), and 
+                          then { trade_rankings_remained() } No. { trade_rankings_no_max_year() } in { max(input_country_profile_y()) } (represented { trade_rankings_exp_share_max_year_2() } 
+                          of its exports).")
       )
     })
     
     trade_summary_text_imp <- eventReactive(input$cp_go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("The imports of { reporter_add_the() } { reporter_name() } to the World { imports_growth_increase_decrease() } from 
-                               { imports_value_min_year_2() } in { min(input_country_profile_y()) } to { imports_value_max_year_2() } in { max(input_country_profile_y()) } 
-                               (annualized { imports_growth_increase_decrease_2() } of { imports_growth_2() })."),
+             "yr" = glue("The imports of { reporter_add_the() } { reporter_name() } to the World { imports_growth_increase_decrease() } from 
+                         { imports_value_min_year_2() } in { min(input_country_profile_y()) } to { imports_value_max_year_2() } in { max(input_country_profile_y()) } 
+                         (annualized { imports_growth_increase_decrease_2() } of { imports_growth_2() })."),
              
-             "yrp" = glue::glue("The imports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { imports_growth_increase_decrease() } from 
-                                { imports_value_min_year_2() } in { min(input_country_profile_y()) } 
-                                to { imports_value_max_year_2() } in { max(input_country_profile_y()) } (annualized { imports_growth_increase_decrease_2() } of 
-                                { imports_growth_2() }). { partner_add_the() } { partner_name() } was the No. { trade_rankings_no_min_year() } trading partner of 
-                                { reporter_add_the() } { reporter_name() } in { min(input_country_profile_y()) } (represented { trade_rankings_imp_share_min_year_2() } of its imports), and 
-                                then { trade_rankings_remained() } No. { trade_rankings_no_max_year() } in { max(input_country_profile_y()) } (represented { trade_rankings_imp_share_max_year_2() } 
-                                of its imports).")
+             "yrp" = glue("The imports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { imports_growth_increase_decrease() } from 
+                          { imports_value_min_year_2() } in { min(input_country_profile_y()) } 
+                          to { imports_value_max_year_2() } in { max(input_country_profile_y()) } (annualized { imports_growth_increase_decrease_2() } of 
+                          { imports_growth_2() }). { partner_add_the() } { partner_name() } was the No. { trade_rankings_no_min_year() } trading partner of 
+                          { reporter_add_the() } { reporter_name() } in { min(input_country_profile_y()) } (represented { trade_rankings_imp_share_min_year_2() } of its imports), and 
+                          then { trade_rankings_remained() } No. { trade_rankings_no_max_year() } in { max(input_country_profile_y()) } (represented { trade_rankings_imp_share_max_year_2() } 
+                          of its imports).")
       )
     })
 
     trade_exchange_lines_title <- eventReactive(input$cp_go, {
       switch(table_aggregated(),
-             "yr" = glue::glue("{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }"),
-             "yrp" = glue::glue("{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } exchange between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }")
+             "yr" = glue("{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }"),
+             "yrp" = glue("{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } exchange between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }")
       )
     })
     
@@ -479,7 +479,7 @@ shinyServer(
     ### Visual elements ----
     
     exports_subtitle <- eventReactive(input$cp_go, {
-      sprintf("Detailed Exports %s-%s", min(input_country_profile_y()), max(input_country_profile_y()))
+      glue("Detailed Exports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
     })
     
     exports_note <- eventReactive(input$cp_go, {
@@ -489,8 +489,8 @@ shinyServer(
     exports_title_min_year <- eventReactive(input$cp_go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_country_profile_y()) }, by product"),
-        "yrpc-parquet" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) }, by product")
+        "yrc" = glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_country_profile_y()) }, by product"),
+        "yrpc-parquet" = glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) }, by product")
       )
     })
     
@@ -515,8 +515,8 @@ shinyServer(
     exports_title_max_year <- eventReactive(input$cp_go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { max(input_country_profile_y()) }, by product"),
-        "yrpc-parquet" = glue::glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { max(input_country_profile_y()) }, by product")
+        "yrc" = glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { max(input_country_profile_y()) }, by product"),
+        "yrpc-parquet" = glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { max(input_country_profile_y()) }, by product")
       )
     })
     
@@ -591,7 +591,7 @@ shinyServer(
     ### Visual elements ----
     
     imports_subtitle <- eventReactive(input$cp_go, {
-      sprintf("Detailed Imports %s-%s", min(input_country_profile_y()), max(input_country_profile_y()))
+      glue("Detailed Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
     })
     
     imports_note <- eventReactive(input$cp_go, {
@@ -601,8 +601,8 @@ shinyServer(
     imports_title_min_year <- eventReactive(input$cp_go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_country_profile_y()) }, by product"),
-        "yrpc-parquet" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) }, by product")
+        "yrc" = glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_country_profile_y()) }, by product"),
+        "yrpc-parquet" = glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) }, by product")
       )
     })
     
@@ -628,8 +628,8 @@ shinyServer(
     imports_title_max_year <- eventReactive(input$cp_go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { max(input_country_profile_y()) }, by product"),
-        "yrpc-parquet" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { max(input_country_profile_y()) }, by product")
+        "yrc" = glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { max(input_country_profile_y()) }, by product"),
+        "yrpc-parquet" = glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { max(input_country_profile_y()) }, by product")
       )
     })
     
@@ -683,26 +683,26 @@ shinyServer(
       
       # 2. apply filters
       
-      if (length(input_model_custom_product_filter()) > 0) {
-        d <- d %>% 
-          filter(commodity_code %in% input_model_custom_product_filter()) 
-      } else {
+      # if (length(input_model_custom_product_filter()) > 0) {
+      #   d <- d %>% 
+      #     filter(commodity_code %in% input_model_custom_product_filter()) 
+      # } else {
         if (!any(input_model_product_filter() %in% c("All Products"))) {
           if (any(input_model_product_filter() %in% "Vaccine Inputs")) {
             vaccine_codes <- read.csv("vaccine_codes.csv")
             d <- d %>% 
               mutate(
-                group_fullname_english = case_when(
+                section_name = case_when(
                   commodity_code %in% vaccine_codes$commodity_code ~ "Vaccine Inputs",
-                  TRUE ~ group_fullname_english
+                  TRUE ~ section_name
                 )
               )
           }
           
           d <- d %>% 
-            filter(group_fullname_english %in% input_model_product_filter())
+            filter(section_name %in% input_model_product_filter())
         }
-      }
+      # }
       
       if (any(input_model_ctn() %in% "mfn")) {
         # 3.1 read from API
@@ -873,6 +873,10 @@ shinyServer(
       )
     })
     
+    data_detailed_model_text <- eventReactive(input$mod_go, { 
+      glue("The filtered dataset contains { nrow(data_detailed_model()) } rows and
+           { ncol(data_detailed_model()) } columns. Here's a preview of the table to use to fit regression models:")
+    })
     data_detailed_model_preview <- eventReactive(input$mod_go, { head(data_detailed_model()) })
     
     model_formula <- eventReactive(input$mod_go, {
@@ -1004,7 +1008,7 @@ shinyServer(
       return(f)
     })
     
-    model_summary <- eventReactive(input$mod_go, {
+    model_output <- eventReactive(input$mod_go, {
       if (any(input_model_type() %in% c("ols", "olsrem", "olsfe"))) {
         if (input_model_cluster() == "yes") {
           m <- feols(model_formula(), data_detailed_model(), cluster = ~reporter_partner_iso)
@@ -1025,37 +1029,28 @@ shinyServer(
       }
       
       gc()
-      return(summary(m))
+      return(m)
     })
     
     # Cite ----
     
     cite <- reactive({
-      sprintf(
-        "Open Trade Statistics. \"OTS BETA DASHBOARD\". <i>Open Trade Statistics</i>. Accessed %s %s, %s. %s/",
-        months(Sys.Date()),
-        lubridate::day(Sys.Date()),
-        lubridate::year(Sys.Date()),
-        site_url
+      glue(
+        "Open Trade Statistics. \"OTS BETA DASHBOARD\". <i>Open Trade Statistics</i>. 
+        Accessed {months(Sys.Date()) } { lubridate::day(Sys.Date()) }, { lubridate::year(Sys.Date()) }. { site_url }/"
       )
     })
 
     cite_bibtex <- reactive({
-      sprintf(
-        "@misc{open_trade_statistics_2021,
-              title = {OTS BETA DASHBOARD},
-              url = {%s/},
-              author = {Vargas, Mauricio},
-              doi = {10.5281/zenodo.3738793},
-              publisher = {Open Trade Statistics},
-              year = {2019},
-              month = {Apr},
-              note = {Accessed: %s %s, %s}
-    }",
-        site_url,
-        months(Sys.Date()),
-        lubridate::day(Sys.Date()),
-        lubridate::year(Sys.Date())
+      glue("@misc{{open_trade_statistics_{lubridate::year(Sys.Date())},
+      title = {{Open Trade Statistics Beta Dashboard}},
+      url = {{{ site_url }/}},
+      author = {{Vargas, Mauricio}},
+      doi = {{10.5281/zenodo.3738793}},
+      publisher = {{Open Trade Statistics}},
+      year = {{2019}},
+      month = {{Apr}},
+      note = {{Accessed: { months(Sys.Date()) } { lubridate::day(Sys.Date()) }, { lubridate::year(Sys.Date()) }}}}}"
       )
     })
     
@@ -1066,7 +1061,7 @@ shinyServer(
     })
     
     output$title_model <- renderText({
-      "<h1>Gravity Models</h1>"
+      "Gravity Models"
     })
     
     output$title_country_profile_legend <- renderText({
@@ -1084,7 +1079,7 @@ shinyServer(
     ## Trade output ----
     
     output$trade_subtitle <- eventReactive(input$cp_go, {
-      sprintf("Total Exports and Imports %s-%s", min(input_country_profile_y()), max(input_country_profile_y()))
+      glue("Total Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
     })
     
     output$trade_subtitle_exp <- eventReactive(input$cp_go, {
@@ -1096,23 +1091,23 @@ shinyServer(
     })
     
     output$trade_partners_title <- eventReactive(input$cp_go, {
-      sprintf("Trading partners %s-%s", min(input_country_profile_y()), max(input_country_profile_y()))
+      glue("Trading partners { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
     })
     
     output$trade_exports_min_year_subtitle <- eventReactive(input$cp_go, {
-      glue::glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_country_profile_y()) }, by country/area")
+      glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_country_profile_y()) }, by country/area")
     })
     
     output$trade_exports_max_year_subtitle <- eventReactive(input$cp_go, {
-      glue::glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { max(input_country_profile_y()) }, by country/area")
+      glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { max(input_country_profile_y()) }, by country/area")
     })
     
     output$trade_imports_min_year_subtitle <- eventReactive(input$cp_go, {
-      glue::glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_country_profile_y()) }, by country/area")
+      glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_country_profile_y()) }, by country/area")
     })
     
     output$trade_imports_max_year_subtitle <- eventReactive(input$cp_go, {
-      glue::glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { max(input_country_profile_y()) }, by country/area")
+      glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { max(input_country_profile_y()) }, by country/area")
     })
     
     output$trade_summary_exp <- renderText(trade_summary_text_exp())
@@ -1149,13 +1144,14 @@ shinyServer(
     # Model output ----
     
     output$model_data_subtitle <- eventReactive(input$mod_go, { "Data preview" })
+    output$data_detailed_model_text <- renderText(data_detailed_model_text())
     output$data_detailed_model_preview <- renderTable(data_detailed_model_preview())
     
     output$model_formula_latex <- renderUI({
       if (input_model_type() == "ppml") {
-        lhs <- "\\text{trade value}_{ij}^{kt}"
+        lhs <- "\\text{trade value}_{ij}^{t}"
       } else {
-        lhs <- "\\text{log trade value}_{ij}^{kt}"
+        lhs <- "\\text{log trade value}_{ij}^{t}"
       }
       
       if (input_model_type() == "ols") {
@@ -1164,11 +1160,11 @@ shinyServer(
             c(input_model_dist(), input_model_ctn(), input_model_bin())
           ))),
           paste0(paste0("\\text{", gsub("_", " ", c(paste("log", input_model_dist()), 
-                                                    paste("log", input_model_ctn()), input_model_bin())), "}"), "_{ij}^{kt}"),
+                                                    paste("log", input_model_ctn()), input_model_bin())), "}"), "_{ij}^{t}"),
           collapse = " + "
         )
         
-        rhs <- paste0("\\beta_0 +", rhs, "+ \\varepsilon_{ij}^{kt}")
+        rhs <- paste0("\\beta_0 +", rhs, "+ \\varepsilon_{ij}^{t}")
       }
       
       if (input_model_type() == "olsrem") {
@@ -1177,11 +1173,11 @@ shinyServer(
             c(input_model_dist(), input_model_bin(), "log_remoteness_exp", "log_remoteness_imp")
           ))),
           paste0(paste0("\\text{", gsub("_", " ", c(paste("log", input_model_dist()), 
-                                                    input_model_bin(), "log_remoteness_exp", "log_remoteness_imp")), "}"), "_{ij}^{kt}"),
+                                                    input_model_bin(), "log_remoteness_exp", "log_remoteness_imp")), "}"), "_{ij}^{t}"),
           collapse = " + "
         )
         
-        rhs <- paste0("\\beta_0 +", rhs, "+ \\varepsilon_{ij}^{kt}")
+        rhs <- paste0("\\beta_0 +", rhs, "+ \\varepsilon_{ij}^{t}")
       }
       
       if (input_model_type() == "olsfe") {
@@ -1190,11 +1186,11 @@ shinyServer(
             c(input_model_dist(), input_model_bin(), "reporter_year", "partner_year")
           ))),
           paste0(paste0("\\text{", gsub("_", " ", c(paste("log", input_model_dist()), 
-                                                    input_model_bin(), "reporter_year", "partner_year")), "}"), "_{ij}^{kt}"),
+                                                    input_model_bin(), "reporter_year", "partner_year")), "}"), "_{ij}^{t}"),
           collapse = " + "
         )
         
-        rhs <- paste0("\\beta_0 +", rhs, "+ \\varepsilon_{ij}^{kt}")
+        rhs <- paste0("\\beta_0 +", rhs, "+ \\varepsilon_{ij}^{t}")
       }
       
       if (input_model_type() == "ppml") {
@@ -1203,11 +1199,11 @@ shinyServer(
             c(input_model_dist(), input_model_bin())
           ))),
           paste0(paste0("\\text{", gsub("_", " ", c(paste("log", input_model_dist()), 
-                                                    input_model_bin())), "}"), "_{ij}^{kt}"),
+                                                    input_model_bin())), "}"), "_{ij}^{t}"),
           collapse = " + "
         )
         
-        rhs <- paste0("\\exp[\\beta_0 +", rhs, "]\\times \\varepsilon_{ij}^{kt}")
+        rhs <- paste0("\\exp[\\beta_0 +", rhs, "]\\times \\varepsilon_{ij}^{t}")
       }
       
       withMathJax(
@@ -1219,7 +1215,8 @@ shinyServer(
     output$model_summary_text <- eventReactive(input$mod_go, { 
       "WIP: some selections create errors messages such as 'contrasts can be applied only to factors with 2 or more levels' but Shiny hides those."
     })
-    output$model_summary <- renderPrint(model_summary())
+    output$model_summary_tidy <- renderTable(tidy(model_output()))
+    output$model_summary_glance <- renderTable(glance(model_output()))
     
     # Download output ----
     
@@ -1245,7 +1242,7 @@ shinyServer(
     
     output$download_country_profile_aggregated_pre <- downloadHandler(
         filename = function() {
-          glue::glue("{ table_aggregated() }_{ input_country_profile_reporter_iso() }_{ input_country_profile_partner_iso() }_{ min(input_country_profile_y()) }_{ max(input_country_profile_y()) }.{ input_country_profile_format() }")
+          glue("{ table_aggregated() }_{ input_country_profile_reporter_iso() }_{ input_country_profile_partner_iso() }_{ min(input_country_profile_y()) }_{ max(input_country_profile_y()) }.{ input_country_profile_format() }")
         },
         content = function(filename) {
           rio::export(data_aggregated(), filename)
@@ -1255,7 +1252,7 @@ shinyServer(
     
     output$download_country_profile_detailed_pre <- downloadHandler(
       filename = function() {
-        glue::glue("{ table_detailed() }_{ input_country_profile_reporter_iso() }_{ input_country_profile_partner_iso() }_{ min(input_country_profile_y()) }_{ max(input_country_profile_y()) }.{ input_country_profile_format() }")
+        glue("{ table_detailed() }_{ input_country_profile_reporter_iso() }_{ input_country_profile_partner_iso() }_{ min(input_country_profile_y()) }_{ max(input_country_profile_y()) }.{ input_country_profile_format() }")
       },
       content = function(filename) {
         rio::export(data_detailed(), filename)
@@ -1295,10 +1292,20 @@ shinyServer(
     
     output$download_model_detailed_pre <- downloadHandler(
       filename = function() {
-        glue::glue("{ input_model_type() }_{ input_model_reporter_iso() }_{ input_model_partner_iso() }_{ min(input_model_y()) }_{ max(input_model_y()) }.{ input_model_format() }")
+        glue("{ input_model_type() }_{ input_model_reporter_iso() }_{ input_model_partner_iso() }_{ min(input_model_y()) }_{ max(input_model_y()) }.{ input_model_format() }")
       },
       content = function(filename) {
         rio::export(data_detailed_model(), filename)
+      },
+      contentType = "application/zip"
+    )
+    
+    output$download_model_fit_pre <- downloadHandler(
+      filename = function() {
+        glue("{ input_model_type() }_{ input_model_reporter_iso() }_{ input_model_partner_iso() }_{ min(input_model_y()) }_{ max(input_model_y()) }.rds")
+      },
+      content = function(filename) {
+        saveRDS(model_output(), filename)
       },
       contentType = "application/zip"
     )
@@ -1309,6 +1316,10 @@ shinyServer(
     output$download_model_detailed <- renderUI({
       req(input$mod_go)
       downloadButton('download_model_detailed_pre', label = 'Detailed data')
+    })
+    output$download_model_fit <- renderUI({
+      req(input$mod_go)
+      downloadButton('download_model_fit_pre', label = 'Fitted model')
     })
     
     # Cite output ----
@@ -1332,10 +1343,7 @@ shinyServer(
     })
     
     output$site_footer <- renderText({
-      sprintf(
-        "<center><i>Open Trade Statistics %s.</i></center>",
-        lubridate::year(Sys.Date())
-      )
+      glue("<center><i>Open Trade Statistics {lubridate::year(Sys.Date())}.</i></center>")
     })
     
     # Bookmarking -------------------------------------------------------------
