@@ -43,4 +43,4 @@ vaccine_codes <- data.frame(commodity_code = c("170199", "220710", "220720", "22
   "847989", "854370", "901831", "901832", "902720", 
   "902790", "903289"))
 
-readr::write_csv(vaccine_codes, "vaccine_codes.csv")
+# readr::write_csv(vaccine_codes, "vaccine_codes.csv")

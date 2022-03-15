@@ -13,7 +13,7 @@ od_order_and_add_continent <- function(d, col = "trade_value_usd_exp") {
   
     mutate(
       continent_name = case_when(
-        is.na(continent_name) ~ "Unspecified",
+        is.na(continent_name) ~ partner_name,
         TRUE ~ continent_name
       )
     ) %>% 
@@ -54,25 +54,17 @@ od_colors <- function(d) {
     
     inner_join(
       ots_countries %>% 
-        select(country_iso, continent_name = continent_name_english) %>% 
-        filter(grepl("c-|ata", country_iso)) %>% 
-        
+        select(country_iso, continent_name = continent_name_english, country_name_english) %>% 
+        filter(grepl("c-|e-536|e-837|e-838|e-839|e-899", country_iso)) %>% 
+        mutate(continent_name = ifelse(is.na(continent_name), country_name_english, continent_name)) %>% 
+        select(-country_name_english) %>% 
         left_join(
           ots_countries_colors %>% 
             select(country_iso, country_color)
-        ) %>% 
-        
-        bind_rows(
-          tibble(
-            country_iso = "999",
-            continent_name = "Unspecified",
-            country_color = "#D3D3D3"
-          )
         )
     ) %>% 
     
-    select(-country_iso) %>% 
-    distinct()
+    select(-country_iso)
 }
 
 od_to_highcharts <- function(d, d2) {
@@ -125,17 +117,6 @@ pd_fix_section_and_aggregate <- function(d, col = "trade_value_usd_exp") {
     select(commodity_code, trade_value = !!sym(col)) %>% 
     
     pd_aggregate_products() %>% 
-    
-    mutate(
-      section_name = case_when(
-        is.na(section_name) ~ "Unspecified",
-        TRUE ~ section_name
-      ),
-      section_code = case_when(
-        is.na(section_code) ~ "99",
-        TRUE ~ section_code
-      )
-    ) %>% 
     
     group_by(section_name, commodity_name) %>% 
     summarise(trade_value = sum(trade_value, na.rm = T)) %>% 
@@ -197,14 +178,7 @@ pd_colors <- function(d) {
         distinct() %>% 
         
         inner_join(ots_sections_colors) %>% 
-        select(-section_code) %>% 
-        
-        bind_rows(
-          tibble(
-            section_name = "Unspecified",
-            section_color = "#d3d3d3"
-          )
-        )
+        select(-section_code)
     )
 }
 

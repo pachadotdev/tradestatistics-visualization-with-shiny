@@ -94,19 +94,6 @@ shinyUI(
             
             column(
               4,
-              radioButtons(
-                "cp_i",
-                "Use imputed data:",
-                choiceNames = list("Yes, use gravity-imputed UN COMTRADE data",
-                                   "No, use raw UN COMTRADE data"),
-                choiceValues = list("yes", "no"),
-                selected = c("no"),
-                width = "100%",
-              )
-            ),
-            
-            column(
-              4,
               selectInput(
                 "cp_a",
                 "Convert to constant dollars of the year:",
@@ -115,6 +102,13 @@ shinyUI(
                 selectize = TRUE,
                 width = "100%"
               )
+            ),
+            
+            column(
+              12,
+              align="center",
+              actionButton("cp_go", "Give me the country profile",
+                           class = "btn-primary")
             ),
             
             column(
@@ -324,15 +318,6 @@ shinyUI(
                 choiceValues = list("yes", "no"),
                 selected = c("no"),
                 width = "100%",
-              ),
-              radioButtons(
-                "mod_i",
-                "Use imputed data:",
-                choiceNames = list("Yes, use gravity-imputed UN COMTRADE data",
-                                   "No, use raw UN COMTRADE data"),
-                choiceValues = list("yes", "no"),
-                selected = c("no"),
-                width = "100%",
               )
             ),
             
@@ -442,8 +427,8 @@ shinyUI(
             column(
               12,
               align="center",
-              actionButton("go", "Give me the results for this model",
-                           class = "btn-default")
+              actionButton("mod_go", "Give me the results for this model",
+                           class = "btn-primary")
             ),
             
             ## Model results ----
