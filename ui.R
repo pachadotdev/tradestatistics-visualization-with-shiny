@@ -45,8 +45,7 @@ shinyUI(
               sliderInput(
                 "cp_y",
                 "Years:",
-                # min = available_years_min,
-                min = 2002,
+                min = available_years_min,
                 max = available_years_max,
                 value = c(available_years_max - 4, 2019),
                 sep = "",
@@ -118,9 +117,9 @@ shinyUI(
             
             column(
               3,
-              h3("Exports"),
+              htmlOutput("trade_subtitle_exp", container = tags$h3),
               htmlOutput("trade_summary_exp", container = tags$p),
-              h3("Imports"),
+              htmlOutput("trade_subtitle_imp", container = tags$h3),
               htmlOutput("trade_summary_imp", container = tags$p)
             ),
             
@@ -204,16 +203,9 @@ shinyUI(
               12,
               htmlOutput("download_country_profile_subtitle", container = tags$h2),
               htmlOutput("download_country_profile_text", container = tags$p),
-              selectInput(
-                "cp_f",
-                "Download data as:",
-                choices = available_formats,
-                selected = NULL,
-                selectize = TRUE
-              ),
-              
-              downloadButton("download_country_profile_aggregated", "Aggregated data"),
-              downloadButton("download_country_profile_detailed", "Detailed data")
+              uiOutput("download_country_profile_format"),
+              uiOutput("download_country_profile_aggregated"),
+              uiOutput("download_country_profile_detailed")
             )
           ),
           
@@ -241,8 +233,7 @@ shinyUI(
               sliderInput(
                 "mod_y",
                 "Years:",
-                # min = available_years_min,
-                min = 2002,
+                min = available_years_min,
                 max = available_years_max,
                 value = c(2002, 2014),
                 sep = "",
@@ -376,7 +367,7 @@ shinyUI(
               selectInput(
                 "mod_cpf",
                 "Custom product filter (optional, overwrites section filter):",
-                choices = available_commodities,
+                choices = NULL,
                 selected = NULL,
                 selectize = TRUE,
                 width = "100%",
@@ -409,10 +400,6 @@ shinyUI(
               )
             ),
             
-            # column(6,
-            #        checkboxInput('fix_custom_header', 'Fix column names (don\'t change this if you are unsure)', TRUE)
-            # ),
-            
             column(12,
                    p("The max size 100MB and this works with csv, tsv, xlsx, sav or dta only."),
                    HTML("<p>You can download an example of custom variables that work with UN COMTRADE data from <a href='https://github.com/pachadotdev/tradestatistics-visualization-with-shiny/blob/master/custom_variables_for_modelling_demo.csv?raw=true'>here</a>. See the <i>cepiigeodist</i> package documentation for the details.</p>")
@@ -435,10 +422,10 @@ shinyUI(
             
             column(
               12,
-              h2("Data preview"),
+              htmlOutput("model_data_subtitle", container = tags$h2),
               tableOutput("data_detailed_model_preview"),
-              h2("Model summary"),
-              p("WIP: some selections create errors messages such as 'contrasts can be applied only to factors with 2 or more levels' but Shiny hides those."),
+              htmlOutput("model_summary_subtitle", container = tags$h2),
+              htmlOutput("model_summary_text", container = tags$p),
               verbatimTextOutput("model_summary")
             ),
             
@@ -448,15 +435,8 @@ shinyUI(
               12,
               htmlOutput("download_model_subtitle", container = tags$h2),
               htmlOutput("download_model_text", container = tags$p),
-              selectInput(
-                "mod_f",
-                "Download data as:",
-                choices = available_formats,
-                selected = NULL,
-                selectize = TRUE
-              ),
-              
-              downloadButton("download_model_detailed", "Detailed data")
+              uiOutput("download_model_format"),
+              uiOutput("download_model_detailed")
             )
           ),
           

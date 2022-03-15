@@ -4,6 +4,8 @@ shinyServer(
   function(input, output, session) {
     # User inputs ----
     
+    updateSelectizeInput(session, 'mod_cpf', choices = available_commodities, server = TRUE)
+    
     input_country_profile_y <- reactive({
       y <- (min(input$cp_y[1], input$cp_y[2])):(max(input$cp_y[1], input$cp_y[2]))
       y <- seq(min(y), max(y), by = input$cp_y_sep)
@@ -27,7 +29,7 @@ shinyServer(
     })
     
     input_country_profile_partner_iso <- reactive({ input$cp_p })
-    input_model_partner_iso <- reactive({ input$model_partner })
+    input_model_partner_iso <- reactive({ input$mod_p })
     
     input_country_profile_convert_dollars <- reactive({ input$cp_a })
     input_model_convert_dollars <- reactive({ input$mod_a })
@@ -477,7 +479,11 @@ shinyServer(
     ### Visual elements ----
     
     exports_subtitle <- eventReactive(input$cp_go, {
-      sprintf("<hr/>Detailed Exports %s-%s", min(input_country_profile_y()), max(input_country_profile_y()))
+      sprintf("Detailed Exports %s-%s", min(input_country_profile_y()), max(input_country_profile_y()))
+    })
+    
+    exports_note <- eventReactive(input$cp_go, {
+      "The data was grouped by official HS sections to make the charts clearer."
     })
     
     exports_title_min_year <- eventReactive(input$cp_go, {
@@ -585,14 +591,18 @@ shinyServer(
     ### Visual elements ----
     
     imports_subtitle <- eventReactive(input$cp_go, {
-      sprintf("<hr/>Detailed Imports %s-%s", min(input_country_profile_y()), max(input_country_profile_y()))
+      sprintf("Detailed Imports %s-%s", min(input_country_profile_y()), max(input_country_profile_y()))
+    })
+    
+    imports_note <- eventReactive(input$cp_go, {
+      "The data was grouped by official HS sections to make the charts clearer. You can download the product level data at the bottom of the page."
     })
     
     imports_title_min_year <- eventReactive(input$cp_go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_country_profile_y()) }, by product"),
-        "yrpc-parquet" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) }, by product")
+        "yrc" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_country_profile_y()) }, by product"),
+        "yrpc-parquet" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) }, by product")
       )
     })
     
@@ -618,8 +628,8 @@ shinyServer(
     imports_title_max_year <- eventReactive(input$cp_go, {
       switch(
         table_detailed(),
-        "yrc" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } to the rest of the World in { max(input_country_profile_y()) }, by product"),
-        "yrpc-parquet" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { max(input_country_profile_y()) }, by product")
+        "yrc" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { max(input_country_profile_y()) }, by product"),
+        "yrpc-parquet" = glue::glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { max(input_country_profile_y()) }, by product")
       )
     })
     
@@ -643,7 +653,7 @@ shinyServer(
     
     # Model ----
   
-    model_custom_data <- eventReactive(input$cp_go, {
+    model_custom_data <- eventReactive(input$mod_go, {
       uploaded_file <- input$mod_own
       
       if(!is.null(uploaded_file)) {
@@ -666,10 +676,6 @@ shinyServer(
           table = "yrpc-parquet",
           use_localhost = use_localhost
         )
-        # filter(
-        #   reporter_iso != "0-unspecified",
-        #   partner_iso != "0-unspecified"
-        # )
       
       if (input_model_convert_dollars() != "No conversion") {
         d <- ots_inflation_adjustment(d, as.integer(input_model_convert_dollars()))
@@ -994,6 +1000,7 @@ shinyServer(
         }
       }
       
+      print(f)
       return(f)
     })
     
@@ -1077,11 +1084,19 @@ shinyServer(
     ## Trade output ----
     
     output$trade_subtitle <- eventReactive(input$cp_go, {
-      sprintf("<hr/>Total Exports and Imports %s-%s", min(input_country_profile_y()), max(input_country_profile_y()))
+      sprintf("Total Exports and Imports %s-%s", min(input_country_profile_y()), max(input_country_profile_y()))
+    })
+    
+    output$trade_subtitle_exp <- eventReactive(input$cp_go, {
+      "Exports"
+    })
+    
+    output$trade_subtitle_imp <- eventReactive(input$cp_go, {
+      "Imports"
     })
     
     output$trade_partners_title <- eventReactive(input$cp_go, {
-      sprintf("<hr/>Trading partners %s-%s", min(input_country_profile_y()), max(input_country_profile_y()))
+      sprintf("Trading partners %s-%s", min(input_country_profile_y()), max(input_country_profile_y()))
     })
     
     output$trade_exports_min_year_subtitle <- eventReactive(input$cp_go, {
@@ -1112,59 +1127,28 @@ shinyServer(
     ## Exports output ----
     
     output$exports_subtitle <- renderText(exports_subtitle())
-    output$exports_note <- renderText(
-      "The data was grouped by official HS sections to make the charts clearer."
-    )
-    
+    output$exports_note <- renderText(exports_note())
     output$exports_title_min_year <- renderText(exports_title_min_year())
-    
-    output$exports_treemap_destinations_min_year <- renderHighchart({
-      exports_treemap_destinations_min_year()
-    })
-    
-    output$exports_treemap_detailed_min_year <- renderHighchart({
-      exports_treemap_detailed_min_year()
-    })
-    
+    output$exports_treemap_destinations_min_year <- renderHighchart({exports_treemap_destinations_min_year()})
+    output$exports_treemap_detailed_min_year <- renderHighchart({exports_treemap_detailed_min_year()})
     output$exports_title_max_year <- renderText(exports_title_max_year())
-    
-    output$exports_treemap_destinations_max_year <- renderHighchart({
-      exports_treemap_destinations_max_year()
-    })
-    
-    output$exports_treemap_detailed_max_year <- renderHighchart({
-      exports_treemap_detailed_max_year()
-    })
+    output$exports_treemap_destinations_max_year <- renderHighchart({exports_treemap_destinations_max_year()})
+    output$exports_treemap_detailed_max_year <- renderHighchart({exports_treemap_detailed_max_year()})
     
     ## Imports output ----
     
     output$imports_subtitle <- renderText(imports_subtitle())
-    output$imports_note <- renderText(
-      "The data was grouped by official HS sections to make the charts clearer. You can download the product level data at the bottom of the page."
-    )
-    
+    output$imports_note <- renderText(imports_note())
     output$imports_title_min_year <- renderText(imports_title_min_year())
-    
-    output$imports_treemap_origins_min_year <- renderHighchart({
-      imports_treemap_origins_min_year()
-    })
-    
-    output$imports_treemap_detailed_min_year <- renderHighchart({
-      imports_treemap_detailed_min_year()
-    })
-    
+    output$imports_treemap_origins_min_year <- renderHighchart({imports_treemap_origins_min_year()})
+    output$imports_treemap_detailed_min_year <- renderHighchart({imports_treemap_detailed_min_year()})
     output$imports_title_max_year <- renderText(imports_title_max_year())
-    
-    output$imports_treemap_origins_max_year <- renderHighchart({
-      imports_treemap_origins_max_year()
-    })
-    
-    output$imports_treemap_detailed_max_year <- renderHighchart({
-      imports_treemap_detailed_max_year()
-    })
+    output$imports_treemap_origins_max_year <- renderHighchart({imports_treemap_origins_max_year()})
+    output$imports_treemap_detailed_max_year <- renderHighchart({imports_treemap_detailed_max_year()})
     
     # Model output ----
     
+    output$model_data_subtitle <- eventReactive(input$mod_go, { "Data preview" })
     output$data_detailed_model_preview <- renderTable(data_detailed_model_preview())
     
     output$model_formula_latex <- renderUI({
@@ -1231,27 +1215,45 @@ shinyServer(
       )
     })
     
+    output$model_summary_subtitle <- eventReactive(input$mod_go, { "Model summary" })
+    output$model_summary_text <- eventReactive(input$mod_go, { 
+      "WIP: some selections create errors messages such as 'contrasts can be applied only to factors with 2 or more levels' but Shiny hides those."
+    })
     output$model_summary <- renderPrint(model_summary())
     
     # Download output ----
     
     ## Country profile ----
     
-    output$download_country_profile_subtitle <- renderText({"<hr/>Download country profile data"})
+    download_country_profile_subtitle <- eventReactive(input$cp_go, {
+      "Download country profile data"
+    })
     
-    output$download_country_profile_text <- renderText({"Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."})
+    download_country_profile_text <- eventReactive(input$cp_go, {
+      "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
+    })
     
-    output$download_country_profile_aggregated <- downloadHandler(
-      filename = function() {
-        glue::glue("{ table_aggregated() }_{ input_country_profile_reporter_iso() }_{ input_country_profile_partner_iso() }_{ min(input_country_profile_y()) }_{ max(input_country_profile_y()) }.{ input_country_profile_format() }")
-      },
-      content = function(filename) {
-        rio::export(data_aggregated(), filename)
-      },
-      contentType = "application/zip"
-    )
+    download_country_profile_format <- eventReactive(input$cp_go, {
+      selectInput(
+        "cp_f",
+        "Download data as:",
+        choices = available_formats,
+        selected = NULL,
+        selectize = TRUE
+      )
+    })
     
-    output$download_country_profile_detailed <- downloadHandler(
+    output$download_country_profile_aggregated_pre <- downloadHandler(
+        filename = function() {
+          glue::glue("{ table_aggregated() }_{ input_country_profile_reporter_iso() }_{ input_country_profile_partner_iso() }_{ min(input_country_profile_y()) }_{ max(input_country_profile_y()) }.{ input_country_profile_format() }")
+        },
+        content = function(filename) {
+          rio::export(data_aggregated(), filename)
+        },
+        contentType = "application/zip"
+      )
+    
+    output$download_country_profile_detailed_pre <- downloadHandler(
       filename = function() {
         glue::glue("{ table_detailed() }_{ input_country_profile_reporter_iso() }_{ input_country_profile_partner_iso() }_{ min(input_country_profile_y()) }_{ max(input_country_profile_y()) }.{ input_country_profile_format() }")
       },
@@ -1261,15 +1263,39 @@ shinyServer(
       contentType = "application/zip"
     )
     
+    output$download_country_profile_subtitle <- renderText({download_country_profile_subtitle()})
+    output$download_country_profile_text <- renderText({download_country_profile_text()})
+    output$download_country_profile_format <- renderUI({download_country_profile_format()})
+    output$download_country_profile_aggregated <- renderUI({
+      req(input$cp_go)
+      downloadButton('download_country_profile_aggregated_pre', label = 'Aggregated data')
+    })
+    output$download_country_profile_detailed <- renderUI({
+      req(input$cp_go)
+      downloadButton('download_country_profile_detailed_pre', label = 'Detailed data')
+    })
+    
     ## Model ----
     
-    output$download_model_subtitle <- renderText({"<hr/>Download model data"})
+    download_model_subtitle <- eventReactive(input$mod_go, { "Download model data" })
     
-    output$download_model_text <- renderText({"Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."})
+    download_model_text <- eventReactive(input$mod_go, {
+      "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
+    })
     
-    output$download_model_detailed <- downloadHandler(
+    download_model_format <- eventReactive(input$mod_go, {
+      selectInput(
+        "mod_f",
+        "Download data as:",
+        choices = available_formats,
+        selected = NULL,
+        selectize = TRUE
+      )
+    })
+    
+    output$download_model_detailed_pre <- downloadHandler(
       filename = function() {
-        glue::glue("{ input_model_type() }_{ input_country_profile_reporter_iso() }_{ input_country_profile_partner_iso() }_{ min(input_country_profile_y()) }_{ max(input_country_profile_y()) }.{ input_model_format() }")
+        glue::glue("{ input_model_type() }_{ input_model_reporter_iso() }_{ input_model_partner_iso() }_{ min(input_model_y()) }_{ max(input_model_y()) }.{ input_model_format() }")
       },
       content = function(filename) {
         rio::export(data_detailed_model(), filename)
@@ -1277,9 +1303,17 @@ shinyServer(
       contentType = "application/zip"
     )
     
+    output$download_model_subtitle <- renderText({download_model_subtitle()})
+    output$download_model_text <- renderText({download_model_text()})
+    output$download_model_format <- renderUI({download_model_format()})
+    output$download_model_detailed <- renderUI({
+      req(input$mod_go)
+      downloadButton('download_model_detailed_pre', label = 'Detailed data')
+    })
+    
     # Cite output ----
     
-    output$cite_subtitle <- renderText({"<hr/>Cite"})
+    output$cite_subtitle <- renderText({"Cite"})
     
     output$cite_chicago_subtitle <- renderText({
       "Chicago citation"
