@@ -130,34 +130,45 @@ shinyUI(
             
             column(
               12,
-              htmlOutput("trade_partners_title", container = tags$h2)
+              htmlOutput("trade_partners_title", container = tags$h2),
+              htmlOutput("trade_partners_text", container = tags$p)
             ),
             
             column(
               6,
-              htmlOutput("trade_exports_min_year_subtitle", container = tags$h3),
+              htmlOutput("trade_exports_year_subtitle", container = tags$h3)
+            ),
+            
+            column(
+              6,
+              htmlOutput("trade_imports_year_subtitle", container = tags$h3)
+            ),
+            
+            column(
+              3,
+              htmlOutput("trade_exports_min_year_subtitle", container = tags$h4),
               highchartOutput("exports_treemap_destinations_min_year", height = "500px")
             ),
             
             column(
-              6,
-              htmlOutput("trade_exports_max_year_subtitle", container = tags$h3),
+              3,
+              htmlOutput("trade_exports_max_year_subtitle", container = tags$h4),
               highchartOutput("exports_treemap_destinations_max_year", height = "500px")
             ),
             
             column(
-              6,
-              htmlOutput("trade_imports_min_year_subtitle", container = tags$h3),
+              3,
+              htmlOutput("trade_imports_min_year_subtitle", container = tags$h4),
               highchartOutput("imports_treemap_origins_min_year", height = "500px")
             ),
             
             column(
-              6,
-              htmlOutput("trade_imports_max_year_subtitle", container = tags$h3),
+              3,
+              htmlOutput("trade_imports_max_year_subtitle", container = tags$h4),
               highchartOutput("imports_treemap_origins_max_year", height = "500px")
             ),
 
-            ## Exports ----
+            ## Exports/Imports ----
 
             column(
               12,
@@ -167,33 +178,35 @@ shinyUI(
 
             column(
               6,
-              htmlOutput("exports_title_min_year", container = tags$h3),
+              htmlOutput("exports_title_year", container = tags$h3)
+            ),
+            
+            column(
+              6,
+              htmlOutput("imports_title_year", container = tags$h3)
+            ),
+            
+            column(
+              3,
+              htmlOutput("exports_title_min_year", container = tags$h4),
               highchartOutput("exports_treemap_detailed_min_year", height = "500px")
             ),
 
             column(
-              6,
-              htmlOutput("exports_title_max_year", container = tags$h3),
+              3,
+              htmlOutput("exports_title_max_year", container = tags$h4),
               highchartOutput("exports_treemap_detailed_max_year", height = "500px")
             ),
 
-            ## Imports ----
-
             column(
-              12,
-              htmlOutput("imports_subtitle", container = tags$h2),
-              htmlOutput("imports_note", container = tags$p)
-            ),
-            
-            column(
-              6,
-              htmlOutput("imports_title_min_year", container = tags$h3),
+              3,
+              htmlOutput("imports_title_min_year", container = tags$h4),
               highchartOutput("imports_treemap_detailed_min_year", height = "500px")
             ),
             
             column(
-              6,
-              htmlOutput("imports_title_max_year", container = tags$h3),
+              3,
+              htmlOutput("imports_title_max_year", container = tags$h4),
               highchartOutput("imports_treemap_detailed_max_year", height = "500px")
             ),
             

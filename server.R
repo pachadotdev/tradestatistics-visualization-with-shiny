@@ -139,28 +139,6 @@ shinyServer(
       return(d)
     })
     
-    trade_rankings <- eventReactive(input$cp_go, {
-      d <- ots_create_tidy_data(
-        years = c(min(input_country_profile_y()), max(input_country_profile_y())),
-        reporters = input_country_profile_reporter_iso(),
-        partners = "all",
-        table = "yrp",
-        use_localhost = use_localhost
-      )
-      
-      if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
-      }
-      
-      d <- d %>% 
-        mutate(
-          exp_rank = dense_rank(desc(trade_value_usd_exp)),
-          imp_rank = dense_rank(desc(trade_value_usd_imp))
-        )
-      
-      return(d)
-    })
-    
     ## Trade ----
     
     ### Tables ----
@@ -479,19 +457,24 @@ shinyServer(
     ### Visual elements ----
     
     exports_subtitle <- eventReactive(input$cp_go, {
-      glue("Detailed Exports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
+      glue("Detailed Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
     })
     
     exports_note <- eventReactive(input$cp_go, {
-      "The data was grouped by official HS sections to make the charts clearer."
+      glue("Explore the exports and imports of { reporter_add_the() } { reporter_name() } at the begining and end of the 
+      selected period. The data was grouped by sections for visual clarity, you can click each section to see the finer detail.")
+    })
+    
+    exports_title_year <- eventReactive(input$cp_go, {
+      switch(
+        table_detailed(),
+        "yrc" = glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product"),
+        "yrpc-parquet" = glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product")
+      )
     })
     
     exports_title_min_year <- eventReactive(input$cp_go, {
-      switch(
-        table_detailed(),
-        "yrc" = glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_country_profile_y()) }, by product"),
-        "yrpc-parquet" = glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) }, by product")
-      )
+      glue("{ min(input_country_profile_y()) }")
     })
     
     exports_treemap_destinations_min_year <- eventReactive(input$cp_go, {
@@ -513,11 +496,7 @@ shinyServer(
     })
     
     exports_title_max_year <- eventReactive(input$cp_go, {
-      switch(
-        table_detailed(),
-        "yrc" = glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { max(input_country_profile_y()) }, by product"),
-        "yrpc-parquet" = glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { max(input_country_profile_y()) }, by product")
-      )
+      glue("{ max(input_country_profile_y()) }")
     })
     
     exports_treemap_destinations_max_year <- eventReactive(input$cp_go, {
@@ -590,20 +569,16 @@ shinyServer(
     
     ### Visual elements ----
     
-    imports_subtitle <- eventReactive(input$cp_go, {
-      glue("Detailed Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
-    })
-    
-    imports_note <- eventReactive(input$cp_go, {
-      "The data was grouped by official HS sections to make the charts clearer. You can download the product level data at the bottom of the page."
+    imports_title_year <- eventReactive(input$cp_go, {
+      switch(
+        table_detailed(),
+        "yrc" = glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product"),
+        "yrpc-parquet" = glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product")
+      )
     })
     
     imports_title_min_year <- eventReactive(input$cp_go, {
-      switch(
-        table_detailed(),
-        "yrc" = glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_country_profile_y()) }, by product"),
-        "yrpc-parquet" = glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) }, by product")
-      )
+      glue("{ min(input_country_profile_y()) }")
     })
     
     imports_treemap_origins_min_year <- eventReactive(input$cp_go, {
@@ -626,11 +601,7 @@ shinyServer(
     })
     
     imports_title_max_year <- eventReactive(input$cp_go, {
-      switch(
-        table_detailed(),
-        "yrc" = glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { max(input_country_profile_y()) }, by product"),
-        "yrpc-parquet" = glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { max(input_country_profile_y()) }, by product")
-      )
+      glue("{ min(input_country_profile_y()) }")
     })
     
     imports_treemap_origins_max_year <- eventReactive(input$cp_go, {
@@ -783,7 +754,9 @@ shinyServer(
               is.na(rta) & nchar(country1) == 3 & nchar(country2) == 3 ~ 0L,
               TRUE ~ rta
             )
-          )
+          ) %>% 
+          ungroup() %>% 
+          select(-c(country1,country2))
       }
       
       # 6. create remoteness indexes
@@ -1064,15 +1037,12 @@ shinyServer(
       "Gravity Models"
     })
     
-    output$title_country_profile_legend <- renderText({
-      "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
-      of restrictions and applicable licenses."
-    })
+    legend_text <- "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
+      of restrictions and applicable licenses. These figures do not include services or foreign direct investment."
     
-    output$title_model_legend <- renderText({
-      "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
-      of restrictions and applicable licenses."
-    })
+    output$title_country_profile_legend <- renderText({ legend_text })
+    
+    output$title_model_legend <- renderText({ legend_text })
     
     # Country profile output ----
     
@@ -1094,20 +1064,40 @@ shinyServer(
       glue("Trading partners { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
     })
     
-    output$trade_exports_min_year_subtitle <- eventReactive(input$cp_go, {
-      glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_country_profile_y()) }, by country/area")
+    output$trade_partners_title <- eventReactive(input$cp_go, {
+      glue("Trading partners { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
     })
     
+    output$trade_partners_text <- eventReactive(input$cp_go, {
+      glue("Explore the trade partners of { reporter_add_the() } { reporter_name() } at the begining and end 
+           of the selected period. The data was grouped by continent and country for visual clarity, you can click
+           each continent/area to see the finer detail.")
+    })
+    
+    output$trade_exports_year_subtitle <- eventReactive(input$cp_go, {
+      glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in 
+           { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by destination")
+    })
+    
+    output$trade_exports_min_year_subtitle <- eventReactive(input$cp_go, {
+      glue("{ min(input_country_profile_y()) }")
+    })
+
     output$trade_exports_max_year_subtitle <- eventReactive(input$cp_go, {
-      glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { max(input_country_profile_y()) }, by country/area")
+      glue("{ max(input_country_profile_y()) }")
+    })
+    
+    output$trade_imports_year_subtitle <- eventReactive(input$cp_go, {
+      glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in 
+           { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by origin")
     })
     
     output$trade_imports_min_year_subtitle <- eventReactive(input$cp_go, {
-      glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_country_profile_y()) }, by country/area")
+      glue("{ min(input_country_profile_y()) }")
     })
-    
+
     output$trade_imports_max_year_subtitle <- eventReactive(input$cp_go, {
-      glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { max(input_country_profile_y()) }, by country/area")
+      glue("{ max(input_country_profile_y()) }")
     })
     
     output$trade_summary_exp <- renderText(trade_summary_text_exp())
@@ -1123,6 +1113,7 @@ shinyServer(
     
     output$exports_subtitle <- renderText(exports_subtitle())
     output$exports_note <- renderText(exports_note())
+    output$exports_title_year <- renderText(exports_title_year())
     output$exports_title_min_year <- renderText(exports_title_min_year())
     output$exports_treemap_destinations_min_year <- renderHighchart({exports_treemap_destinations_min_year()})
     output$exports_treemap_detailed_min_year <- renderHighchart({exports_treemap_detailed_min_year()})
@@ -1132,8 +1123,7 @@ shinyServer(
     
     ## Imports output ----
     
-    output$imports_subtitle <- renderText(imports_subtitle())
-    output$imports_note <- renderText(imports_note())
+    output$imports_title_year <- renderText(imports_title_year())
     output$imports_title_min_year <- renderText(imports_title_min_year())
     output$imports_treemap_origins_min_year <- renderHighchart({imports_treemap_origins_min_year()})
     output$imports_treemap_detailed_min_year <- renderHighchart({imports_treemap_detailed_min_year()})
