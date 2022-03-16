@@ -8,7 +8,7 @@ shinyServer(
     
     input_country_profile_y <- reactive({
       y <- (min(input$cp_y[1], input$cp_y[2])):(max(input$cp_y[1], input$cp_y[2]))
-      y <- seq(min(y), max(y), by = input$cp_y_sep)
+      y <- seq(min(y), max(y), by = ifelse(max(y) - min(y) >= 10, 2, 1))
       return(y)
     })
     
@@ -408,9 +408,9 @@ shinyServer(
     
     ### Tables ----
     
-    exports_table_destinations_min_year <- eventReactive(input$cp_go, {
+    exports_imports_table_origin_destination_year <- eventReactive(input$cp_go, {
       d <- ots_create_tidy_data(
-        years = min(input_country_profile_y()),
+        years = c(min(input_country_profile_y()),max(input_country_profile_y())),
         reporters = input_country_profile_reporter_iso(),
         partners = "all",
         table = "yrp",
@@ -420,36 +420,6 @@ shinyServer(
       if (input_country_profile_convert_dollars() != "No conversion") {
         d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
       }
-      
-      return(d)
-    })
-    
-    exports_table_detailed_min_year <- eventReactive(input$cp_go, {
-      d <- data_detailed() %>%
-        filter(year == min(input_country_profile_y()))
-      
-      return(d)
-    })
-    
-    exports_table_destinations_max_year <- eventReactive(input$cp_go, {
-      d <- ots_create_tidy_data(
-        years = max(input_country_profile_y()),
-        reporters = input_country_profile_reporter_iso(),
-        partners = "all",
-        table = "yrp",
-        use_localhost = use_localhost
-      )
-      
-      if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
-      }
-      
-      return(d)
-    })
-    
-    exports_table_detailed_max_year <- eventReactive(input$cp_go, {
-      d <- data_detailed() %>%
-        filter(year == max(input_country_profile_y()))
       
       return(d)
     })
@@ -457,12 +427,22 @@ shinyServer(
     ### Visual elements ----
     
     exports_subtitle <- eventReactive(input$cp_go, {
-      glue("Detailed Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
+      switch(
+        table_detailed(),
+        "yrc" = glue("Detailed multilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }"),
+        "yrpc-parquet" = glue("Detailed bilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
+      )
     })
     
     exports_note <- eventReactive(input$cp_go, {
-      glue("Explore the exports and imports of { reporter_add_the() } { reporter_name() } at the begining and end of the 
-      selected period. The data was grouped by sections for visual clarity, you can click each section to see the finer detail.")
+      switch(
+        table_detailed(),
+        "yrc" = glue("Explore the exports and imports of { reporter_add_the() } { reporter_name() } to/from the World at the begining 
+          and end of the selected period. The data was grouped by sections for visual clarity, you can click each section to see the finer detail."),
+        "yrpc-parquet" = glue("Explore the exports and imports of { reporter_add_the() } { reporter_name() } to/from { partner_add_the() } 
+          { partner_name() } at the begining and end of the selected period. The data was grouped by sections for visual clarity, you can 
+          click each section to see the finer detail."),
+      )
     })
     
     exports_title_year <- eventReactive(input$cp_go, {
@@ -478,7 +458,8 @@ shinyServer(
     })
     
     exports_treemap_destinations_min_year <- eventReactive(input$cp_go, {
-      d <- exports_table_destinations_min_year() %>%
+      d <- exports_imports_table_origin_destination_year() %>%
+        filter(year == min(year)) %>% 
         od_order_and_add_continent()
       
       d2 <- od_colors(d)
@@ -487,7 +468,8 @@ shinyServer(
     })
     
     exports_treemap_detailed_min_year <- eventReactive(input$cp_go, {
-      d <- exports_table_detailed_min_year() %>% 
+      d <- data_detailed() %>%
+        filter(year == min(input_country_profile_y())) %>% 
         pd_fix_section_and_aggregate(col = "trade_value_usd_exp")
       
       d2 <- pd_colors(d)
@@ -500,7 +482,8 @@ shinyServer(
     })
     
     exports_treemap_destinations_max_year <- eventReactive(input$cp_go, {
-      d <- exports_table_destinations_max_year() %>%
+      d <- exports_imports_table_origin_destination_year() %>%
+        filter(year == max(year)) %>% 
         od_order_and_add_continent()
       
       d2 <- od_colors(d)
@@ -509,7 +492,8 @@ shinyServer(
     })
     
     exports_treemap_detailed_max_year <- eventReactive(input$cp_go, {
-      d <- exports_table_detailed_max_year() %>% 
+      d <- data_detailed() %>%
+        filter(year == max(input_country_profile_y())) %>% 
         pd_fix_section_and_aggregate(col = "trade_value_usd_exp")
       
       d2 <- pd_colors(d)
@@ -518,54 +502,6 @@ shinyServer(
     })
 
     ## Imports ----
-    
-    ### Tables ----
-    
-    imports_table_origins_min_year <- eventReactive(input$cp_go, {
-      d <- ots_create_tidy_data(
-        years = min(input_country_profile_y()),
-        reporters = input_country_profile_reporter_iso(),
-        partners = "all",
-        table = "yrp",
-        use_localhost = use_localhost
-      )
-      
-      if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
-      }
-      
-      return(d)
-    })
-    
-    imports_table_detailed_min_year <- eventReactive(input$cp_go, {
-      d <- data_detailed() %>%
-        filter(year == min(input_country_profile_y()))
-      
-      return(d)
-    })
-    
-    imports_table_origins_max_year <- eventReactive(input$cp_go, {
-      d <- ots_create_tidy_data(
-        years = max(input_country_profile_y()),
-        reporters = input_country_profile_reporter_iso(),
-        partners = "all",
-        table = "yrp",
-        use_localhost = use_localhost
-      )
-      
-      if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
-      }
-      
-      return(d)
-    })
-    
-    imports_table_detailed_max_year <- eventReactive(input$cp_go, {
-      d <- data_detailed() %>%
-        filter(year == max(input_country_profile_y()))
-      
-      return(d)
-    })
     
     ### Visual elements ----
     
@@ -582,7 +518,8 @@ shinyServer(
     })
     
     imports_treemap_origins_min_year <- eventReactive(input$cp_go, {
-      d <- imports_table_origins_min_year() %>%
+      d <- exports_imports_table_origin_destination_year() %>%
+        filter(year == min(year)) %>% 
         od_order_and_add_continent(col = "trade_value_usd_imp")
       
       d2 <- od_colors(d)
@@ -591,13 +528,13 @@ shinyServer(
     })
     
     imports_treemap_detailed_min_year <- eventReactive(input$cp_go, {
-      d <- imports_table_detailed_min_year() %>% 
+      d <- data_detailed() %>%
+        filter(year == min(input_country_profile_y())) %>% 
         pd_fix_section_and_aggregate(col = "trade_value_usd_imp")
       
       d2 <- pd_colors(d)
       
       pd_to_highcharts(d, d2)
-      
     })
     
     imports_title_max_year <- eventReactive(input$cp_go, {
@@ -605,7 +542,8 @@ shinyServer(
     })
     
     imports_treemap_origins_max_year <- eventReactive(input$cp_go, {
-      d <- imports_table_origins_max_year() %>%
+      d <- exports_imports_table_origin_destination_year() %>%
+        filter(year == max(year)) %>% 
         od_order_and_add_continent(col = "trade_value_usd_imp")
       
       d2 <- od_colors(d)
@@ -614,7 +552,8 @@ shinyServer(
     })
     
     imports_treemap_detailed_max_year <- eventReactive(input$cp_go, {
-      d <- imports_table_detailed_max_year() %>% 
+      d <- data_detailed() %>%
+        filter(year == max(input_country_profile_y())) %>% 
         pd_fix_section_and_aggregate(col = "trade_value_usd_imp")
       
       d2 <- pd_colors(d)
@@ -1049,7 +988,11 @@ shinyServer(
     ## Trade output ----
     
     output$trade_subtitle <- eventReactive(input$cp_go, {
-      glue("Total Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
+      switch(
+        table_detailed(),
+        "yrc" = glue("Total multilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }"),
+        "yrpc-parquet" = glue("Total bilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
+      )
     })
     
     output$trade_subtitle_exp <- eventReactive(input$cp_go, {
