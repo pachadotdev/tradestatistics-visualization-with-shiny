@@ -1,5 +1,12 @@
 # ORIGIN/DESTINATION TREEMAPS -----
 
+custom_tooltip <- function() {
+  JS("function() { return '<b>' + this.name + '</b>' + '<br>' + 
+                        'Share: ' + Math.round(this.value / this.series.tree.val * 10000)/100 + '%' + '<br>' +
+                        'Value: ' + Highcharts.numberFormat(this.value, 0) + 'USD (FOB)'
+                        }")
+}
+
 od_order_and_add_continent <- function(d, col = "trade_value_usd_exp") {
   d <- d %>% 
     select(partner_iso, trade_value = !!sym(col)) %>%
@@ -99,10 +106,7 @@ od_to_highcharts <- function(d, d2) {
     allowDrillToNode = TRUE,
     levels = lvl_opts,
     tooltip = list(
-      pointFormatter = JS("function() { return '<b>' + this.name + '</b>' + '<br>' + 
-                        'Share: ' + Math.round(this.value / this.series.tree.val * 10000)/100 + '%' + '<br>' +
-                        'Value: ' + Highcharts.numberFormat(this.value, 0)
-                        }")
+      pointFormatter = custom_tooltip()
     ),
     dataLabels = list(
       formatter = JS("function() { return this.key + '<br>' + Math.round(this.point.value / this.point.series.tree.val * 10000 ) / 100 + '%'}")
@@ -214,10 +218,7 @@ pd_to_highcharts <- function(d, d2) {
     allowDrillToNode = TRUE,
     levels = lvl_opts,
     tooltip = list(
-      pointFormatter = JS("function() { return '<b>' + this.name + '</b>' + '<br>' + 
-                        'Share: ' + Math.round(this.value / this.series.tree.val * 10000)/100 + '%' + '<br>' +
-                        'Value: ' + Highcharts.numberFormat(this.value, 0)
-                        }")
+      pointFormatter = custom_tooltip()
     ),
     dataLabels = list(
       formatter = JS("function() { return this.key + '<br>' + Math.round(this.point.value / this.point.series.tree.val * 10000 ) / 100 + '%'}")

@@ -397,8 +397,10 @@ shinyServer(
       d <- trade_table_aggregated()
 
       highchart() %>%
-        hc_xAxis(title = list(text = "Year")) %>% 
-        hc_xAxis(categories = d$year) %>%
+        hc_xAxis(title = list(text = "Year"),
+                 categories = d$year) %>%
+        hc_yAxis(title = list(text = "USD billion (FOB)"),
+                 labels = list(formatter = JS("function() { return '$' + this.value / 1000000000 }"))) %>% 
         hc_add_series(name = "Exports", data = d$trade_value_usd_exp) %>% 
         hc_add_series(name = "Imports", data = d$trade_value_usd_imp) %>% 
         hc_title(text = trade_exchange_lines_title())
