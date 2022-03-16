@@ -395,14 +395,39 @@ shinyServer(
     
     trade_exchange_lines_aggregated <- eventReactive(input$cp_go, {
       d <- trade_table_aggregated()
+      
+      d <- tibble(
+        year = d$year,
+        trade = d$trade_value_usd_exp,
+        flow = "Exports"
+      ) %>% 
+        bind_rows(
+          tibble(
+            year = d$year,
+            trade = d$trade_value_usd_imp,
+            flow = "Imports"
+          )
+        ) %>% 
+        mutate(year = as.character(year))
 
-      highchart() %>%
-        hc_xAxis(title = list(text = "Year"),
-                 categories = d$year) %>%
+      # highchart() %>%
+      #   hc_xAxis(title = list(text = "Year"),
+      #            categories = d$year) %>%
+      #   hc_yAxis(title = list(text = "USD billion (FOB)"),
+      #            labels = list(formatter = JS("function() { return this.value / 1000000000 }"))) %>% 
+      #   hc_add_series(name = "Exports", data = d$trade_value_usd_exp) %>% 
+      #   hc_add_series(name = "Imports", data = d$trade_value_usd_imp) %>% 
+      #   hc_title(text = trade_exchange_lines_title())
+      
+      hchart(d, 
+        "line", 
+        hcaes(x = year, y = trade, group = flow),
+        tooltip = list(
+          pointFormatter = custom_tooltip_short()
+        )) %>% 
+        hc_xAxis(title = list(text = "Year")) %>%
         hc_yAxis(title = list(text = "USD billion (FOB)"),
-                 labels = list(formatter = JS("function() { return '$' + this.value / 1000000000 }"))) %>% 
-        hc_add_series(name = "Exports", data = d$trade_value_usd_exp) %>% 
-        hc_add_series(name = "Imports", data = d$trade_value_usd_imp) %>% 
+                 labels = list(formatter = JS("function() { return this.value / 1000000000 }"))) %>% 
         hc_title(text = trade_exchange_lines_title())
     })
     

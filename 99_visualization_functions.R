@@ -3,8 +3,17 @@
 custom_tooltip <- function() {
   JS("function() { return '<b>' + this.name + '</b>' + '<br>' + 
                         'Share: ' + Math.round(this.value / this.series.tree.val * 10000)/100 + '%' + '<br>' +
-                        'Value: ' + Highcharts.numberFormat(this.value, 0) + 'USD (FOB)'
+                        'Value: ' + Highcharts.numberFormat(this.value, 0) + ' USD (FOB)'
                         }")
+}
+
+custom_tooltip_short <- function() {
+  JS("function() { return '<b>' + this.series.name + '</b>' + ' ' + 
+     Highcharts.numberFormat(this.y, 0) + ' USD (FOB)' }")
+}
+
+data_labels <- function() {
+  JS("function() { return this.key + '<br>' + Math.round(this.point.value / this.point.series.tree.val * 10000 ) / 100 + '%'}")
 }
 
 od_order_and_add_continent <- function(d, col = "trade_value_usd_exp") {
@@ -109,7 +118,7 @@ od_to_highcharts <- function(d, d2) {
       pointFormatter = custom_tooltip()
     ),
     dataLabels = list(
-      formatter = JS("function() { return this.key + '<br>' + Math.round(this.point.value / this.point.series.tree.val * 10000 ) / 100 + '%'}")
+      formatter = data_labels()
     )
   )
 }
@@ -221,7 +230,7 @@ pd_to_highcharts <- function(d, d2) {
       pointFormatter = custom_tooltip()
     ),
     dataLabels = list(
-      formatter = JS("function() { return this.key + '<br>' + Math.round(this.point.value / this.point.series.tree.val * 10000 ) / 100 + '%'}")
+      formatter = data_labels()
     )
   )
 }
