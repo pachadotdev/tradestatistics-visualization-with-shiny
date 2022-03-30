@@ -54,6 +54,10 @@ growth_rate <- function(p, q, t) {
 # choices trick by Andrea Gao
 # http://gytcrt.github.io/gytcrt.github.io/2016/08/11/RShiny-easily-passing-a-long-list-of-items-to-selectInput-choices/
 
+available_tables <- c("tc", "ntc")
+names(available_tables) <- c("Raw data (i.e., with transportation costs)",
+                             "Imputed data (i.e., corrected flows and without transportation costs)")
+
 available_years <- sprintf("%s/year_range", base_url) %>%
   jsonlite::fromJSON() %>%
   purrr::as_vector()

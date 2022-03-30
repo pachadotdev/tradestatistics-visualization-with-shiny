@@ -41,7 +41,7 @@ shinyUI(
             ),
             
             column(
-              3,
+              12,
               sliderInput(
                 "cp_y",
                 "Years:",
@@ -54,6 +54,7 @@ shinyUI(
                 width = "100%"
               )
             ),
+            
             
             column(
               3,
@@ -88,6 +89,17 @@ shinyUI(
                 selected = "",
                 selectize = TRUE,
                 width = "100%"
+              )
+            ),
+            
+            column(
+              3,
+              selectInput(
+                "cp_t",
+                "Which data to use:",
+                choices = available_tables,
+                selected = "",
+                width = "100%",
               )
             ),
             
