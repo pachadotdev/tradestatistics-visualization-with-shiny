@@ -18,7 +18,7 @@ library(cepiigeodist)
 running_on_server <- T
 
 if (running_on_server == TRUE) {
-  base_url <- "http://localhost:8080"
+  base_url <- "http://localhost:4949"
   use_localhost <- TRUE
 } else {
   base_url <- "https://api.tradestatistics.io"
