@@ -1,35 +1,24 @@
 # Packages ----------------------------------------------------------------
 
-library(shiny)
-library(shinydashboard)
-library(dplyr)
-library(purrr)
-library(rlang)
-library(glue)
-library(broom)
-library(highcharter)
-library(tradestatistics)
-library(fixest)
-library(cepiigeodist)
-# library(rio) # used to import/export data
+source("99_packages.R")
+
+# SQL connection ----------------------------------------------------------
+
+con <- pool::dbPool(
+  drv = RPostgres::Postgres(),
+  dbname = "tradestatistics",
+  host = "tradestatistics.io",
+  user = Sys.getenv("TRADESTATISTICS_SQL_USR"),
+  password = Sys.getenv("TRADESTATISTICS_SQL_PWD")
+)
 
 # URLs --------------------------------------------------------------------
-
-running_on_server <- T
-
-if (running_on_server == TRUE) {
-  base_url <- "http://localhost:8080"
-  use_localhost <- TRUE
-} else {
-  base_url <- "https://api.tradestatistics.io"
-  use_localhost <- FALSE
-}
 
 site_url <- "https://shiny.tradestatistics.io"
 
 # Tables ------------------------------------------------------------------
 
-countries <- ots_countries %>%
+countries <- tradestatistics::ots_countries %>%
   select(country_iso, country_name_english)
 
 # Paragraphs format -------------------------------------------------------
@@ -58,9 +47,7 @@ available_tables <- c("tc", "ntc")
 names(available_tables) <- c("Raw data (i.e., with transportation costs)",
                              "Imputed data (i.e., corrected flows and without transportation costs)")
 
-available_years <- sprintf("%s/year_range", base_url) %>%
-  jsonlite::fromJSON() %>%
-  purrr::as_vector()
+available_years <- 2002:2020
 
 available_years_min <- min(available_years)
 available_years_max <- max(available_years)
@@ -74,12 +61,12 @@ reporters_to_display <- tibble(
   available_reporters_names = names(available_reporters_iso)
 )
 
-available_commodities <- ots_commodities$commodity_code
-names(available_commodities) <- paste(ots_commodities$commodity_code,
-                                      ots_commodities$commodity_fullname_english,
+available_commodities <- tradestatistics::ots_commodities$commodity_code
+names(available_commodities) <- paste(tradestatistics::ots_commodities$commodity_code,
+                                      tradestatistics::ots_commodities$commodity_fullname_english,
                                       sep = " - ")
 
-available_groups <- c("All Products", "Vaccine Inputs", ots_sections$section_fullname_english)
+available_groups <- c("All Products", "Vaccine Inputs", tradestatistics::ots_sections$section_fullname_english)
 
 available_models <- list("ols", "olsrem", "olsfe", "ppml")
 names(available_models) <- c("OLS", "OLS (Remoteness Index)", "OLS (Fixed Effects)", "Poisson Pseudo Maximum Likelihood (PPML)")

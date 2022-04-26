@@ -93,17 +93,6 @@ shinyUI(
             ),
             
             column(
-              3,
-              selectInput(
-                "cp_t",
-                "Which data to use:",
-                choices = available_tables,
-                selected = "",
-                width = "100%",
-              )
-            ),
-            
-            column(
               12,
               align="center",
               actionButton("cp_go", "Give me the country profile",

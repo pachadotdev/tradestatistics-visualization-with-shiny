@@ -53,22 +53,12 @@ shinyServer(
     input_country_profile_format <- reactive({ input$cp_f })
     input_model_format <- reactive({ input$mod_f })
     
-    input_country_profile_transportation_costs <- reactive({ input$cp_t })
-    
     table_aggregated <- eventReactive(input$cp_go, {
-      if (input_country_profile_partner_iso() == "all") { 
-        paste0("yr_", input_country_profile_transportation_costs())
-      } else {
-        paste0("yrp_", input_country_profile_transportation_costs())
-      }
+      ifelse(input_country_profile_partner_iso() == "all", "yr", "yrp")
     })
     
     table_detailed <- eventReactive(input$cp_go, {
-      if (input_country_profile_partner_iso() == "all") { 
-        paste0("yrc_", input_country_profile_transportation_costs())
-      } else {
-        paste0("yrpc_", input_country_profile_transportation_costs())
-      }
+      ifelse(input_country_profile_partner_iso() == "all", "yrc", "yrpc")
     })
     
     # Titles ----
@@ -106,10 +96,8 @@ shinyServer(
     title_country_profile <- eventReactive(input$cp_go, {
       switch(
         table_detailed(),
-        "yrc_tc" = glue("{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }"),
-        "yrc_ntc" = glue("{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }"),
-        "yrpc_tc" = glue("{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }"),
-        "yrpc_ntc" = glue("{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }")
+        "yrc" = glue("{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }"),
+        "yrpc" = glue("{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }"),
       )
     })
     
@@ -118,32 +106,69 @@ shinyServer(
     ## Data ----
     
     data_aggregated <- eventReactive(input$cp_go, {
-      d <- ots_create_tidy_data(
-        years = input_country_profile_y(),
-        reporters = input_country_profile_reporter_iso(),
-        partners = input_country_profile_partner_iso(),
-        table = table_aggregated(),
-        use_localhost = use_localhost
+      d <- map_df(
+        input_country_profile_y(),
+        function(y) {
+          d2 <- tbl(con, table_aggregated())
+          
+          if (input_country_profile_partner_iso() == "all") {
+            d2 <- d2 %>% 
+              filter(
+                year == y &
+                reporter_iso == !!input_country_profile_reporter_iso()
+              )
+          } else {
+            d2 <- d2 %>% 
+              filter(
+                year == y &
+                reporter_iso == !!input_country_profile_reporter_iso() &
+                partner_iso == !!input_country_profile_partner_iso()
+              )
+          }
+          
+          return(d2 %>% collect())
+        }
       )
       
       if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
+        d <- tradestatistics::ots_inflation_adjustment(
+          data.table::as.data.table(d), as.integer(input_country_profile_convert_dollars())
+        )
       }
       
       return(d)
     })
     
     data_detailed <- eventReactive(input$cp_go, {
-      d <- ots_create_tidy_data(
-        years = input_country_profile_y(),
-        reporters = input_country_profile_reporter_iso(),
-        partners = input_country_profile_partner_iso(),
-        table = table_detailed(),
-        use_localhost = use_localhost
+      d <- map_df(
+        input_country_profile_y(),
+        function(y) {
+          d2 <- tbl(con, table_detailed())
+          
+          if (input_country_profile_partner_iso() == "all") {
+            d2 <- d2 %>% 
+              filter(
+                year == y &
+                reporter_iso == !!input_country_profile_reporter_iso()
+              )
+          } else {
+            d2 <- d2 %>% 
+              filter(
+                year == y &
+                reporter_iso == !!input_country_profile_reporter_iso() &
+                partner_iso == !!input_country_profile_partner_iso()
+              )
+          }
+          
+          return(d2 %>% collect())
+        }
       )
       
       if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
+        d <- tradestatistics::ots_inflation_adjustment(
+          data.table::as.data.table(d),
+          as.integer(input_country_profile_convert_dollars())
+        )
       }
       
       return(d)
@@ -239,16 +264,23 @@ shinyServer(
     })
     
     trade_rankings <- eventReactive(input$cp_go, {
-      d <- ots_create_tidy_data(
-        years = c(min(input_country_profile_y()), max(input_country_profile_y())),
-        reporters = input_country_profile_reporter_iso(),
-        partners = "all",
-        table = paste0("yrp_", input_country_profile_transportation_costs()),
-        use_localhost = use_localhost
+      d <- map_df(
+        c(min(input_country_profile_y()), max(input_country_profile_y())),
+        function(y) {
+          tbl(con, "yrp") %>% 
+            filter(
+              year == y &
+              reporter_iso == !!input_country_profile_reporter_iso()
+            ) %>% 
+            collect()
+        }
       )
       
       if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
+        d <- tradestatistics::ots_inflation_adjustment(
+          data.table::as.data.table(d),
+          as.integer(input_country_profile_convert_dollars())
+        )
       }
       
       d <- d %>% 
@@ -366,21 +398,11 @@ shinyServer(
     
     trade_summary_text_exp <- eventReactive(input$cp_go, {
       switch(table_aggregated(),
-             "yr_tc" = glue("The exports of { reporter_add_the() } { reporter_name() } to the World { exports_growth_increase_decrease() } from 
-                          { exports_value_min_year_2() } in { min(input_country_profile_y()) } to { exports_value_max_year_2() } in { max(input_country_profile_y()) } 
-                          (annualized { exports_growth_increase_decrease_2() } of { exports_growth_2() })."),
-             "yr_ntc" = glue("The exports of { reporter_add_the() } { reporter_name() } to the World { exports_growth_increase_decrease() } from 
+             "yr" = glue("The exports of { reporter_add_the() } { reporter_name() } to the World { exports_growth_increase_decrease() } from 
                           { exports_value_min_year_2() } in { min(input_country_profile_y()) } to { exports_value_max_year_2() } in { max(input_country_profile_y()) } 
                           (annualized { exports_growth_increase_decrease_2() } of { exports_growth_2() })."),
              
-             "yrp_tc" = glue("The exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { exports_growth_increase_decrease() } from 
-                          { exports_value_min_year_2() } in { min(input_country_profile_y()) } 
-                          to { exports_value_max_year_2() } in { max(input_country_profile_y()) } (annualized { exports_growth_increase_decrease_2() } of 
-                          { exports_growth_2() }). { partner_add_the() } { partner_name() } was the No. { trade_rankings_no_min_year() } trading partner of 
-                          { reporter_add_the() } { reporter_name() } in { min(input_country_profile_y()) } (represented { trade_rankings_exp_share_min_year_2() } of its exports), and 
-                          then { trade_rankings_remained() } No. { trade_rankings_no_max_year() } in { max(input_country_profile_y()) } (represented { trade_rankings_exp_share_max_year_2() } 
-                          of its exports)."),
-             "yrp_ntc" = glue("The exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { exports_growth_increase_decrease() } from 
+             "yrp" = glue("The exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { exports_growth_increase_decrease() } from 
                           { exports_value_min_year_2() } in { min(input_country_profile_y()) } 
                           to { exports_value_max_year_2() } in { max(input_country_profile_y()) } (annualized { exports_growth_increase_decrease_2() } of 
                           { exports_growth_2() }). { partner_add_the() } { partner_name() } was the No. { trade_rankings_no_min_year() } trading partner of 
@@ -392,21 +414,11 @@ shinyServer(
     
     trade_summary_text_imp <- eventReactive(input$cp_go, {
       switch(table_aggregated(),
-             "yr_tc" = glue("The imports of { reporter_add_the() } { reporter_name() } to the World { imports_growth_increase_decrease() } from 
-                         { imports_value_min_year_2() } in { min(input_country_profile_y()) } to { imports_value_max_year_2() } in { max(input_country_profile_y()) } 
-                         (annualized { imports_growth_increase_decrease_2() } of { imports_growth_2() })."),
-             "yr_ntc" = glue("The imports of { reporter_add_the() } { reporter_name() } to the World { imports_growth_increase_decrease() } from 
+             "yr" = glue("The imports of { reporter_add_the() } { reporter_name() } to the World { imports_growth_increase_decrease() } from 
                          { imports_value_min_year_2() } in { min(input_country_profile_y()) } to { imports_value_max_year_2() } in { max(input_country_profile_y()) } 
                          (annualized { imports_growth_increase_decrease_2() } of { imports_growth_2() })."),
              
-             "yrp_tc" = glue("The imports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { imports_growth_increase_decrease() } from 
-                          { imports_value_min_year_2() } in { min(input_country_profile_y()) } 
-                          to { imports_value_max_year_2() } in { max(input_country_profile_y()) } (annualized { imports_growth_increase_decrease_2() } of 
-                          { imports_growth_2() }). { partner_add_the() } { partner_name() } was the No. { trade_rankings_no_min_year() } trading partner of 
-                          { reporter_add_the() } { reporter_name() } in { min(input_country_profile_y()) } (represented { trade_rankings_imp_share_min_year_2() } of its imports), and 
-                          then { trade_rankings_remained() } No. { trade_rankings_no_max_year() } in { max(input_country_profile_y()) } (represented { trade_rankings_imp_share_max_year_2() } 
-                          of its imports)."),
-             "yrp_ntc" = glue("The imports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { imports_growth_increase_decrease() } from 
+             "yrp" = glue("The imports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { imports_growth_increase_decrease() } from 
                           { imports_value_min_year_2() } in { min(input_country_profile_y()) } 
                           to { imports_value_max_year_2() } in { max(input_country_profile_y()) } (annualized { imports_growth_increase_decrease_2() } of 
                           { imports_growth_2() }). { partner_add_the() } { partner_name() } was the No. { trade_rankings_no_min_year() } trading partner of 
@@ -418,10 +430,8 @@ shinyServer(
 
     trade_exchange_lines_title <- eventReactive(input$cp_go, {
       switch(table_aggregated(),
-             "yr_tc" = glue("{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }"),
-             "yr_ntc" = glue("{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }"),
-             "yrp_tc" = glue("{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } exchange between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }"),
-             "yrp_ntc" = glue("{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } exchange between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }")
+             "yr" = glue("{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }"),
+             "yrp" = glue("{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } exchange between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }")
       )
     })
     
@@ -468,16 +478,23 @@ shinyServer(
     ### Tables ----
     
     exports_imports_table_origin_destination_year <- eventReactive(input$cp_go, {
-      d <- ots_create_tidy_data(
-        years = c(min(input_country_profile_y()),max(input_country_profile_y())),
-        reporters = input_country_profile_reporter_iso(),
-        partners = "all",
-        table = paste0("yrp_", input_country_profile_transportation_costs()),
-        use_localhost = use_localhost
+      d <- map_df(
+        c(min(input_country_profile_y()), max(input_country_profile_y())),
+        function(y) {
+          tbl(con, "yrp") %>% 
+            filter(
+              year == y &
+              reporter_iso == !!input_country_profile_reporter_iso()
+            ) %>% 
+            collect()
+        }
       )
       
       if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, as.integer(input_country_profile_convert_dollars()))
+        d <- tradestatistics::ots_inflation_adjustment(
+          data.table::as.data.table(d),
+          as.integer(input_country_profile_convert_dollars())
+        )
       }
       
       return(d)
@@ -488,24 +505,17 @@ shinyServer(
     exports_subtitle <- eventReactive(input$cp_go, {
       switch(
         table_detailed(),
-        "yrc_tc" = glue("Detailed multilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }"),
-        "yrc_ntc" = glue("Detailed multilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }"),
-        "yrpc_tc" = glue("Detailed bilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }"),
-        "yrpc_ntc" = glue("Detailed bilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
+        "yrc" = glue("Detailed multilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }"),
+        "yrpc" = glue("Detailed bilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
       )
     })
     
     exports_note <- eventReactive(input$cp_go, {
       switch(
         table_detailed(),
-        "yrc_tc" = glue("Explore the exports and imports of { reporter_add_the() } { reporter_name() } to/from the World at the begining 
+        "yrc" = glue("Explore the exports and imports of { reporter_add_the() } { reporter_name() } to/from the World at the begining 
           and end of the selected period. The data was grouped by sections for visual clarity, you can click each section to see the finer detail."),
-        "yrc_ntc" = glue("Explore the exports and imports of { reporter_add_the() } { reporter_name() } to/from the World at the begining 
-          and end of the selected period. The data was grouped by sections for visual clarity, you can click each section to see the finer detail."),
-        "yrpc_tc" = glue("Explore the exports and imports of { reporter_add_the() } { reporter_name() } to/from { partner_add_the() } 
-          { partner_name() } at the begining and end of the selected period. The data was grouped by sections for visual clarity, you can 
-          click each section to see the finer detail."),
-        "yrpc_ntc" = glue("Explore the exports and imports of { reporter_add_the() } { reporter_name() } to/from { partner_add_the() } 
+        "yrpc" = glue("Explore the exports and imports of { reporter_add_the() } { reporter_name() } to/from { partner_add_the() } 
           { partner_name() } at the begining and end of the selected period. The data was grouped by sections for visual clarity, you can 
           click each section to see the finer detail.")
       )
@@ -514,10 +524,8 @@ shinyServer(
     exports_title_year <- eventReactive(input$cp_go, {
       switch(
         table_detailed(),
-        "yrc_tc" = glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product"),
-        "yrc_ntc" = glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product"),
-        "yrpc_tc" = glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product"),
-        "yrpc_ntc" = glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product")
+        "yrc" = glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product"),
+        "yrpc" = glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product")
       )
     })
     
@@ -576,10 +584,8 @@ shinyServer(
     imports_title_year <- eventReactive(input$cp_go, {
       switch(
         table_detailed(),
-        "yrc_tc" = glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product"),
-        "yrc_ntc" = glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product"),
-        "yrpc_tc" = glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product"),
-        "yrpc_ntc" = glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product")
+        "yrc" = glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product"),
+        "yrpc" = glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product")
       )
     })
     
@@ -647,18 +653,37 @@ shinyServer(
     })
     
     data_detailed_model <- eventReactive(input$mod_go, {
-      # 1. read from API
+      # 1. read from SQL
       
-      d <- ots_create_tidy_data(
-          years = input_model_y(),
-          reporters = input_model_reporter_iso(),
-          partners = input_model_partner_iso(),
-          table = paste0("yrpc_", input_country_profile_transportation_costs()),
-          use_localhost = use_localhost
-        )
+      d <- map_df(
+        input_model_y(),
+        function(y) {
+          d2 <- tbl(con, table_detailed())
+          
+          if (input_model_partner_iso() == "all") {
+            d2 <- d2 %>% 
+              filter(
+                year == y &
+                reporter_iso == !!input_model_reporter_iso()
+              )
+          } else {
+            d2 <- d2 %>% 
+              filter(
+                year == y &
+                reporter_iso == !!input_model_reporter_iso() &
+                partner_iso == !!input_model_partner_iso()
+              )
+          }
+          
+          return(d2 %>% collect())
+        }
+      )
       
       if (input_model_convert_dollars() != "No conversion") {
-        d <- ots_inflation_adjustment(d, as.integer(input_model_convert_dollars()))
+        d <- tradestatistics::ots_inflation_adjustment(
+          data.table::as.data.table(d),
+          as.integer(input_model_convert_dollars())
+        )
       }
       
       # 2. apply filters
@@ -685,7 +710,7 @@ shinyServer(
       # }
       
       if (any(input_model_ctn() %in% "mfn")) {
-        # 3.1 read from API
+        # 3.1 read from SQL
         
         d <- d %>%
           inner_join(
@@ -1060,10 +1085,8 @@ shinyServer(
     output$trade_subtitle <- eventReactive(input$cp_go, {
       switch(
         table_detailed(),
-        "yrc_tc" = glue("Total multilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }"),
-        "yrc_ntc" = glue("Total multilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }"),
-        "yrpc_tc" = glue("Total bilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }"),
-        "yrpc_ntc" = glue("Total bilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
+        "yrc" = glue("Total multilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }"),
+        "yrpc" = glue("Total bilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
       )
     })
     

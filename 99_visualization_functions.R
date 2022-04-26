@@ -21,7 +21,7 @@ od_order_and_add_continent <- function(d, col = "trade_value_usd_exp") {
     select(partner_iso, trade_value = !!sym(col)) %>%
     
     full_join(
-      ots_countries %>% 
+      tradestatistics::ots_countries %>% 
         select(partner_iso = country_iso, partner_name = country_name_english,
                continent_name = continent_name_english) %>% 
         filter(!grepl("c-|all", partner_iso))
@@ -69,13 +69,13 @@ od_colors <- function(d) {
     distinct() %>% 
     
     inner_join(
-      ots_countries %>% 
+      tradestatistics::ots_countries %>% 
         select(country_iso, continent_name = continent_name_english, country_name_english) %>% 
         filter(grepl("c-|e-536|e-837|e-838|e-839|e-899", country_iso)) %>% 
         mutate(continent_name = ifelse(is.na(continent_name), country_name_english, continent_name)) %>% 
         select(-country_name_english) %>% 
         left_join(
-          ots_countries_colors %>% 
+          tradestatistics::ots_countries_colors %>% 
             select(country_iso, country_color)
         )
     ) %>% 
@@ -161,7 +161,7 @@ pd_fix_section_and_aggregate <- function(d, col = "trade_value_usd_exp") {
 pd_aggregate_products <- function(d) {
   d %>% 
     full_join(
-      ots_commodities %>% 
+      tradestatistics::ots_commodities %>% 
         select(
           commodity_code,
           section_code, section_name = section_fullname_english
@@ -175,7 +175,7 @@ pd_aggregate_products <- function(d) {
     ungroup() %>% 
     
     left_join(
-      ots_commodities_short %>% 
+      tradestatistics::ots_commodities_short %>% 
         rename(commodity_name = commodity_fullname_english)
     )
 }
@@ -186,11 +186,11 @@ pd_colors <- function(d) {
     distinct() %>% 
     
     inner_join(
-      ots_commodities %>% 
+      tradestatistics::ots_commodities %>% 
         select(section_name = section_fullname_english, section_code) %>% 
         distinct() %>% 
         
-        inner_join(ots_sections_colors) %>% 
+        inner_join(tradestatistics::ots_sections_colors) %>% 
         select(-section_code)
     )
 }

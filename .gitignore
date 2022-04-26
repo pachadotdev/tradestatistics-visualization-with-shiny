@@ -2,5 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+.Renviron
 credentials.R
 dashboard-test/
