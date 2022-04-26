@@ -106,32 +106,27 @@ shinyServer(
     ## Data ----
     
     data_aggregated <- eventReactive(input$cp_go, {
-      d <- map_df(
-        input_country_profile_y(),
-        function(y) {
-          d2 <- tbl(con, table_aggregated())
+      d <- tbl(con, table_aggregated())
           
-          if (input_country_profile_partner_iso() == "all") {
-            d2 <- d2 %>% 
-              filter(
-                year == y &
-                reporter_iso == !!input_country_profile_reporter_iso()
-              )
-          } else {
-            d2 <- d2 %>% 
-              filter(
-                year == y &
-                reporter_iso == !!input_country_profile_reporter_iso() &
-                partner_iso == !!input_country_profile_partner_iso()
-              )
-          }
-          
-          return(d2 %>% collect())
-        }
-      )
+      if (input_country_profile_partner_iso() == "all") {
+        d <- d %>% 
+          filter(
+            year %in% !!input_country_profile_y() &
+              reporter_iso == !!input_country_profile_reporter_iso()
+          )
+      } else {
+        d <- d %>% 
+          filter(
+            year %in% !!input_country_profile_y() &
+              reporter_iso == !!input_country_profile_reporter_iso() &
+              partner_iso == !!input_country_profile_partner_iso()
+          )
+      }
       
+      d <- d %>% collect()
+
       if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- tradestatistics::ots_inflation_adjustment(
+        d <- tradestatistics::ots_gdp_deflator_adjustment(
           data.table::as.data.table(d), as.integer(input_country_profile_convert_dollars())
         )
       }
@@ -140,32 +135,27 @@ shinyServer(
     })
     
     data_detailed <- eventReactive(input$cp_go, {
-      d <- map_df(
-        input_country_profile_y(),
-        function(y) {
-          d2 <- tbl(con, table_detailed())
+      d <- tbl(con, table_detailed())
           
-          if (input_country_profile_partner_iso() == "all") {
-            d2 <- d2 %>% 
-              filter(
-                year == y &
-                reporter_iso == !!input_country_profile_reporter_iso()
-              )
-          } else {
-            d2 <- d2 %>% 
-              filter(
-                year == y &
-                reporter_iso == !!input_country_profile_reporter_iso() &
-                partner_iso == !!input_country_profile_partner_iso()
-              )
-          }
+      if (input_country_profile_partner_iso() == "all") {
+        d <- d %>% 
+          filter(
+            year %in% !!input_country_profile_y() &
+              reporter_iso == !!input_country_profile_reporter_iso()
+          )
+      } else {
+        d <- d %>% 
+          filter(
+            year %in% !!input_country_profile_y() &
+              reporter_iso == !!input_country_profile_reporter_iso() &
+              partner_iso == !!input_country_profile_partner_iso()
+          )
+      }
           
-          return(d2 %>% collect())
-        }
-      )
+      d <- d %>% collect()
       
       if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- tradestatistics::ots_inflation_adjustment(
+        d <- tradestatistics::ots_gdp_deflator_adjustment(
           data.table::as.data.table(d),
           as.integer(input_country_profile_convert_dollars())
         )
@@ -264,20 +254,17 @@ shinyServer(
     })
     
     trade_rankings <- eventReactive(input$cp_go, {
-      d <- map_df(
-        c(min(input_country_profile_y()), max(input_country_profile_y())),
-        function(y) {
-          tbl(con, "yrp") %>% 
-            filter(
-              year == y &
-              reporter_iso == !!input_country_profile_reporter_iso()
-            ) %>% 
-            collect()
-        }
-      )
+      min_max_y <- c(min(input_country_profile_y()), max(input_country_profile_y()))
+      
+      d <- tbl(con, "yrp") %>% 
+        filter(
+          year %in% min_max_y &
+            reporter_iso == !!input_country_profile_reporter_iso()
+        ) %>% 
+        collect()
       
       if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- tradestatistics::ots_inflation_adjustment(
+        d <- tradestatistics::ots_gdp_deflator_adjustment(
           data.table::as.data.table(d),
           as.integer(input_country_profile_convert_dollars())
         )
@@ -478,20 +465,17 @@ shinyServer(
     ### Tables ----
     
     exports_imports_table_origin_destination_year <- eventReactive(input$cp_go, {
-      d <- map_df(
-        c(min(input_country_profile_y()), max(input_country_profile_y())),
-        function(y) {
-          tbl(con, "yrp") %>% 
-            filter(
-              year == y &
-              reporter_iso == !!input_country_profile_reporter_iso()
-            ) %>% 
-            collect()
-        }
-      )
+      min_max_y <- c(min(input_country_profile_y()), max(input_country_profile_y()))
+      
+      d <- tbl(con, "yrp") %>% 
+        filter(
+          year %in% min_max_y &
+            reporter_iso == !!input_country_profile_reporter_iso()
+        ) %>% 
+        collect()
       
       if (input_country_profile_convert_dollars() != "No conversion") {
-        d <- tradestatistics::ots_inflation_adjustment(
+        d <- tradestatistics::ots_gdp_deflator_adjustment(
           data.table::as.data.table(d),
           as.integer(input_country_profile_convert_dollars())
         )
@@ -655,32 +639,27 @@ shinyServer(
     data_detailed_model <- eventReactive(input$mod_go, {
       # 1. read from SQL
       
-      d <- map_df(
-        input_model_y(),
-        function(y) {
-          d2 <- tbl(con, table_detailed())
+      d <- tbl(con, table_detailed())
           
-          if (input_model_partner_iso() == "all") {
-            d2 <- d2 %>% 
-              filter(
-                year == y &
-                reporter_iso == !!input_model_reporter_iso()
-              )
-          } else {
-            d2 <- d2 %>% 
-              filter(
-                year == y &
-                reporter_iso == !!input_model_reporter_iso() &
-                partner_iso == !!input_model_partner_iso()
-              )
-          }
+      if (input_model_partner_iso() == "all") {
+        d <- d %>% 
+          filter(
+            year %in% !!input_model_y() &
+              reporter_iso == !!input_model_reporter_iso()
+          )
+      } else {
+        d <- d %>% 
+          filter(
+            year %in% !!input_model_y() &
+              reporter_iso == !!input_model_reporter_iso() &
+              partner_iso == !!input_model_partner_iso()
+          )
+      }
           
-          return(d2 %>% collect())
-        }
-      )
+      d <- d %>% collect()
       
       if (input_model_convert_dollars() != "No conversion") {
-        d <- tradestatistics::ots_inflation_adjustment(
+        d <- tradestatistics::ots_gdp_deflator_adjustment(
           data.table::as.data.table(d),
           as.integer(input_model_convert_dollars())
         )
