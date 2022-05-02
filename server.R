@@ -57,8 +57,12 @@ shinyServer(
       ifelse(input_country_profile_partner_iso() == "all", "yr", "yrp")
     })
     
-    table_detailed <- eventReactive(input$cp_go, {
+    table_detailed_country_profile <- eventReactive(input$cp_go, {
       ifelse(input_country_profile_partner_iso() == "all", "yrc", "yrpc")
+    })
+    
+    table_detailed_model <- eventReactive(input$mod_go, {
+      ifelse(input_model_partner_iso() == "all", "yrc", "yrpc")
     })
     
     # Titles ----
@@ -95,7 +99,7 @@ shinyServer(
     
     title_country_profile <- eventReactive(input$cp_go, {
       switch(
-        table_detailed(),
+        table_detailed_country_profile(),
         "yrc" = glue("{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }"),
         "yrpc" = glue("{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_country_profile_y()) } and { max(input_country_profile_y()) }"),
       )
@@ -135,7 +139,7 @@ shinyServer(
     })
     
     data_detailed <- eventReactive(input$cp_go, {
-      d <- tbl(con, table_detailed())
+      d <- tbl(con, table_detailed_country_profile())
           
       if (input_country_profile_partner_iso() == "all") {
         d <- d %>% 
@@ -488,7 +492,7 @@ shinyServer(
     
     exports_subtitle <- eventReactive(input$cp_go, {
       switch(
-        table_detailed(),
+        table_detailed_country_profile(),
         "yrc" = glue("Detailed multilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }"),
         "yrpc" = glue("Detailed bilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
       )
@@ -496,7 +500,7 @@ shinyServer(
     
     exports_note <- eventReactive(input$cp_go, {
       switch(
-        table_detailed(),
+        table_detailed_country_profile(),
         "yrc" = glue("Explore the exports and imports of { reporter_add_the() } { reporter_name() } to/from the World at the begining 
           and end of the selected period. The data was grouped by sections for visual clarity, you can click each section to see the finer detail."),
         "yrpc" = glue("Explore the exports and imports of { reporter_add_the() } { reporter_name() } to/from { partner_add_the() } 
@@ -507,7 +511,7 @@ shinyServer(
     
     exports_title_year <- eventReactive(input$cp_go, {
       switch(
-        table_detailed(),
+        table_detailed_country_profile(),
         "yrc" = glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product"),
         "yrpc" = glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product")
       )
@@ -567,7 +571,7 @@ shinyServer(
     
     imports_title_year <- eventReactive(input$cp_go, {
       switch(
-        table_detailed(),
+        table_detailed_country_profile(),
         "yrc" = glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product"),
         "yrpc" = glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(input_country_profile_y()) } and { max(input_country_profile_y()) }, by product")
       )
@@ -639,7 +643,7 @@ shinyServer(
     data_detailed_model <- eventReactive(input$mod_go, {
       # 1. read from SQL
       
-      d <- tbl(con, table_detailed())
+      d <- tbl(con, "yrpc")
           
       if (input_model_partner_iso() == "all") {
         d <- d %>% 
@@ -667,40 +671,35 @@ shinyServer(
       
       # 2. apply filters
       
-      # if (length(input_model_custom_product_filter()) > 0) {
-      #   d <- d %>% 
-      #     filter(commodity_code %in% input_model_custom_product_filter()) 
-      # } else {
-        if (!any(input_model_product_filter() %in% c("All Products"))) {
-          if (any(input_model_product_filter() %in% "Vaccine Inputs")) {
-            vaccine_codes <- read.csv("vaccine_codes.csv")
-            d <- d %>% 
-              mutate(
-                section_name = case_when(
-                  commodity_code %in% vaccine_codes$commodity_code ~ "Vaccine Inputs",
-                  TRUE ~ section_name
-                )
-              )
-          }
-          
+      if (!any(input_model_product_filter() %in% c("All Products"))) {
+        if (any(input_model_product_filter() %in% "Vaccine Inputs")) {
+          vaccine_codes <- read.csv("vaccine_codes.csv")
           d <- d %>% 
-            filter(section_name %in% input_model_product_filter())
+            mutate(
+              section_name = case_when(
+                commodity_code %in% vaccine_codes$commodity_code ~ "Vaccine Inputs",
+                TRUE ~ section_name
+              )
+            )
         }
-      # }
+        
+        d <- d %>% 
+          filter(section_name %in% input_model_product_filter())
+      }
       
       if (any(input_model_ctn() %in% "mfn")) {
         # 3.1 read from SQL
         
         d <- d %>%
           inner_join(
-            ots_create_tidy_data(
-              years = input_model_y(),
-              # here we need the applied tariffs when the product gets to destination
-              reporters = input_model_partner_iso(),
-              table = "tariffs",
-              use_localhost = use_localhost
-            ) %>% 
-              select(year, partner_iso = reporter_iso, commodity_code, mfn = simple_average),
+            tbl(con, "tariffs") %>% 
+              filter(
+                years %in% !!input_model_y(),
+                # here we need the applied tariffs when the product gets to destination
+                reporters = input_model_partner_iso()
+              ) %>% 
+              select(year, partner_iso = reporter_iso, commodity_code, mfn = simple_average) %>% 
+              collect(),
             by = c("year", "partner_iso", "commodity_code")
           )
         
@@ -739,12 +738,18 @@ shinyServer(
       # 4. add geo dist data
       
       d <- d %>% 
+        mutate(
+          country1 = pmin(reporter_iso, partner_iso),
+          country2 = pmax(reporter_iso, partner_iso)
+        ) %>% 
         inner_join(
-          dist_cepii %>% 
-            select(reporter_iso = iso_o, partner_iso = iso_d,
-                   c(input_model_dist(), input_model_bin()[input_model_bin() != "rta"])) %>% 
-            mutate_if(is.character, tolower)
-        )
+          tbl(con, "distances") %>% 
+            select(country1, country2,
+                   c(!!input_model_dist(), !!input_model_bin()[!!input_model_bin() != "rta"])) %>% 
+            collect(),
+          by = c("country1", "country2")
+        ) %>% 
+        select(-c(country1,country2))
       
       # 5. add RTA data
       
@@ -755,11 +760,9 @@ shinyServer(
             country2 = pmax(reporter_iso, partner_iso)
           ) %>%
           left_join(
-            ots_create_tidy_data(
-              years = input_model_y(),
-              table = "rtas",
-              use_localhost = use_localhost
-            ),
+            tbl(con, "rtas") %>% 
+              filter(year %in% !!input_model_y()) %>% 
+              collect(),
             by = c("year", "country1", "country2")
           ) %>% 
           mutate(
@@ -768,7 +771,6 @@ shinyServer(
               TRUE ~ rta
             )
           ) %>% 
-          ungroup() %>% 
           select(-c(country1,country2))
       }
       
@@ -1063,7 +1065,7 @@ shinyServer(
     
     output$trade_subtitle <- eventReactive(input$cp_go, {
       switch(
-        table_detailed(),
+        table_detailed_country_profile(),
         "yrc" = glue("Total multilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }"),
         "yrpc" = glue("Total bilateral Exports and Imports { min(input_country_profile_y()) }-{ max(input_country_profile_y()) }")
       )
@@ -1259,7 +1261,7 @@ shinyServer(
     
     output$download_country_profile_detailed_pre <- downloadHandler(
       filename = function() {
-        glue("{ table_detailed() }_{ input_country_profile_reporter_iso() }_{ input_country_profile_partner_iso() }_{ min(input_country_profile_y()) }_{ max(input_country_profile_y()) }.{ input_country_profile_format() }")
+        glue("{ table_detailed_country_profile() }_{ input_country_profile_reporter_iso() }_{ input_country_profile_partner_iso() }_{ min(input_country_profile_y()) }_{ max(input_country_profile_y()) }.{ input_country_profile_format() }")
       },
       content = function(filename) {
         rio::export(data_detailed(), filename)

@@ -21,9 +21,10 @@ od_order_and_add_continent <- function(d, col = "trade_value_usd_exp") {
     select(partner_iso, trade_value = !!sym(col)) %>%
     
     full_join(
-      tradestatistics::ots_countries %>% 
+      tbl(con, "countries") %>% 
         select(partner_iso = country_iso, partner_name = country_name_english,
                continent_name = continent_name_english) %>% 
+        collect() %>% 
         filter(!grepl("c-|all", partner_iso))
     ) %>% 
   
@@ -69,14 +70,16 @@ od_colors <- function(d) {
     distinct() %>% 
     
     inner_join(
-      tradestatistics::ots_countries %>% 
+      tbl(con, "countries") %>% 
         select(country_iso, continent_name = continent_name_english, country_name_english) %>% 
+        collect() %>% 
         filter(grepl("c-|e-536|e-837|e-838|e-839|e-899", country_iso)) %>% 
         mutate(continent_name = ifelse(is.na(continent_name), country_name_english, continent_name)) %>% 
         select(-country_name_english) %>% 
         left_join(
-          tradestatistics::ots_countries_colors %>% 
-            select(country_iso, country_color)
+          tbl(con, "countries_colors") %>% 
+            select(country_iso, country_color) %>% 
+            collect()
         )
     ) %>% 
     
@@ -161,12 +164,13 @@ pd_fix_section_and_aggregate <- function(d, col = "trade_value_usd_exp") {
 pd_aggregate_products <- function(d) {
   d %>% 
     full_join(
-      tradestatistics::ots_commodities %>% 
+      tbl(con, "commodities") %>% 
         select(
           commodity_code,
           section_code, section_name = section_fullname_english
         ) %>% 
-        filter(nchar(commodity_code) == 6)
+        filter(nchar(commodity_code) == 6) %>% 
+        collect()
     ) %>% 
   
     mutate(commodity_code = substr(commodity_code, 1, 4)) %>% 
@@ -175,8 +179,9 @@ pd_aggregate_products <- function(d) {
     ungroup() %>% 
     
     left_join(
-      tradestatistics::ots_commodities_short %>% 
-        rename(commodity_name = commodity_fullname_english)
+      tbl(con, "commodities_short") %>% 
+        select(commodity_code, commodity_name = commodity_fullname_english) %>% 
+        collect()
     )
 }
     
@@ -186,11 +191,14 @@ pd_colors <- function(d) {
     distinct() %>% 
     
     inner_join(
-      tradestatistics::ots_commodities %>% 
+      tbl(con, "sections") %>% 
         select(section_name = section_fullname_english, section_code) %>% 
-        distinct() %>% 
+        collect() %>% 
         
-        inner_join(tradestatistics::ots_sections_colors) %>% 
+        inner_join(
+          tbl(con, "sections_colors") %>% 
+            collect()
+        ) %>% 
         select(-section_code)
     )
 }

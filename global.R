@@ -4,10 +4,13 @@ source("99_packages.R")
 
 # SQL connection ----------------------------------------------------------
 
+# Read credentials from file excluded in .gitignore
+readRenviron("/tradestatistics/visualization-with-shiny")
+
 con <- pool::dbPool(
   drv = RPostgres::Postgres(),
   dbname = "tradestatistics",
-  host = "tradestatistics.io",
+  host = "localhost",
   user = Sys.getenv("TRADESTATISTICS_SQL_USR"),
   password = Sys.getenv("TRADESTATISTICS_SQL_PWD")
 )
@@ -18,8 +21,9 @@ site_url <- "https://shiny.tradestatistics.io"
 
 # Tables ------------------------------------------------------------------
 
-countries <- tradestatistics::ots_countries %>%
-  select(country_iso, country_name_english)
+commodities <- tbl(con, "commodities") %>%
+  select(commodity_code, commodity_fullname_english) %>% 
+  collect()
 
 # Paragraphs format -------------------------------------------------------
 
@@ -52,21 +56,46 @@ available_years <- 2002:2020
 available_years_min <- min(available_years)
 available_years_max <- max(available_years)
 
-available_reporters_iso <- as.list(countries$country_iso)
-available_reporters_iso <- c("all", available_reporters_iso[grep("^c-|all", available_reporters_iso, invert = T)])
-names(available_reporters_iso) <- c("the World", as.vector(countries$country_name_english[grep("^Alias", countries$country_name_english, invert = T)]))
+reporters_to_display <- tbl(con, "countries") %>%
+  select(country_iso, country_name_english) %>% 
+  collect()
+
+available_reporters_iso <- reporters_to_display$country_iso
+names(available_reporters_iso) <- reporters_to_display$country_name_english
+
+available_reporters_iso <- c("all", sort(available_reporters_iso[grep("^c-|all", available_reporters_iso, invert = T)]))
+names(available_reporters_iso)[1] <- "the World"
 
 reporters_to_display <- tibble(
-  available_reporters_iso = purrr::as_vector(available_reporters_iso),
+  available_reporters_iso = available_reporters_iso,
   available_reporters_names = names(available_reporters_iso)
 )
 
-available_commodities <- tradestatistics::ots_commodities$commodity_code
-names(available_commodities) <- paste(tradestatistics::ots_commodities$commodity_code,
-                                      tradestatistics::ots_commodities$commodity_fullname_english,
-                                      sep = " - ")
+available_commodities <- tbl(con, "commodities") %>%
+  select(commodity_code) %>% 
+  collect() %>% 
+  pull()
 
-available_groups <- c("All Products", "Vaccine Inputs", tradestatistics::ots_sections$section_fullname_english)
+available_commodities <- tbl(con, "commodities") %>%
+  select(commodity_code) %>% 
+  collect() %>% 
+  pull()
+
+names(available_commodities) <- paste(
+  available_commodities,
+  tbl(con, "commodities") %>%
+    select(commodity_fullname_english) %>% 
+    collect() %>% 
+    pull(),
+  sep = " - "
+)
+
+available_groups <- c("All Products", "Vaccine Inputs",
+                      tbl(con, "sections") %>%
+                        select(section_fullname_english) %>% 
+                        collect() %>% 
+                        pull()
+)
 
 available_models <- list("ols", "olsrem", "olsfe", "ppml")
 names(available_models) <- c("OLS", "OLS (Remoteness Index)", "OLS (Fixed Effects)", "Poisson Pseudo Maximum Likelihood (PPML)")
