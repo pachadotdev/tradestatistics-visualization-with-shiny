@@ -31,8 +31,8 @@ shinyUI(
 
             column(
               12,
-              htmlOutput("title_country_profile", container = tags$h1),
-              htmlOutput("title_country_profile_legend", container = tags$p)
+              htmlOutput("title_cp", container = tags$h1),
+              htmlOutput("title_cp_legend", container = tags$p)
             ),
             
             column(
@@ -103,115 +103,115 @@ shinyUI(
             
             column(
               12,
-              htmlOutput("trade_subtitle", container = tags$h2)
+              htmlOutput("trade_subtitle_cp", container = tags$h2)
             ),
             
             column(
               3,
-              htmlOutput("trade_subtitle_exp", container = tags$h3),
-              htmlOutput("trade_summary_exp", container = tags$p),
-              htmlOutput("trade_subtitle_imp", container = tags$h3),
-              htmlOutput("trade_summary_imp", container = tags$p)
+              htmlOutput("trade_subtitle_exp_cp", container = tags$h3),
+              htmlOutput("trade_summary_exp_cp", container = tags$p),
+              htmlOutput("trade_subtitle_imp_cp", container = tags$h3),
+              htmlOutput("trade_summary_imp_cp", container = tags$p)
             ),
             
             column(
               9,
-              highchartOutput("trade_exchange_lines_aggregated", height = "500px")
+              highchartOutput("trade_exchange_lines_aggregated_cp", height = "500px")
             ),
 
             ## Detailed trade ----
 
             column(
               12,
-              htmlOutput("exports_subtitle", container = tags$h2),
-              htmlOutput("exports_note", container = tags$p)
+              htmlOutput("exports_subtitle_cp", container = tags$h2),
+              htmlOutput("exports_note_cp", container = tags$p)
             ),
 
             column(
               6,
-              htmlOutput("exports_title_year", container = tags$h3)
+              htmlOutput("exports_title_year_cp", container = tags$h3)
             ),
             
             column(
               6,
-              htmlOutput("imports_title_year", container = tags$h3)
+              htmlOutput("imports_title_year_cp", container = tags$h3)
             ),
             
             column(
               3,
-              htmlOutput("exports_title_min_year", container = tags$h4),
-              highchartOutput("exports_treemap_detailed_min_year", height = "500px")
+              htmlOutput("exports_title_min_year_cp", container = tags$h4),
+              highchartOutput("exports_treemap_detailed_min_year_cp", height = "500px")
             ),
 
             column(
               3,
-              htmlOutput("exports_title_max_year", container = tags$h4),
-              highchartOutput("exports_treemap_detailed_max_year", height = "500px")
+              htmlOutput("exports_title_max_year_cp", container = tags$h4),
+              highchartOutput("exports_treemap_detailed_max_year_cp", height = "500px")
             ),
 
             column(
               3,
-              htmlOutput("imports_title_min_year", container = tags$h4),
-              highchartOutput("imports_treemap_detailed_min_year", height = "500px")
+              htmlOutput("imports_title_min_year_cp", container = tags$h4),
+              highchartOutput("imports_treemap_detailed_min_year_cp", height = "500px")
             ),
             
             column(
               3,
-              htmlOutput("imports_title_max_year", container = tags$h4),
-              highchartOutput("imports_treemap_detailed_max_year", height = "500px")
+              htmlOutput("imports_title_max_year_cp", container = tags$h4),
+              highchartOutput("imports_treemap_detailed_max_year_cp", height = "500px")
             ),
             
             ## Origin/Destination ----
             
             column(
               12,
-              htmlOutput("trade_partners_title", container = tags$h2),
-              htmlOutput("trade_partners_text", container = tags$p)
+              htmlOutput("trade_partners_title_cp", container = tags$h2),
+              htmlOutput("trade_partners_text_cp", container = tags$p)
             ),
             
             column(
               6,
-              htmlOutput("trade_exports_year_subtitle", container = tags$h3)
+              htmlOutput("trade_exports_year_subtitle_cp", container = tags$h3)
             ),
             
             column(
               6,
-              htmlOutput("trade_imports_year_subtitle", container = tags$h3)
+              htmlOutput("trade_imports_year_subtitle_cp", container = tags$h3)
             ),
             
             column(
               3,
-              htmlOutput("trade_exports_min_year_subtitle", container = tags$h4),
-              highchartOutput("exports_treemap_destinations_min_year", height = "500px")
+              htmlOutput("trade_exports_min_year_subtitle_cp", container = tags$h4),
+              highchartOutput("exports_treemap_destinations_min_year_cp", height = "500px")
             ),
             
             column(
               3,
-              htmlOutput("trade_exports_max_year_subtitle", container = tags$h4),
-              highchartOutput("exports_treemap_destinations_max_year", height = "500px")
+              htmlOutput("trade_exports_max_year_subtitle_cp", container = tags$h4),
+              highchartOutput("exports_treemap_destinations_max_year_cp", height = "500px")
             ),
             
             column(
               3,
-              htmlOutput("trade_imports_min_year_subtitle", container = tags$h4),
-              highchartOutput("imports_treemap_origins_min_year", height = "500px")
+              htmlOutput("trade_imports_min_year_subtitle_cp", container = tags$h4),
+              highchartOutput("imports_treemap_origins_min_year_cp", height = "500px")
             ),
             
             column(
               3,
-              htmlOutput("trade_imports_max_year_subtitle", container = tags$h4),
-              highchartOutput("imports_treemap_origins_max_year", height = "500px")
+              htmlOutput("trade_imports_max_year_subtitle_cp", container = tags$h4),
+              highchartOutput("imports_treemap_origins_max_year_cp", height = "500px")
             ),
             
             ## Download ----
             
             column(
               12,
-              htmlOutput("download_country_profile_subtitle", container = tags$h2),
-              htmlOutput("download_country_profile_text", container = tags$p),
-              uiOutput("download_country_profile_format"),
-              uiOutput("download_country_profile_aggregated"),
-              uiOutput("download_country_profile_detailed")
+              htmlOutput("download_country_profile_subtitle_cp", container = tags$h2),
+              htmlOutput("download_country_profile_text_cp", container = tags$p),
+              uiOutput("download_country_profile_format_cp"),
+              uiOutput("download_country_profile_aggregated_cp"),
+              uiOutput("download_country_profile_detailed_cp")
             )
           ),
           
