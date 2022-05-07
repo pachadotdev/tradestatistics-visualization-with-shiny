@@ -4,7 +4,7 @@ shinyServer(
   function(input, output, session) {
     # User inputs ----
     
-    # updateSelectizeInput(session, 'mod_cpf', choices = available_commodities, server = TRUE)
+    ## Country profile ----
     
     input_cp_y <- reactive({
       y <- (min(input$cp_y[1], input$cp_y[2])):(max(input$cp_y[1], input$cp_y[2]))
@@ -12,46 +12,12 @@ shinyServer(
       return(y)
     })
     
-    input_model_y <- reactive({
-      y2 <- (min(input$mod_y[1], input$mod_y[2])):(max(input$mod_y[1], input$mod_y[2]))
-      y2 <- seq(min(y2), max(y2), by = input$mod_y_sep)
-      return(y2)
-    })
-    
     input_cp_reporter_iso <- reactive({ input$cp_r })
-    input_model_reporter_iso <- reactive({ input$mod_r })
-    
-    reporter_name <- eventReactive(input$cp_go, {
-      reporters_to_display %>%
-        filter(available_reporters_iso == input_cp_reporter_iso()) %>%
-        select(available_reporters_names) %>%
-        as.character()
-    })
-    
     input_cp_partner_iso <- reactive({ input$cp_p })
-    input_model_partner_iso <- reactive({ input$mod_p })
-    
-    input_cp_convert_dollars <- reactive({ input$cp_a })
-    input_model_convert_dollars <- reactive({ input$mod_a })
-    
-    partner_name <- eventReactive(input$cp_go, {
-      reporters_to_display %>%
-        filter(available_reporters_iso == input_cp_partner_iso()) %>%
-        select(available_reporters_names) %>%
-        as.character()
-    })
-    
-    input_model_product_filter <- reactive({ input$mod_pf })
-    # input_model_custom_product_filter <- reactive({ input$mod_cpf })
-    input_model_type <- reactive({ input$mod_t })
-    input_model_dist <- reactive({ input$mod_d })
-    input_model_bin <- reactive({ input$mod_b })
-    input_model_ctn <- reactive({ input$mod_ct })
-    input_model_cluster <- reactive({ input$mod_cl })
-    input_model_custom_subset <- reactive({ input$mod_s })
     
     input_cp_format <- reactive({ input$cp_f })
-    input_model_format <- reactive({ input$mod_f })
+    
+    input_cp_convert_dollars <- reactive({ input$cp_a })
     
     table_aggregated_cp <- eventReactive(input$cp_go, {
       ifelse(input_cp_partner_iso() == "all", "yr", "yrp")
@@ -60,6 +26,62 @@ shinyServer(
     table_detailed_cp <- eventReactive(input$cp_go, {
       ifelse(input_cp_partner_iso() == "all", "yrc", "yrpc")
     })
+    
+    reporter_name <- eventReactive(input$cp_go, {
+      reporters_to_display %>%
+        filter(available_reporters_iso == input_cp_reporter_iso()) %>%
+        select(available_reporters_names) %>%
+        as.character()
+    })
+    
+    partner_name <- eventReactive(input$cp_go, {
+      reporters_to_display %>%
+        filter(available_reporters_iso == input_cp_partner_iso()) %>%
+        select(available_reporters_names) %>%
+        as.character()
+    })
+    
+    ## Product profile ----
+    
+    input_pp_y <- reactive({
+      y <- (min(input$pp_y[1], input$pp_y[2])):(max(input$pp_y[1], input$pp_y[2]))
+      y <- c(min(y), max(y))
+      return(y)
+    })
+    
+    input_pp_section_code <- reactive({ input$pp_s })
+    
+    input_pp_convert_dollars <- reactive({ input$pp_a })
+    
+    section_name <- eventReactive(input$pp_go, {
+      sections_to_display %>%
+        filter(section_code == input_pp_section_code()) %>%
+        select(section_fullname_english) %>%
+        as.character()
+    })
+    
+    ## Model ----
+    
+    input_model_y <- reactive({
+      y2 <- (min(input$mod_y[1], input$mod_y[2])):(max(input$mod_y[1], input$mod_y[2]))
+      y2 <- seq(min(y2), max(y2), by = input$mod_y_sep)
+      return(y2)
+    })
+    
+    input_model_reporter_iso <- reactive({ input$mod_r })
+    input_model_partner_iso <- reactive({ input$mod_p })
+    
+    input_model_convert_dollars <- reactive({ input$mod_a })
+    
+    input_model_product_filter <- reactive({ input$mod_pf })
+    input_model_type <- reactive({ input$mod_t })
+    input_model_dist <- reactive({ input$mod_d })
+    input_model_bin <- reactive({ input$mod_b })
+    input_model_ctn <- reactive({ input$mod_ct })
+    input_model_cluster <- reactive({ input$mod_cl })
+    input_model_custom_subset <- reactive({ input$mod_s })
+    
+    input_model_format <- reactive({ input$mod_f })
     
     # Titles ----
     
@@ -97,8 +119,12 @@ shinyServer(
       switch(
         table_detailed_cp(),
         "yrc" = glue("{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(input_cp_y()) } and { max(input_cp_y()) }"),
-        "yrpc" = glue("{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_cp_y()) } and { max(input_cp_y()) }"),
+        "yrpc" = glue("{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(input_cp_y()) } and { max(input_cp_y()) }")
       )
+    })
+    
+    title_pp <- eventReactive(input$pp_go, {
+      glue("COMPLETE THIS between { min(input_pp_y()) } and { max(input_pp_y()) }")
     })
     
     # Country profile ----
@@ -601,6 +627,139 @@ shinyServer(
       pd_to_highcharts(d, d2)
     })
     
+    
+    # Product profile ----
+    
+    ## Data ----
+    
+    data_detailed_pp <- eventReactive(input$pp_go, {
+      d <- tbl(con, "yrpc") %>% 
+        filter(year %in% !!input_pp_y())
+      
+      if (input_pp_section_code() != "all") {
+        # TODO: CONDITIONAL FOR VACCINES
+        d <- d %>% 
+          filter(section_code == !!input_pp_section_code())
+      }
+      
+      d <- d %>% 
+        group_by(year, reporter_iso, partner_iso) %>% 
+        summarize(
+          trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T),
+          trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)
+        ) %>% 
+        ungroup() %>% 
+        collect()
+      
+      if (input_pp_convert_dollars() != "No conversion") {
+        d <- gdp_deflator_adjustment(d, as.integer(input_pp_convert_dollars()))
+      }
+      
+      return(d)
+    })
+    
+    ## Trade ----
+    
+    ### Tables ----
+    
+    exports_value_min_year_pp <- eventReactive(input$pp_go, {
+      data_detailed_pp() %>%
+        filter(year == min(input_pp_y())) %>%
+        select(trade_value_usd_exp) %>%
+        summarise(trade_value_usd_exp = sum(trade_value_usd_exp)) %>% 
+        as.numeric()
+    })
+    
+    exports_value_max_year_pp <- eventReactive(input$pp_go, {
+      data_detailed_pp() %>%
+        filter(year == max(input_pp_y())) %>%
+        select(trade_value_usd_exp) %>%
+        summarise(trade_value_usd_exp = sum(trade_value_usd_exp)) %>% 
+        as.numeric()
+    })
+    
+    imports_value_min_year_pp <- eventReactive(input$pp_go, {
+      data_detailed_pp() %>%
+        filter(year == min(input_pp_y())) %>%
+        select(trade_value_usd_imp) %>%
+        summarise(trade_value_usd_imp = sum(trade_value_usd_imp)) %>% 
+        as.numeric()
+    })
+    
+    imports_value_max_year_pp <- eventReactive(input$pp_go, {
+      data_detailed_pp() %>%
+        filter(year == max(input_pp_y())) %>%
+        select(trade_value_usd_imp) %>%
+        summarise(trade_value_usd_imp = sum(trade_value_usd_imp)) %>% 
+        as.numeric()
+    })
+    
+    exports_value_min_year_2_pp <- eventReactive(input$pp_go, {
+      show_dollars(exports_value_min_year_pp())
+    })
+    
+    exports_value_max_year_2_pp <- eventReactive(input$pp_go, {
+      show_dollars(exports_value_max_year_pp())
+    })
+    
+    imports_value_min_year_2_pp <- eventReactive(input$pp_go, {
+      show_dollars(imports_value_min_year_pp())
+    })
+    
+    imports_value_max_year_2_pp <- eventReactive(input$pp_go, {
+      show_dollars(imports_value_max_year_pp())
+    })
+    
+    exports_growth_pp <- eventReactive(input$pp_go, {
+      growth_rate(
+        exports_value_max_year_pp(), exports_value_min_year_pp(), input_pp_y()
+      )
+    })
+    
+    exports_growth_2_pp <- eventReactive(input$pp_go, {
+      show_percentage(exports_growth_pp())
+    })
+    
+    exports_growth_increase_decrease_pp <- eventReactive(input$pp_go, {
+      ifelse(exports_growth_pp() >= 0, "increased", "decreased")
+    })
+    
+    exports_growth_increase_decrease_2_pp <- eventReactive(input$pp_go, {
+      ifelse(exports_growth_pp() >= 0, "increase", "decrease")
+    })
+    
+    imports_growth_pp <- eventReactive(input$pp_go, {
+      growth_rate(
+        imports_value_max_year_pp(), imports_value_min_year_pp(), input_pp_y()
+      )
+    })
+    
+    imports_growth_2_pp <- eventReactive(input$pp_go, {
+      show_percentage(imports_growth_pp())
+    })
+    
+    imports_growth_increase_decrease_pp <- eventReactive(input$pp_go, {
+      ifelse(imports_growth_pp() >= 0, "increased", "decreased")
+    })
+    
+    imports_growth_increase_decrease_2_pp <- eventReactive(input$pp_go, {
+      ifelse(imports_growth_pp() >= 0, "increase", "decrease")
+    })
+    
+    ### Text/Visual elements ----
+    
+    trade_summary_text_exp_pp <- eventReactive(input$pp_go, {
+      glue("The exports of { section_name() } { exports_growth_increase_decrease_pp() } from 
+                          { exports_value_min_year_2_pp() } in { min(input_pp_y()) } to { exports_value_max_year_2_pp() } in { max(input_pp_y()) } 
+                          (annualized { exports_growth_increase_decrease_2_pp() } of { exports_growth_2_pp() }).")
+    })
+    
+    trade_summary_text_imp_pp <- eventReactive(input$pp_go, {
+      glue("The imports of { section_name() } { imports_growth_increase_decrease_pp() } from 
+                          { imports_value_min_year_2_pp() } in { min(input_pp_y()) } to { imports_value_max_year_2_pp() } in { max(input_pp_y()) } 
+                          (annualized { imports_growth_increase_decrease_2_pp() } of { imports_growth_2_pp() }).")
+    })
+    
     # Model ----
   
     model_custom_data <- eventReactive(input$mod_go, {
@@ -1022,6 +1181,10 @@ shinyServer(
       title_cp()
     })
     
+    output$title_pp <- renderText({
+      title_pp()
+    })
+    
     output$title_model <- renderText({
       "Gravity Models"
     })
@@ -1123,6 +1286,11 @@ shinyServer(
     output$imports_title_max_year_cp <- renderText(imports_title_max_year_cp())
     output$imports_treemap_origins_max_year_cp <- renderHighchart({imports_treemap_origins_max_year_cp()})
     output$imports_treemap_detailed_max_year_cp <- renderHighchart({imports_treemap_detailed_max_year_cp()})
+    
+    # Product profile output ----
+    
+    output$trade_summary_exp_pp <- renderText(trade_summary_text_exp_pp())
+    output$trade_summary_imp_pp <- renderText(trade_summary_text_imp_pp())
     
     # Model output ----
     

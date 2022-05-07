@@ -16,6 +16,8 @@ shinyUI(
 
           menuItem("Country profile", tabName = "country_profile"),
           
+          menuItem("Product profile", tabName = "product_profile", badgeLabel = "new", badgeColor = "green"),
+          
           menuItem("Model", tabName = "model", badgeLabel = "new", badgeColor = "green"),
       
           menuItem("Cite", tabName = "cite")
@@ -54,7 +56,6 @@ shinyUI(
                 width = "100%"
               )
             ),
-            
             
             column(
               3,
@@ -215,10 +216,78 @@ shinyUI(
             )
           ),
           
-          # Model ----
+          tabItem(
+            tabName = "product_profile",
+          
+            # Product profile ----
+            
+            column(
+              12,
+              htmlOutput("title_pp", container = tags$h1)
+            ),
+            
+            column(
+              12,
+              h2("Filter")
+            ),
+            
+            column(
+              12,
+              sliderInput(
+                "pp_y",
+                "Years:",
+                min = available_years_min,
+                max = available_years_max,
+                value = c(available_years_max - 4, 2019),
+                sep = "",
+                step = 1,
+                ticks = FALSE,
+                width = "100%"
+              )
+            ),
+            
+            column(
+              12,
+              selectInput(
+                "pp_s",
+                "Section:",
+                choices = available_sections_code,
+                selected = "all",
+                selectize = TRUE,
+                width = "100%"
+              )
+            ),
+            
+            column(
+              12,
+              selectInput(
+                "pp_a",
+                "Convert to constant dollars of the year:",
+                choices = c("No conversion", 2000:2019),
+                selected = "",
+                selectize = TRUE,
+                width = "100%"
+              )
+            ),
+            
+            column(
+              12,
+              align="center",
+              actionButton("pp_go", "Give me the product profile",
+                           class = "btn-primary")
+            ),
+            
+            column(
+              12,
+              htmlOutput("trade_summary_exp_pp", container = tags$p),
+              htmlOutput("trade_summary_imp_pp", container = tags$p)
+            )
+          ),
           
           tabItem(
             tabName = "model",
+            
+            # Model ----
             
             column(
               12,
@@ -360,7 +429,7 @@ shinyUI(
               selectInput(
                 "mod_pf",
                 "Product filter (i.e., HS section subset):",
-                choice = available_groups,
+                choice = available_sections_code,
                 selected = "All Products",
                 selectize = TRUE,
                 width = "100%",

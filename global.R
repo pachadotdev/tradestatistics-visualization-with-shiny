@@ -71,31 +71,14 @@ reporters_to_display <- tibble(
   available_reporters_names = names(available_reporters_iso)
 )
 
-available_commodities <- tbl(con, "commodities") %>%
-  select(commodity_code) %>% 
-  collect() %>% 
-  pull()
+sections_to_display <- tbl(con, "sections") %>%
+  collect()
 
-available_commodities <- tbl(con, "commodities") %>%
-  select(commodity_code) %>% 
-  collect() %>% 
-  pull()
+available_sections_code <- sections_to_display$section_code
+names(available_sections_code) <- sections_to_display$section_fullname_english
 
-names(available_commodities) <- paste(
-  available_commodities,
-  tbl(con, "commodities") %>%
-    select(commodity_fullname_english) %>% 
-    collect() %>% 
-    pull(),
-  sep = " - "
-)
-
-available_groups <- c("All Products", "Vaccine Inputs",
-                      tbl(con, "sections") %>%
-                        select(section_fullname_english) %>% 
-                        collect() %>% 
-                        pull()
-)
+available_sections_code <- c("all", "vaccine", available_sections_code)
+names(available_sections_code)[1:2] <- c("All Products", "Vaccine Inputs")
 
 available_models <- list("ols", "olsrem", "olsfe", "ppml")
 names(available_models) <- c("OLS", "OLS (Remoteness Index)", "OLS (Fixed Effects)", "Poisson Pseudo Maximum Likelihood (PPML)")
