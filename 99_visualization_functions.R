@@ -17,32 +17,39 @@ data_labels <- function() {
 }
 
 od_order_and_add_continent <- function(d, col = "trade_value_usd_exp") {
+  if (col == "trade_value_usd_exp") {
+    d <- d %>% 
+      select(country_iso = reporter_iso, trade_value = !!sym(col))
+  } else {
+    d <- d %>% 
+      select(country_iso = partner_iso, trade_value = !!sym(col))
+  }
+  
   d <- d %>% 
-    select(partner_iso, trade_value = !!sym(col)) %>%
     
     full_join(
       tbl(con, "countries") %>% 
-        select(partner_iso = country_iso, partner_name = country_name_english,
+        select(country_iso, country_name = country_name_english,
                continent_name = continent_name_english) %>% 
         collect() %>% 
-        filter(!grepl("c-|all", partner_iso))
+        filter(!grepl("c-|all", country_iso))
     ) %>% 
   
     mutate(
       continent_name = case_when(
-        is.na(continent_name) ~ partner_name,
+        is.na(continent_name) ~ country_name,
         TRUE ~ continent_name
       )
     ) %>% 
     
-    group_by(partner_iso, partner_name, continent_name) %>% 
+    group_by(country_iso, country_name, continent_name) %>% 
     summarise(trade_value = sum(trade_value, na.rm = T)) %>% 
     ungroup() %>% 
     
-    select(-partner_iso)
+    select(-country_iso)
   
   d <- d %>% 
-    select(continent_name, partner_name, trade_value) %>% 
+    select(continent_name, country_name, trade_value) %>% 
     group_by(continent_name) %>% 
     mutate(sum_trade_value = sum(trade_value, na.rm = T)) %>% 
     ungroup() %>% 
@@ -92,7 +99,7 @@ od_to_highcharts <- function(d, d2) {
     arrange(continent_name)
   
   new_lvls <- dd %>% 
-    group_by(continent_name, partner_name) %>% 
+    group_by(continent_name, country_name) %>% 
     summarise(trade_value = sum(trade_value, na.rm = TRUE), .groups = "drop") %>%
     ungroup() %>%
     mutate_if(is.factor, as.character) %>% 
@@ -105,7 +112,7 @@ od_to_highcharts <- function(d, d2) {
     arrange(continent_name) %>% 
     pull(country_color)
   
-  els <- data_to_hierarchical(dd, c(continent_name, partner_name), trade_value, color = new_colors)
+  els <- data_to_hierarchical(dd, c(continent_name, country_name), trade_value, color = new_colors)
   
   lopts <- getOption("highcharter.lang")
   lopts$thousandsSep <- ","

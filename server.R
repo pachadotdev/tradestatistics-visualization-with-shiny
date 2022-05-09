@@ -660,7 +660,7 @@ shinyServer(
     
     ## Trade ----
     
-    ### Tables ----
+    ### Numbers ----
     
     exports_value_min_year_pp <- eventReactive(input$pp_go, {
       data_detailed_pp() %>%
@@ -758,6 +758,30 @@ shinyServer(
       glue("The imports of { section_name() } { imports_growth_increase_decrease_pp() } from 
                           { imports_value_min_year_2_pp() } in { min(input_pp_y()) } to { imports_value_max_year_2_pp() } in { max(input_pp_y()) } 
                           (annualized { imports_growth_increase_decrease_2_pp() } of { imports_growth_2_pp() }).")
+    })
+    
+    ## Imports ----
+    
+    ### Text/Visual elements ----
+    
+    imports_treemap_origins_min_year_pp <- eventReactive(input$pp_go, {
+      d <- data_detailed_pp() %>%
+        filter(year == min(year)) %>% 
+        od_order_and_add_continent(col = "trade_value_usd_imp")
+      
+      d2 <- od_colors(d)
+      
+      od_to_highcharts(d, d2)
+    })
+    
+    imports_treemap_origins_max_year_pp <- eventReactive(input$pp_go, {
+      d <- data_detailed_pp() %>%
+        filter(year == max(year)) %>% 
+        od_order_and_add_continent(col = "trade_value_usd_imp")
+      
+      d2 <- od_colors(d)
+      
+      od_to_highcharts(d, d2)
     })
     
     # Model ----
@@ -1291,6 +1315,9 @@ shinyServer(
     
     output$trade_summary_exp_pp <- renderText(trade_summary_text_exp_pp())
     output$trade_summary_imp_pp <- renderText(trade_summary_text_imp_pp())
+    
+    output$imports_treemap_origins_min_year_pp <- renderHighchart({imports_treemap_origins_min_year_pp()})
+    output$imports_treemap_origins_max_year_pp <- renderHighchart({imports_treemap_origins_max_year_pp()})
     
     # Model output ----
     

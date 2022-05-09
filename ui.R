@@ -281,6 +281,12 @@ shinyUI(
               12,
               htmlOutput("trade_summary_exp_pp", container = tags$p),
               htmlOutput("trade_summary_imp_pp", container = tags$p)
+            ),
+            
+            column(
+              12,
+              highchartOutput("imports_treemap_origins_min_year_pp", height = "500px"),
+              highchartOutput("imports_treemap_origins_max_year_pp", height = "500px")
             )
           ),
           
