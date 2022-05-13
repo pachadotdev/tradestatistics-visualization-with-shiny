@@ -1,3 +1,5 @@
+# THIS IS NOT IN USE IN THE APP
+# THIS IS TO SHOW HOW I STORED THE CODES FOR VACCINES
 library(dplyr)
 
 # see
@@ -28,7 +30,8 @@ hs12vac <- readxl::read_excel("~/UN ESCAP/comtrade-codes/02-1-raw-product-data/o
   pull()
 
 # datapasta::vector_paste(hs17vac)
-vaccine_codes <- data.frame(commodity_code = c("170199", "220710", "220720", "220890", "250100", 
+vaccine_codes <- data.frame(commodity_code = c(
+  "170199", "220710", "220720", "220890", "250100", 
   "280610", "281121", "281511", "281512", "282731", 
   "283330", "283522", "283524", "285210", "285390", 
   "290544", "290613", "291211", "291521", "291529", 

@@ -58,7 +58,7 @@ shinyUI(
             ),
             
             column(
-              3,
+              4,
               selectInput(
                 "cp_r",
                 "Reporter:",
@@ -70,7 +70,7 @@ shinyUI(
             ),
             
             column(
-              3,
+              4,
               selectInput(
                 "cp_p",
                 "Partner:",
@@ -82,7 +82,7 @@ shinyUI(
             ),
             
             column(
-              3,
+              4,
               selectInput(
                 "cp_a",
                 "Convert to constant dollars of the year:",
@@ -208,11 +208,11 @@ shinyUI(
             
             column(
               12,
-              htmlOutput("download_country_profile_subtitle_cp", container = tags$h2),
-              htmlOutput("download_country_profile_text_cp", container = tags$p),
-              uiOutput("download_country_profile_format_cp"),
-              uiOutput("download_country_profile_aggregated_cp"),
-              uiOutput("download_country_profile_detailed_cp")
+              htmlOutput("download_cp_subtitle", container = tags$h2),
+              htmlOutput("download_cp_text", container = tags$p),
+              uiOutput("download_cp_format"),
+              uiOutput("download_cp_aggregated"),
+              uiOutput("download_cp_detailed")
             )
           ),
           
@@ -247,7 +247,7 @@ shinyUI(
             ),
             
             column(
-              12,
+              6,
               selectInput(
                 "pp_s",
                 "Section:",
@@ -259,7 +259,7 @@ shinyUI(
             ),
             
             column(
-              12,
+              6,
               selectInput(
                 "pp_a",
                 "Convert to constant dollars of the year:",
@@ -279,14 +279,45 @@ shinyUI(
             
             column(
               12,
-              htmlOutput("trade_summary_exp_pp", container = tags$p),
-              htmlOutput("trade_summary_imp_pp", container = tags$p)
+              htmlOutput("exports_title_year_pp", container = tags$h2),
+              htmlOutput("trade_summary_exp_pp", container = tags$p)
+            ),
+            column(
+              6,
+              htmlOutput("exports_title_min_year_pp", container = tags$h3),
+              highchartOutput("exports_treemap_origins_min_year_pp", height = "500px")
+            ),
+            column(
+              6,
+              htmlOutput("exports_title_max_year_pp", container = tags$h3),
+              highchartOutput("exports_treemap_origins_max_year_pp", height = "500px")
             ),
             
             column(
               12,
-              highchartOutput("imports_treemap_origins_min_year_pp", height = "500px"),
+              htmlOutput("imports_title_year_pp", container = tags$h2),
+              htmlOutput("trade_summary_imp_pp", container = tags$p)
+            ),
+            column(
+              6,
+              htmlOutput("imports_title_min_year_pp", container = tags$h3),
+              highchartOutput("imports_treemap_origins_min_year_pp", height = "500px")
+            ),
+            column(
+              6,
+              htmlOutput("imports_title_max_year_pp", container = tags$h3),
               highchartOutput("imports_treemap_origins_max_year_pp", height = "500px")
+            ),
+            
+            ## Download ----
+            
+            column(
+              12,
+              htmlOutput("download_pp_subtitle", container = tags$h2),
+              htmlOutput("download_pp_text", container = tags$p),
+              uiOutput("download_pp_format"),
+              uiOutput("download_pp_aggregated"),
+              uiOutput("download_pp_detailed")
             )
           ),
           

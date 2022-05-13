@@ -53,11 +53,17 @@ shinyServer(
     
     input_pp_convert_dollars <- reactive({ input$pp_a })
     
+    input_pp_format <- reactive({ input$pp_f })
+    
     section_name <- eventReactive(input$pp_go, {
-      sections_to_display %>%
-        filter(section_code == input_pp_section_code()) %>%
-        select(section_fullname_english) %>%
-        as.character()
+      if (input_pp_section_code() != "vaccine") {
+        sections_to_display %>%
+          filter(section_code == input_pp_section_code()) %>%
+          select(section_fullname_english) %>%
+          as.character()
+      } else {
+        "Vaccine Inputs"
+      }
     })
     
     ## Model ----
@@ -637,9 +643,14 @@ shinyServer(
         filter(year %in% !!input_pp_y())
       
       if (input_pp_section_code() != "all") {
-        # TODO: CONDITIONAL FOR VACCINES
-        d <- d %>% 
-          filter(section_code == !!input_pp_section_code())
+        if (input_pp_section_code() == "vaccine") {
+          vaccine_codes <- as.character(unlist(read.csv("vaccine_codes.csv")))
+          d <- d %>% 
+            filter(commodity_code %in% vaccine_codes)
+        } else {
+          d <- d %>% 
+            filter(section_code == !!input_pp_section_code()) 
+        }
       }
       
       d <- d %>% 
@@ -760,9 +771,53 @@ shinyServer(
                           (annualized { imports_growth_increase_decrease_2_pp() } of { imports_growth_2_pp() }).")
     })
     
+    ## Exports ----
+    
+    ### Text/Visual elements ----
+    
+    exports_title_year_pp <- eventReactive(input$pp_go, {
+      glue("Exports of { section_name() } in { min(input_pp_y()) } and { max(input_pp_y()) }, by country")
+    })
+    
+    exports_title_min_year_pp <- eventReactive(input$pp_go, {
+      glue("{ min(input_pp_y()) }")
+    })
+    
+    exports_treemap_origins_min_year_pp <- eventReactive(input$pp_go, {
+      d <- data_detailed_pp() %>%
+        filter(year == min(year)) %>% 
+        od_order_and_add_continent(col = "trade_value_usd_exp")
+      
+      d2 <- od_colors(d)
+      
+      od_to_highcharts(d, d2)
+    })
+    
+    exports_title_max_year_pp <- eventReactive(input$pp_go, {
+      glue("{ max(input_pp_y()) }")
+    })
+    
+    exports_treemap_origins_max_year_pp <- eventReactive(input$pp_go, {
+      d <- data_detailed_pp() %>%
+        filter(year == max(year)) %>% 
+        od_order_and_add_continent(col = "trade_value_usd_exp")
+      
+      d2 <- od_colors(d)
+      
+      od_to_highcharts(d, d2)
+    })
+    
     ## Imports ----
     
     ### Text/Visual elements ----
+    
+    imports_title_year_pp <- eventReactive(input$pp_go, {
+      glue("Imports of { section_name() } in { min(input_pp_y()) } and { max(input_pp_y()) }, by country")
+    })
+    
+    imports_title_min_year_pp <- eventReactive(input$pp_go, {
+      glue("{ min(input_pp_y()) }")
+    })
     
     imports_treemap_origins_min_year_pp <- eventReactive(input$pp_go, {
       d <- data_detailed_pp() %>%
@@ -772,6 +827,10 @@ shinyServer(
       d2 <- od_colors(d)
       
       od_to_highcharts(d, d2)
+    })
+    
+    imports_title_max_year_pp <- eventReactive(input$pp_go, {
+      glue("{ max(input_pp_y()) }")
     })
     
     imports_treemap_origins_max_year_pp <- eventReactive(input$pp_go, {
@@ -827,20 +886,20 @@ shinyServer(
       
       # 2. apply filters
       
-      if (!any(input_model_product_filter() %in% c("All Products"))) {
-        if (any(input_model_product_filter() %in% "Vaccine Inputs")) {
-          vaccine_codes <- read.csv("vaccine_codes.csv")
+      if (!any(input_model_product_filter() %in% "all")) {
+        if (any(input_model_product_filter() %in% "vaccine")) {
+          vaccine_codes <- as.character(unlist(read.csv("vaccine_codes.csv")))
           d <- d %>% 
             mutate(
-              section_name = case_when(
-                commodity_code %in% vaccine_codes$commodity_code ~ "Vaccine Inputs",
-                TRUE ~ section_name
+              section_code = case_when(
+                commodity_code %in% vaccine_codes ~ "vaccine",
+                TRUE ~ section_code
               )
             )
         }
         
         d <- d %>% 
-          filter(section_name %in% input_model_product_filter())
+          filter(section_name %in% !!input_model_product_filter())
       }
       
       if (any(input_model_ctn() %in% "mfn")) {
@@ -1316,8 +1375,17 @@ shinyServer(
     output$trade_summary_exp_pp <- renderText(trade_summary_text_exp_pp())
     output$trade_summary_imp_pp <- renderText(trade_summary_text_imp_pp())
     
+    output$imports_title_year_pp <- renderText(imports_title_year_pp())
+    output$imports_title_min_year_pp <- renderText(imports_title_min_year_pp())
+    output$imports_title_max_year_pp <- renderText(imports_title_max_year_pp())
     output$imports_treemap_origins_min_year_pp <- renderHighchart({imports_treemap_origins_min_year_pp()})
     output$imports_treemap_origins_max_year_pp <- renderHighchart({imports_treemap_origins_max_year_pp()})
+    
+    output$exports_title_year_pp <- renderText(exports_title_year_pp())
+    output$exports_title_min_year_pp <- renderText(exports_title_min_year_pp())
+    output$exports_title_max_year_pp <- renderText(exports_title_max_year_pp())
+    output$exports_treemap_origins_min_year_pp <- renderHighchart({exports_treemap_origins_min_year_pp()})
+    output$exports_treemap_origins_max_year_pp <- renderHighchart({exports_treemap_origins_max_year_pp()})
     
     # Model output ----
     
@@ -1433,7 +1501,7 @@ shinyServer(
         glue("{ table_detailed_cp() }_{ input_cp_reporter_iso() }_{ input_cp_partner_iso() }_{ min(input_cp_y()) }_{ max(input_cp_y()) }.{ input_cp_format() }")
       },
       content = function(filename) {
-        rio::export(data_detailed(), filename)
+        rio::export(data_detailed_cp(), filename)
       },
       contentType = "application/zip"
     )
@@ -1448,6 +1516,44 @@ shinyServer(
     output$download_cp_detailed <- renderUI({
       req(input$cp_go)
       downloadButton('download_cp_detailed_pre', label = 'Detailed data')
+    })
+    
+    ## Product profile ----
+    
+    download_pp_subtitle <- eventReactive(input$pp_go, {
+      "Download product profile data"
+    })
+    
+    download_pp_text <- eventReactive(input$pp_go, {
+      "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
+    })
+    
+    download_pp_format <- eventReactive(input$pp_go, {
+      selectInput(
+        "pp_f",
+        "Download data as:",
+        choices = available_formats,
+        selected = NULL,
+        selectize = TRUE
+      )
+    })
+    
+    output$download_pp_pre <- downloadHandler(
+      filename = function() {
+        glue("yrpc_{ input_pp_section_code() }_{ min(input_pp_y()) }_{ max(input_pp_y()) }.{ input_pp_format() }")
+      },
+      content = function(filename) {
+        rio::export(data_detailed_pp(), filename)
+      },
+      contentType = "application/zip"
+    )
+    
+    output$download_pp_subtitle <- renderText({download_pp_subtitle()})
+    output$download_pp_text <- renderText({download_pp_text()})
+    output$download_pp_format <- renderUI({download_pp_format()})
+    output$download_pp_aggregated <- renderUI({
+      req(input$pp_go)
+      downloadButton('download_pp_pre', label = 'Aggregated data')
     })
     
     ## Model ----

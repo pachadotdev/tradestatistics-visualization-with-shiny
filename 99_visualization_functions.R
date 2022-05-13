@@ -3,7 +3,7 @@
 custom_tooltip <- function() {
   JS("function() { return '<b>' + this.name + '</b>' + '<br>' + 
                         'Share: ' + Math.round(this.value / this.series.tree.val * 10000)/100 + '%' + '<br>' +
-                        'Value: ' + Highcharts.numberFormat(this.value, 0) + ' USD (FOB)'
+                        'Value: ' + Highcharts.numberFormat(this.value, 0) + ' USD'
                         }")
 }
 
@@ -17,13 +17,8 @@ data_labels <- function() {
 }
 
 od_order_and_add_continent <- function(d, col = "trade_value_usd_exp") {
-  if (col == "trade_value_usd_exp") {
-    d <- d %>% 
-      select(country_iso = reporter_iso, trade_value = !!sym(col))
-  } else {
-    d <- d %>% 
-      select(country_iso = partner_iso, trade_value = !!sym(col))
-  }
+  d <- d %>% 
+    select(country_iso = partner_iso, trade_value = !!sym(col))
   
   d <- d %>% 
     
