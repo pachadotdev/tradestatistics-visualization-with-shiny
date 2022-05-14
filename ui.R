@@ -251,7 +251,11 @@ shinyUI(
               selectInput(
                 "pp_s",
                 "Section:",
-                choices = available_sections_code,
+                choices = list(
+                  "All Products" = available_all,
+                  "Custom Selections" = available_vaccine,
+                  "HS Sections" = available_sections_code
+                ),
                 selected = "all",
                 selectize = TRUE,
                 width = "100%"
@@ -466,7 +470,11 @@ shinyUI(
               selectInput(
                 "mod_pf",
                 "Product filter (i.e., HS section subset):",
-                choice = available_sections_code,
+                choice = list(
+                  "All Products" = available_all,
+                  "Custom Selections" = available_vaccine,
+                  "HS Sections" = available_sections_code
+                  ),
                 selected = "All Products",
                 selectize = TRUE,
                 width = "100%",

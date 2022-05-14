@@ -61,8 +61,14 @@ shinyServer(
           filter(section_code == input_pp_section_code()) %>%
           select(section_fullname_english) %>%
           as.character()
-      } else {
+      }
+      
+      if (input_pp_section_code() == "vaccine") {
         "Vaccine Inputs"
+      }
+      
+      if (input_pp_section_code() == "all") {
+        "All Products"
       }
     })
     

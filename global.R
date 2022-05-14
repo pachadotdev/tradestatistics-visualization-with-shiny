@@ -74,11 +74,12 @@ reporters_to_display <- tibble(
 sections_to_display <- tbl(con, "sections") %>%
   collect()
 
+available_all <- c("All Products" = "all")
+available_vaccine <- c("Vaccine Inputs" = "vaccine")
+
 available_sections_code <- sections_to_display$section_code
 names(available_sections_code) <- sections_to_display$section_fullname_english
-
-available_sections_code <- c("all", "vaccine", available_sections_code)
-names(available_sections_code)[1:2] <- c("All Products", "Vaccine Inputs")
+names(available_sections_code) <- glue("{ stringr::str_pad(1:22, 2, 'left', '0') } - { names(available_sections_code) }")
 
 available_models <- list("ols", "olsrem", "olsfe", "ppml")
 names(available_models) <- c("OLS", "OLS (Remoteness Index)", "OLS (Fixed Effects)", "Poisson Pseudo Maximum Likelihood (PPML)")
