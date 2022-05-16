@@ -47,14 +47,19 @@ growth_rate <- function(p, q, t) {
 # choices trick by Andrea Gao
 # http://gytcrt.github.io/gytcrt.github.io/2016/08/11/RShiny-easily-passing-a-long-list-of-items-to-selectInput-choices/
 
+## Tables ----
+
 available_tables <- c("tc", "ntc")
 names(available_tables) <- c("Raw data (i.e., with transportation costs)",
                              "Imputed data (i.e., corrected flows and without transportation costs)")
 
-available_years <- 2002:2020
+## Years ----
 
+available_years <- 2002:2020
 available_years_min <- min(available_years)
 available_years_max <- max(available_years)
+
+## Countries ----
 
 reporters_to_display <- tbl(con, "countries") %>%
   select(country_iso, country_name_english) %>% 
@@ -71,7 +76,12 @@ reporters_to_display <- tibble(
   available_reporters_names = names(available_reporters_iso)
 )
 
+## Products ----
+
 sections_to_display <- tbl(con, "sections") %>%
+  collect()
+
+commodities_to_display <- tbl(con, "commodities_short") %>%
   collect()
 
 available_all <- c("All Products" = "all")
@@ -79,11 +89,19 @@ available_vaccine <- c("Vaccine Inputs" = "vaccine")
 
 available_sections_code <- sections_to_display$section_code
 names(available_sections_code) <- sections_to_display$section_fullname_english
-names(available_sections_code) <- glue("{ stringr::str_pad(1:22, 2, 'left', '0') } - { names(available_sections_code) }")
+names(available_sections_code) <- glue("{ sections_to_display$section_code } - { names(available_sections_code) }")
+
+available_commodities_code <- commodities_to_display$commodity_code
+names(available_commodities_code) <- commodities_to_display$commodity_fullname_english
+names(available_commodities_code) <- glue("{ commodities_to_display$commodity_code } - { names(available_commodities_code) }")
+
+## Models ----
 
 available_models <- list("ols", "olsrem", "olsfe", "ppml")
 names(available_models) <- c("OLS", "OLS (Remoteness Index)", "OLS (Fixed Effects)", "Poisson Pseudo Maximum Likelihood (PPML)")
-  
+
+## Formats ----
+
 available_formats <- c("csv", "tsv", "json", "xlsx", "sav", "dta")
 
 # Buttons -----------------------------------------------------------------

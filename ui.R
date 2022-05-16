@@ -18,7 +18,8 @@ shinyUI(
           
           menuItem("Product profile", tabName = "product_profile", badgeLabel = "new", badgeColor = "green"),
           
-          menuItem("Model", tabName = "model", badgeLabel = "new", badgeColor = "green"),
+          # THIS IS NOT READY
+          # menuItem("Model", tabName = "model", badgeLabel = "new", badgeColor = "green"),
       
           menuItem("Cite", tabName = "cite")
         )
@@ -33,8 +34,7 @@ shinyUI(
 
             column(
               12,
-              htmlOutput("title_cp", container = tags$h1),
-              htmlOutput("title_cp_legend", container = tags$p)
+              HTML("<h1>Country Profile</h1>")
             ),
             
             column(
@@ -100,6 +100,11 @@ shinyUI(
                            class = "btn-primary")
             ),
             
+            column(
+              12,
+              htmlOutput("title_cp", container = tags$h1)
+            ),
+            
             ## Aggregated trade -----
             
             column(
@@ -124,84 +129,36 @@ shinyUI(
 
             column(
               12,
-              htmlOutput("exports_subtitle_cp", container = tags$h2),
-              htmlOutput("exports_note_cp", container = tags$p)
-            ),
-
-            column(
-              6,
-              htmlOutput("exports_title_year_cp", container = tags$h3)
+              htmlOutput("exports_title_year_cp", container = tags$h2)
             ),
             
             column(
               6,
-              htmlOutput("imports_title_year_cp", container = tags$h3)
-            ),
-            
-            column(
-              3,
-              htmlOutput("exports_title_min_year_cp", container = tags$h4),
+              htmlOutput("exports_title_min_year_cp", container = tags$h3),
               highchartOutput("exports_treemap_detailed_min_year_cp", height = "500px")
             ),
 
             column(
-              3,
-              htmlOutput("exports_title_max_year_cp", container = tags$h4),
+              6,
+              htmlOutput("exports_title_max_year_cp", container = tags$h3),
               highchartOutput("exports_treemap_detailed_max_year_cp", height = "500px")
             ),
 
             column(
-              3,
-              htmlOutput("imports_title_min_year_cp", container = tags$h4),
+              12,
+              htmlOutput("imports_title_year_cp", container = tags$h2)
+            ),
+            
+            column(
+              6,
+              htmlOutput("imports_title_min_year_cp", container = tags$h3),
               highchartOutput("imports_treemap_detailed_min_year_cp", height = "500px")
             ),
             
             column(
-              3,
-              htmlOutput("imports_title_max_year_cp", container = tags$h4),
+              6,
+              htmlOutput("imports_title_max_year_cp", container = tags$h3),
               highchartOutput("imports_treemap_detailed_max_year_cp", height = "500px")
-            ),
-            
-            ## Origin/Destination ----
-            
-            column(
-              12,
-              htmlOutput("trade_partners_title_cp", container = tags$h2),
-              htmlOutput("trade_partners_text_cp", container = tags$p)
-            ),
-            
-            column(
-              6,
-              htmlOutput("trade_exports_year_subtitle_cp", container = tags$h3)
-            ),
-            
-            column(
-              6,
-              htmlOutput("trade_imports_year_subtitle_cp", container = tags$h3)
-            ),
-            
-            column(
-              3,
-              htmlOutput("trade_exports_min_year_subtitle_cp", container = tags$h4),
-              highchartOutput("exports_treemap_destinations_min_year_cp", height = "500px")
-            ),
-            
-            column(
-              3,
-              htmlOutput("trade_exports_max_year_subtitle_cp", container = tags$h4),
-              highchartOutput("exports_treemap_destinations_max_year_cp", height = "500px")
-            ),
-            
-            column(
-              3,
-              htmlOutput("trade_imports_min_year_subtitle_cp", container = tags$h4),
-              highchartOutput("imports_treemap_origins_min_year_cp", height = "500px")
-            ),
-            
-            column(
-              3,
-              htmlOutput("trade_imports_max_year_subtitle_cp", container = tags$h4),
-              highchartOutput("imports_treemap_origins_max_year_cp", height = "500px")
             ),
             
             ## Download ----
@@ -223,7 +180,7 @@ shinyUI(
             
             column(
               12,
-              htmlOutput("title_pp", container = tags$h1)
+              HTML("<h1>Product Profile</h1>")
             ),
             
             column(
@@ -254,7 +211,8 @@ shinyUI(
                 choices = list(
                   "All Products" = available_all,
                   "Custom Selections" = available_vaccine,
-                  "HS Sections" = available_sections_code
+                  "HS Sections" = available_sections_code,
+                  "HS Commodities" = available_commodities_code
                 ),
                 selected = "all",
                 selectize = TRUE,
@@ -283,8 +241,26 @@ shinyUI(
             
             column(
               12,
-              htmlOutput("exports_title_year_pp", container = tags$h2),
-              htmlOutput("trade_summary_exp_pp", container = tags$p)
+              htmlOutput("title_pp", container = tags$h1),
+              htmlOutput("trade_subtitle_pp", container = tags$h2)
+            ),
+            
+            column(
+              3,
+              htmlOutput("trade_subtitle_exp_pp", container = tags$h3),
+              htmlOutput("trade_summary_exp_pp", container = tags$p),
+              htmlOutput("trade_subtitle_imp_pp", container = tags$h3),
+              htmlOutput("trade_summary_imp_pp", container = tags$p)
+            ),
+            
+            column(
+              9,
+              highchartOutput("trade_exchange_columns_pp", height = "500px")
+            ),
+            
+            column(
+              12,
+              htmlOutput("exports_title_year_pp", container = tags$h2)
             ),
             column(
               6,
@@ -299,8 +275,7 @@ shinyUI(
             
             column(
               12,
-              htmlOutput("imports_title_year_pp", container = tags$h2),
-              htmlOutput("trade_summary_imp_pp", container = tags$p)
+              htmlOutput("imports_title_year_pp", container = tags$h2)
             ),
             column(
               6,

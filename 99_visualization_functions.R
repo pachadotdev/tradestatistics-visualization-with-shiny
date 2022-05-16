@@ -9,7 +9,7 @@ custom_tooltip <- function() {
 
 custom_tooltip_short <- function() {
   JS("function() { return '<b>' + this.series.name + '</b>' + ' ' + 
-     Highcharts.numberFormat(this.y, 0) + ' USD (FOB)' }")
+     Highcharts.numberFormat(this.y, 0) + ' USD' }")
 }
 
 data_labels <- function() {
@@ -18,7 +18,7 @@ data_labels <- function() {
 
 od_order_and_add_continent <- function(d, col = "trade_value_usd_exp") {
   d <- d %>% 
-    select(country_iso = partner_iso, trade_value = !!sym(col))
+    select(country_iso = reporter_iso, trade_value = !!sym(col))
   
   d <- d %>% 
     

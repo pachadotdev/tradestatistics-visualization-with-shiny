@@ -55,21 +55,26 @@ shinyServer(
     
     input_pp_format <- reactive({ input$pp_f })
     
-    section_name <- eventReactive(input$pp_go, {
-      if (input_pp_section_code() != "vaccine") {
+    section_name_pp <- eventReactive(input$pp_go, {
+      warning(nchar(input_pp_section_code()))
+      
+      s <- if (nchar(input_pp_section_code()) == 2) {
         sections_to_display %>%
           filter(section_code == input_pp_section_code()) %>%
           select(section_fullname_english) %>%
           as.character()
-      }
-      
-      if (input_pp_section_code() == "vaccine") {
+      } else if (nchar(input_pp_section_code()) == 4) {
+        commodities_to_display %>%
+          filter(commodity_code == input_pp_section_code()) %>%
+          select(commodity_fullname_english) %>%
+          as.character()
+      } else if (input_pp_section_code() == "vaccine") {
         "Vaccine Inputs"
-      }
-      
-      if (input_pp_section_code() == "all") {
+      } else if (input_pp_section_code() == "all") {
         "All Products"
       }
+      
+      return(s)
     })
     
     ## Model ----
@@ -136,7 +141,7 @@ shinyServer(
     })
     
     title_pp <- eventReactive(input$pp_go, {
-      glue("COMPLETE THIS between { min(input_pp_y()) } and { max(input_pp_y()) }")
+      glue("{ section_name_pp() } multilateral trade in { min(input_pp_y()) } and { max(input_pp_y()) }")
     })
     
     # Country profile ----
@@ -476,7 +481,7 @@ shinyServer(
           pointFormatter = custom_tooltip_short()
         )) %>% 
         hc_xAxis(title = list(text = "Year")) %>%
-        hc_yAxis(title = list(text = "USD billion (FOB)"),
+        hc_yAxis(title = list(text = "USD billion"),
                  labels = list(formatter = JS("function() { return this.value / 1000000000 }"))) %>% 
         hc_title(text = trade_exchange_lines_title_cp())
     })
@@ -504,25 +509,6 @@ shinyServer(
     
     ### Visual elements ----
     
-    exports_subtitle_cp <- eventReactive(input$cp_go, {
-      switch(
-        table_detailed_cp(),
-        "yrc" = glue("Detailed multilateral Exports and Imports { min(input_cp_y()) }-{ max(input_cp_y()) }"),
-        "yrpc" = glue("Detailed bilateral Exports and Imports { min(input_cp_y()) }-{ max(input_cp_y()) }")
-      )
-    })
-    
-    exports_note_cp <- eventReactive(input$cp_go, {
-      switch(
-        table_detailed_cp(),
-        "yrc" = glue("Explore the exports and imports of { reporter_add_the() } { reporter_name() } to/from the World at the begining 
-          and end of the selected period. The data was grouped by sections for visual clarity, you can click each section to see the finer detail."),
-        "yrpc" = glue("Explore the exports and imports of { reporter_add_the() } { reporter_name() } to/from { partner_add_the() } 
-          { partner_name() } at the begining and end of the selected period. The data was grouped by sections for visual clarity, you can 
-          click each section to see the finer detail.")
-      )
-    })
-    
     exports_title_year_cp <- eventReactive(input$cp_go, {
       switch(
         table_detailed_cp(),
@@ -533,16 +519,6 @@ shinyServer(
     
     exports_title_min_year_cp <- eventReactive(input$cp_go, {
       glue("{ min(input_cp_y()) }")
-    })
-    
-    exports_treemap_destinations_min_year_cp <- eventReactive(input$cp_go, {
-      d <- exports_imports_table_origin_destination_year_cp() %>%
-        filter(year == min(year)) %>% 
-        od_order_and_add_continent()
-      
-      d2 <- od_colors(d)
-      
-      od_to_highcharts(d, d2)
     })
     
     exports_treemap_detailed_min_year_cp <- eventReactive(input$cp_go, {
@@ -557,16 +533,6 @@ shinyServer(
     
     exports_title_max_year_cp <- eventReactive(input$cp_go, {
       glue("{ max(input_cp_y()) }")
-    })
-    
-    exports_treemap_destinations_max_year_cp <- eventReactive(input$cp_go, {
-      d <- exports_imports_table_origin_destination_year_cp() %>%
-        filter(year == max(year)) %>% 
-        od_order_and_add_continent()
-      
-      d2 <- od_colors(d)
-      
-      od_to_highcharts(d, d2)
     })
     
     exports_treemap_detailed_max_year_cp <- eventReactive(input$cp_go, {
@@ -653,9 +619,12 @@ shinyServer(
           vaccine_codes <- as.character(unlist(read.csv("vaccine_codes.csv")))
           d <- d %>% 
             filter(commodity_code %in% vaccine_codes)
-        } else {
+        } else if (nchar(input_pp_section_code()) == 2) {
           d <- d %>% 
             filter(section_code == !!input_pp_section_code()) 
+        } else if (nchar(input_pp_section_code()) == 4) {
+          d <- d %>% 
+            filter(substr(commodity_code, 1, 4) == !!input_pp_section_code()) 
         }
       }
       
@@ -766,15 +735,53 @@ shinyServer(
     ### Text/Visual elements ----
     
     trade_summary_text_exp_pp <- eventReactive(input$pp_go, {
-      glue("The exports of { section_name() } { exports_growth_increase_decrease_pp() } from 
+      glue("The exports of { section_name_pp() } { exports_growth_increase_decrease_pp() } from 
                           { exports_value_min_year_2_pp() } in { min(input_pp_y()) } to { exports_value_max_year_2_pp() } in { max(input_pp_y()) } 
                           (annualized { exports_growth_increase_decrease_2_pp() } of { exports_growth_2_pp() }).")
     })
     
     trade_summary_text_imp_pp <- eventReactive(input$pp_go, {
-      glue("The imports of { section_name() } { imports_growth_increase_decrease_pp() } from 
+      glue("The imports of { section_name_pp() } { imports_growth_increase_decrease_pp() } from 
                           { imports_value_min_year_2_pp() } in { min(input_pp_y()) } to { imports_value_max_year_2_pp() } in { max(input_pp_y()) } 
                           (annualized { imports_growth_increase_decrease_2_pp() } of { imports_growth_2_pp() }).")
+    })
+    
+    trade_exchange_columns_title_pp <- eventReactive(input$pp_go, {
+      glue("{ section_name_pp() } exchange in { min(input_cp_y()) } and { max(input_cp_y()) }")
+    })
+    
+    trade_exchange_columns_pp <- eventReactive(input$pp_go, {
+      d <- data_detailed_pp() %>% 
+        group_by(year) %>% 
+        summarise(
+          trade_value_usd_exp = sum(trade_value_usd_exp),
+          trade_value_usd_imp = sum(trade_value_usd_imp)
+        )
+      
+      d <- tibble(
+        year = d$year,
+        trade = d$trade_value_usd_exp,
+        flow = "Exports"
+      ) %>% 
+        bind_rows(
+          tibble(
+            year = d$year,
+            trade = d$trade_value_usd_imp,
+            flow = "Imports"
+          )
+        ) %>% 
+        mutate(year = as.character(year))
+      
+      hchart(d, 
+             "column", 
+             hcaes(x = year, y = trade, group = flow),
+             tooltip = list(
+               pointFormatter = custom_tooltip_short()
+             )) %>% 
+        hc_xAxis(title = list(text = "Year")) %>%
+        hc_yAxis(title = list(text = "USD billion"),
+                 labels = list(formatter = JS("function() { return this.value / 1000000000 }"))) %>% 
+        hc_title(text = trade_exchange_columns_title_pp())
     })
     
     ## Exports ----
@@ -782,7 +789,7 @@ shinyServer(
     ### Text/Visual elements ----
     
     exports_title_year_pp <- eventReactive(input$pp_go, {
-      glue("Exports of { section_name() } in { min(input_pp_y()) } and { max(input_pp_y()) }, by country")
+      glue("Exports of { section_name_pp() } in { min(input_pp_y()) } and { max(input_pp_y()) }, by country")
     })
     
     exports_title_min_year_pp <- eventReactive(input$pp_go, {
@@ -818,7 +825,7 @@ shinyServer(
     ### Text/Visual elements ----
     
     imports_title_year_pp <- eventReactive(input$pp_go, {
-      glue("Imports of { section_name() } in { min(input_pp_y()) } and { max(input_pp_y()) }, by country")
+      glue("Imports of { section_name_pp() } in { min(input_pp_y()) } and { max(input_pp_y()) }, by country")
     })
     
     imports_title_min_year_pp <- eventReactive(input$pp_go, {
@@ -1305,50 +1312,8 @@ shinyServer(
       "Imports"
     })
     
-    output$trade_partners_title_cp <- eventReactive(input$cp_go, {
-      glue("Trading partners { min(input_cp_y()) }-{ max(input_cp_y()) }")
-    })
-    
-    output$trade_partners_title_cp <- eventReactive(input$cp_go, {
-      glue("Trading partners { min(input_cp_y()) }-{ max(input_cp_y()) }")
-    })
-    
-    output$trade_partners_text_cp <- eventReactive(input$cp_go, {
-      glue("Explore the trade partners of { reporter_add_the() } { reporter_name() } at the begining and end 
-           of the selected period. The data was grouped by continent and country for visual clarity, you can click
-           each continent/area to see the finer detail.")
-    })
-    
-    output$trade_exports_year_subtitle_cp <- eventReactive(input$cp_go, {
-      glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in 
-           { min(input_cp_y()) } and { max(input_cp_y()) }, by destination")
-    })
-    
-    output$trade_exports_min_year_subtitle_cp <- eventReactive(input$cp_go, {
-      glue("{ min(input_cp_y()) }")
-    })
-
-    output$trade_exports_max_year_subtitle_cp <- eventReactive(input$cp_go, {
-      glue("{ max(input_cp_y()) }")
-    })
-    
-    output$trade_imports_year_subtitle_cp <- eventReactive(input$cp_go, {
-      glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in 
-           { min(input_cp_y()) } and { max(input_cp_y()) }, by origin")
-    })
-    
-    output$trade_imports_min_year_subtitle_cp <- eventReactive(input$cp_go, {
-      glue("{ min(input_cp_y()) }")
-    })
-
-    output$trade_imports_max_year_subtitle_cp <- eventReactive(input$cp_go, {
-      glue("{ max(input_cp_y()) }")
-    })
-    
     output$trade_summary_exp_cp <- renderText(trade_summary_text_exp_cp())
     output$trade_summary_imp_cp <- renderText(trade_summary_text_imp_cp())
-    
-    output$trade_title_cp <- renderText(trade_title_cp())
     
     output$trade_exchange_lines_aggregated_cp <- renderHighchart({
       trade_exchange_lines_aggregated_cp()
@@ -1356,30 +1321,40 @@ shinyServer(
     
     ## Exports output ----
     
-    output$exports_subtitle_cp <- renderText(exports_subtitle_cp())
-    output$exports_note_cp <- renderText(exports_note_cp())
     output$exports_title_year_cp <- renderText(exports_title_year_cp())
     output$exports_title_min_year_cp <- renderText(exports_title_min_year_cp())
-    output$exports_treemap_destinations_min_year_cp <- renderHighchart({exports_treemap_destinations_min_year_cp()})
     output$exports_treemap_detailed_min_year_cp <- renderHighchart({exports_treemap_detailed_min_year_cp()})
     output$exports_title_max_year_cp <- renderText(exports_title_max_year_cp())
-    output$exports_treemap_destinations_max_year_cp <- renderHighchart({exports_treemap_destinations_max_year_cp()})
     output$exports_treemap_detailed_max_year_cp <- renderHighchart({exports_treemap_detailed_max_year_cp()})
     
     ## Imports output ----
     
     output$imports_title_year_cp <- renderText(imports_title_year_cp())
     output$imports_title_min_year_cp <- renderText(imports_title_min_year_cp())
-    output$imports_treemap_origins_min_year_cp <- renderHighchart({imports_treemap_origins_min_year_cp()})
     output$imports_treemap_detailed_min_year_cp <- renderHighchart({imports_treemap_detailed_min_year_cp()})
     output$imports_title_max_year_cp <- renderText(imports_title_max_year_cp())
-    output$imports_treemap_origins_max_year_cp <- renderHighchart({imports_treemap_origins_max_year_cp()})
     output$imports_treemap_detailed_max_year_cp <- renderHighchart({imports_treemap_detailed_max_year_cp()})
     
     # Product profile output ----
     
+    output$trade_subtitle_pp <- eventReactive(input$pp_go, {
+      glue("Total multilateral Exports and Imports { min(input_cp_y()) } and { max(input_cp_y()) }")
+    })
+    
+    output$trade_subtitle_exp_pp <- eventReactive(input$pp_go, {
+      "Exports"
+    })
+    
+    output$trade_subtitle_imp_pp <- eventReactive(input$pp_go, {
+      "Imports"
+    })
+    
     output$trade_summary_exp_pp <- renderText(trade_summary_text_exp_pp())
     output$trade_summary_imp_pp <- renderText(trade_summary_text_imp_pp())
+    
+    output$trade_exchange_columns_pp <- renderHighchart({
+      trade_exchange_columns_pp()
+    })
     
     output$imports_title_year_pp <- renderText(imports_title_year_pp())
     output$imports_title_min_year_pp <- renderText(imports_title_min_year_pp())
