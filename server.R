@@ -148,12 +148,11 @@ shinyServer(
     
     ## Data ----
     
-    waitress <- Waitress$new("nav", theme = "overlay-percent", min = 0, max = 10)
-    
-    # use notification
-    waitress$notify(position = "br")
+    waitress <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
     
     data_aggregated_cp <- eventReactive(input$cp_go, {
+      waitress$start()
+      
       d <- tbl(con, table_aggregated_cp())
           
       if (input_cp_partner_iso() == "all") {
