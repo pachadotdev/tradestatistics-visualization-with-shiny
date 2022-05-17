@@ -148,6 +148,11 @@ shinyServer(
     
     ## Data ----
     
+    waitress <- Waitress$new("nav", theme = "overlay-percent", min = 0, max = 10)
+    
+    # use notification
+    waitress$notify(position = "br")
+    
     data_aggregated_cp <- eventReactive(input$cp_go, {
       d <- tbl(con, table_aggregated_cp())
           
@@ -171,6 +176,8 @@ shinyServer(
       if (input_cp_convert_dollars() != "No conversion") {
         d <- gdp_deflator_adjustment(d, as.integer(input_cp_convert_dollars()))
       }
+      
+      waitress$inc(2)
       
       return(d)
     })
@@ -198,6 +205,8 @@ shinyServer(
       if (input_cp_convert_dollars() != "No conversion") {
         d <- gdp_deflator_adjustment(d, as.integer(input_cp_convert_dollars()))
       }
+      
+      waitress$inc(2)
       
       return(d)
     })
@@ -413,6 +422,8 @@ shinyServer(
     })
     
     trade_rankings_imp_share_max_year_2_cp <- eventReactive(input$cp_go, {
+      waitress$inc(1)
+      
       show_percentage(trade_rankings_imp_share_max_year_cp())
     })
     
@@ -474,6 +485,8 @@ shinyServer(
         ) %>% 
         mutate(year = as.character(year))
 
+      waitress$inc(1)
+      
       hchart(d, 
         "line", 
         hcaes(x = year, y = trade, group = flow),
@@ -503,6 +516,8 @@ shinyServer(
       if (input_cp_convert_dollars() != "No conversion") {
         d <- gdp_deflator_adjustment(d, as.integer(input_cp_convert_dollars()))
       }
+      
+      waitress$inc(1)
       
       return(d)
     })
@@ -542,9 +557,11 @@ shinyServer(
       
       d2 <- pd_colors(d)
       
+      waitress$inc(1)
+      
       pd_to_highcharts(d, d2)
     })
-
+    
     ## Imports ----
     
     ### Visual elements ----
@@ -602,9 +619,11 @@ shinyServer(
       
       d2 <- pd_colors(d)
       
+      waitress$inc(2)
+      waitress$close() 
+      
       pd_to_highcharts(d, d2)
     })
-    
     
     # Product profile ----
     

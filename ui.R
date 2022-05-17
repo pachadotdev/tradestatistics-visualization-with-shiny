@@ -5,7 +5,7 @@ shinyUI(
     dashboardPage(
       skin = styles$skin_color,
       theme = styles$css_files,
-
+      
       dashboardHeader(
         title = "OTS beta dashboard"
       ),
@@ -32,6 +32,8 @@ shinyUI(
 
             # Country profile ----
 
+            useWaitress(),
+            
             column(
               12,
               HTML("<h1>Country Profile</h1>")
@@ -561,15 +563,15 @@ shinyUI(
         
         # Loading ----
         
-        conditionalPanel(
-          condition = "$('html').hasClass('shiny-busy')",
-          div(
-            id = "loading",
-            img(src = "img/loading_icon.gif", width = "100"),
-            p("Loading..."),
-            align = "center"
-          )
-        ),
+        # conditionalPanel(
+        #   condition = "$('html').hasClass('shiny-busy')",
+        #   div(
+        #     id = "loading",
+        #     img(src = "img/loading_icon.gif", width = "100"),
+        #     p("Loading..."),
+        #     align = "center"
+        #   )
+        # ),
         
         # Footer ----
         

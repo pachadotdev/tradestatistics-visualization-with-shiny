@@ -7,5 +7,6 @@ library(glue)
 library(broom)
 library(highcharter)
 library(fixest)
+library(waiter)
 # library(pool) # used for SQL connections
 # library(rio) # used to import/export data
