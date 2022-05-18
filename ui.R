@@ -19,7 +19,7 @@ shinyUI(
           menuItem("Product profile", tabName = "product_profile", badgeLabel = "new", badgeColor = "green"),
           
           # THIS IS NOT READY
-          # menuItem("Model", tabName = "model", badgeLabel = "new", badgeColor = "green"),
+          menuItem("Model", tabName = "model", badgeLabel = "new", badgeColor = "green"),
       
           menuItem("Cite", tabName = "cite")
         )
@@ -207,17 +207,10 @@ shinyUI(
             
             column(
               6,
-              selectInput(
+              selectizeInput(
                 "pp_s",
-                "Section:",
-                choices = list(
-                  "All Products" = available_all,
-                  "Custom Selections" = available_vaccine,
-                  "HS Sections" = available_sections_code,
-                  "HS Commodities" = available_commodities_code
-                ),
-                selected = "all",
-                selectize = TRUE,
+                label = "Section:",
+                choices = NULL,
                 width = "100%"
               )
             ),

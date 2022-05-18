@@ -43,6 +43,18 @@ shinyServer(
     
     ## Product profile ----
     
+    updateSelectizeInput(
+      session,
+      inputId = "pp_s",
+      choices = list(
+        "All Products" = available_all,
+        "Custom Selections" = available_vaccine,
+        "HS Sections" = available_sections_code,
+        "HS Commodities" = available_commodities_code
+      ),
+      server = TRUE
+    )
+    
     input_pp_y <- reactive({
       y <- (min(input$pp_y[1], input$pp_y[2])):(max(input$pp_y[1], input$pp_y[2]))
       y <- c(min(y), max(y))
@@ -56,8 +68,6 @@ shinyServer(
     input_pp_format <- reactive({ input$pp_f })
     
     section_name_pp <- eventReactive(input$pp_go, {
-      warning(nchar(input_pp_section_code()))
-      
       s <- if (nchar(input_pp_section_code()) == 2) {
         sections_to_display %>%
           filter(section_code == input_pp_section_code()) %>%
