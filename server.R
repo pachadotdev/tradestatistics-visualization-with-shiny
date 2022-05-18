@@ -146,12 +146,12 @@ shinyServer(
     
     # Country profile ----
     
+    waitress_cp <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
+    
     ## Data ----
     
-    waitress <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
-    
     data_aggregated_cp <- eventReactive(input$cp_go, {
-      waitress$start()
+      waitress_cp$start()
       
       d <- tbl(con, table_aggregated_cp())
           
@@ -176,7 +176,7 @@ shinyServer(
         d <- gdp_deflator_adjustment(d, as.integer(input_cp_convert_dollars()))
       }
       
-      waitress$inc(2)
+      waitress_cp$inc(2)
       
       return(d)
     })
@@ -205,7 +205,7 @@ shinyServer(
         d <- gdp_deflator_adjustment(d, as.integer(input_cp_convert_dollars()))
       }
       
-      waitress$inc(2)
+      waitress_cp$inc(2)
       
       return(d)
     })
@@ -421,7 +421,7 @@ shinyServer(
     })
     
     trade_rankings_imp_share_max_year_2_cp <- eventReactive(input$cp_go, {
-      waitress$inc(1)
+      waitress_cp$inc(1)
       
       show_percentage(trade_rankings_imp_share_max_year_cp())
     })
@@ -484,7 +484,7 @@ shinyServer(
         ) %>% 
         mutate(year = as.character(year))
 
-      waitress$inc(1)
+      waitress_cp$inc(1)
       
       hchart(d, 
         "line", 
@@ -516,7 +516,7 @@ shinyServer(
         d <- gdp_deflator_adjustment(d, as.integer(input_cp_convert_dollars()))
       }
       
-      waitress$inc(1)
+      waitress_cp$inc(1)
       
       return(d)
     })
@@ -556,7 +556,7 @@ shinyServer(
       
       d2 <- pd_colors(d)
       
-      waitress$inc(1)
+      waitress_cp$inc(1)
       
       pd_to_highcharts(d, d2)
     })
@@ -618,19 +618,25 @@ shinyServer(
       
       d2 <- pd_colors(d)
       
-      waitress$inc(2)
-      waitress$close() 
+      waitress_cp$inc(2)
+      waitress_cp$close() 
       
       pd_to_highcharts(d, d2)
     })
     
     # Product profile ----
     
+    waitress_pp <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
+    
     ## Data ----
     
     data_detailed_pp <- eventReactive(input$pp_go, {
+      waitress_pp$start()
+      
       d <- tbl(con, "yrpc") %>% 
         filter(year %in% !!input_pp_y())
+      
+      waitress_pp$inc(1)
       
       if (input_pp_section_code() != "all") {
         if (input_pp_section_code() == "vaccine") {
@@ -646,6 +652,8 @@ shinyServer(
         }
       }
       
+      waitress_pp$inc(1)
+      
       d <- d %>% 
         group_by(year, reporter_iso, partner_iso) %>% 
         summarize(
@@ -659,6 +667,8 @@ shinyServer(
         d <- gdp_deflator_adjustment(d, as.integer(input_pp_convert_dollars()))
       }
       
+      waitress_pp$inc(3)
+      
       return(d)
     })
     
@@ -667,6 +677,8 @@ shinyServer(
     ### Numbers ----
     
     exports_value_min_year_pp <- eventReactive(input$pp_go, {
+      waitress_pp$inc(1)
+      
       data_detailed_pp() %>%
         filter(year == min(input_pp_y())) %>%
         select(trade_value_usd_exp) %>%
@@ -683,6 +695,8 @@ shinyServer(
     })
     
     imports_value_min_year_pp <- eventReactive(input$pp_go, {
+      waitress_pp$inc(1)
+      
       data_detailed_pp() %>%
         filter(year == min(input_pp_y())) %>%
         select(trade_value_usd_imp) %>%
@@ -790,6 +804,9 @@ shinyServer(
         ) %>% 
         mutate(year = as.character(year))
       
+      waitress_pp$inc(3)
+      waitress_pp$close()
+      
       hchart(d, 
              "column", 
              hcaes(x = year, y = trade, group = flow),
@@ -876,6 +893,8 @@ shinyServer(
     
     # Model ----
   
+    waitress_model <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
+    
     model_custom_data <- eventReactive(input$mod_go, {
       uploaded_file <- input$mod_own
       
@@ -890,6 +909,8 @@ shinyServer(
     })
     
     data_detailed_model <- eventReactive(input$mod_go, {
+      waitress_model$start()
+      
       # 1. read from SQL
       
       d <- tbl(con, "yrpc")
@@ -911,6 +932,8 @@ shinyServer(
           
       d <- d %>% collect()
       
+      waitress_model$inc(1)
+      
       if (input_model_convert_dollars() != "No conversion") {
         d <- gdp_deflator_adjustment(d, as.integer(input_model_convert_dollars()))
       }
@@ -928,6 +951,8 @@ shinyServer(
               )
             )
         }
+        
+        waitress_model$inc(1)
         
         d <- d %>% 
           filter(section_name %in% !!input_model_product_filter())
@@ -1049,6 +1074,8 @@ shinyServer(
               log_remoteness_imp = log(remoteness_imp)
             )
         
+        waitress_model$inc(3)
+        
         d <- d %>% 
           select(-c(total_e, total_y, remoteness_exp, remoteness_imp))
       }
@@ -1056,6 +1083,8 @@ shinyServer(
       # 7. create fixed effects
       
       if (input_model_type() == "olsfe") {
+        waitress_model$inc(3)
+        
         d <- d %>% 
           mutate(
             reporter_year = paste0(reporter_iso, year),
@@ -1239,6 +1268,8 @@ shinyServer(
         }
       }
       
+      waitress_model$inc(1)
+      
       print(f)
       return(f)
     })
@@ -1262,6 +1293,9 @@ shinyServer(
                      family = quasipoisson(link = "log"))
         }
       }
+      
+      waitress_model$inc(1)
+      waitress_model$close() 
       
       gc()
       return(m)
