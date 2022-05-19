@@ -921,7 +921,7 @@ shinyServer(
     data_detailed_model <- eventReactive(input$mod_go, {
       waitress_model$start()
       
-      # 1. read from SQL
+      ## 1. read from SQL ----
       
       d <- tbl(con, "yrpc")
           
@@ -942,34 +942,32 @@ shinyServer(
           
       d <- d %>% collect()
       
+      waitress_model$inc(2)
+      
+      ## 2. apply filters ----
+      
+      if (any(input_model_product_filter() %in% "vaccine")) {
+        vaccine_codes <- as.character(unlist(read.csv("vaccine_codes.csv")))
+        d <- d %>% 
+          mutate(
+            section_code = case_when(
+              commodity_code %in% vaccine_codes ~ "vaccine",
+              TRUE ~ section_code
+            )
+          )
+      }
+      
+      if (length(input_model_product_filter()) > 0) {
+        d <- d %>% 
+          filter(section_code %in% !!input_model_product_filter())
+      }
+        
       waitress_model$inc(1)
       
-      if (input_model_convert_dollars() != "No conversion") {
-        d <- gdp_deflator_adjustment(d, as.integer(input_model_convert_dollars()))
-      }
-      
-      # 2. apply filters
-      
-      if (!any(input_model_product_filter() %in% "all")) {
-        if (any(input_model_product_filter() %in% "vaccine")) {
-          vaccine_codes <- as.character(unlist(read.csv("vaccine_codes.csv")))
-          d <- d %>% 
-            mutate(
-              section_code = case_when(
-                commodity_code %in% vaccine_codes ~ "vaccine",
-                TRUE ~ section_code
-              )
-            )
-        }
-        
-        waitress_model$inc(1)
-        
-        d <- d %>% 
-          filter(section_name %in% !!input_model_product_filter())
-      }
-      
       if (any(input_model_ctn() %in% "mfn")) {
-        # 3.1 read from SQL
+        ## 3.1. If MFN ----
+        
+        ### read from SQL ----
         
         d <- d %>%
           inner_join(
@@ -984,7 +982,7 @@ shinyServer(
             by = c("year", "partner_iso", "commodity_code")
           )
         
-        # 3.2. summarise
+        ### summarise ----
         
         d2 <- d %>% 
           select(year, reporter_iso, partner_iso, trade_value_usd_exp, trade_value_usd_imp) %>% 
@@ -1004,7 +1002,9 @@ shinyServer(
         
         d <- d2 %>% left_join(d3); rm(d2,d3)
       } else {
-        # 3.1. summarise
+        ## 3.2. If no MFN ----
+        
+        ### summarise ----
         
         d <- d %>% 
           select(year, reporter_iso, partner_iso, trade_value_usd_exp, trade_value_usd_imp) %>% 
@@ -1016,7 +1016,7 @@ shinyServer(
           ungroup()
       }
       
-      # 4. add geo dist data
+      ## 4. add geo dist data ----
       
       d <- d %>% 
         mutate(
@@ -1032,7 +1032,7 @@ shinyServer(
         ) %>% 
         select(-c(country1,country2))
       
-      # 5. add RTA data
+      ## 5. add RTA data ----
       
       if (any(input_model_bin() %in% "rta")) {
         d <- d %>%
@@ -1055,7 +1055,7 @@ shinyServer(
           select(-c(country1,country2))
       }
       
-      # 6. create remoteness indexes
+      ## 6. create remoteness indexes ----
       
       if (input_model_type() == "olsrem") {
         d <- d %>% 
@@ -1084,17 +1084,13 @@ shinyServer(
               log_remoteness_imp = log(remoteness_imp)
             )
         
-        waitress_model$inc(3)
-        
         d <- d %>% 
           select(-c(total_e, total_y, remoteness_exp, remoteness_imp))
       }
       
-      # 7. create fixed effects
+      ## 7. create fixed effects ----
       
       if (input_model_type() == "olsfe") {
-        waitress_model$inc(3)
-        
         d <- d %>% 
           mutate(
             reporter_year = paste0(reporter_iso, year),
@@ -1102,7 +1098,7 @@ shinyServer(
           )
       }
       
-      # 8. log variables
+      ## 8. log variables ----
       
       if (input_model_dist() == "dist") {
         d <- d %>% 
@@ -1123,19 +1119,29 @@ shinyServer(
           select(-trade_value_usd_exp)
       }
       
-      # 9. create clustering variable
+      ## 9. create clustering variable ----
       
       if (input_model_cluster() == "yes") {
        d <- d %>% 
          mutate(reporter_partner_iso = paste(reporter_iso, partner_iso, sep = "_"))
       }
       
-      # 10. join with custom data
+      ## 10. join with custom data ----
       
       if (nrow(model_custom_data()) > 0) {
         d <- d %>% 
           inner_join(model_custom_data())
       }
+      
+      waitress_model$inc(2)
+      
+      ## 11. convert dollars in time ----
+      
+      if (input_model_convert_dollars() != "No conversion") {
+        d <- gdp_deflator_adjustment(d, as.integer(input_model_convert_dollars()))
+      }
+      
+      waitress_model$inc(1)
       
       gc()
       
@@ -1278,7 +1284,7 @@ shinyServer(
         }
       }
       
-      waitress_model$inc(1)
+      waitress_model$inc(2)
       
       print(f)
       return(f)
@@ -1304,7 +1310,7 @@ shinyServer(
         }
       }
       
-      waitress_model$inc(1)
+      waitress_model$inc(2)
       waitress_model$close() 
       
       gc()
