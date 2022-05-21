@@ -1,6 +1,6 @@
-shinyOptions(cache = cachem::cache_disk(
-  dir = "/tradestatistics/shiny_cache",
-  logfile = "/tradestatistics/log/shiny_cache.log"))
+# shinyOptions(cache = cachem::cache_disk(
+#   dir = "/tradestatistics/shiny_cache",
+#   logfile = "/tradestatistics/log/shiny_cache.log"))
 
 # Packages ----------------------------------------------------------------
 

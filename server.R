@@ -47,8 +47,7 @@ shinyServer(
       session,
       inputId = "pp_s",
       choices = list(
-        "All Products" = available_all,
-        "Custom Selections" = available_vaccine,
+        "Custom Selections" = c(available_all, available_vaccine),
         "HS Sections" = available_sections_code,
         "HS Commodities" = available_commodities_code
       ),
