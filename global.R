@@ -55,9 +55,9 @@ names(available_tables) <- c("Raw data (i.e., with transportation costs)",
 
 ## Years ----
 
-available_years <- 2002:2020
-available_years_min <- min(available_years)
-available_years_max <- max(available_years)
+available_yrs <- 2002:2020
+available_yrs_min <- min(available_yrs)
+available_yrs_max <- max(available_yrs)
 
 ## Countries ----
 
