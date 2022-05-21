@@ -19,7 +19,7 @@ shinyUI(
           menuItem("Product profile", tabName = "pp", badgeLabel = "new", badgeColor = "green"),
           
           # THIS IS NOT READY
-          menuItem("Model", tabName = "md", badgeLabel = "new", badgeColor = "green"),
+          # menuItem("Model", tabName = "md", badgeLabel = "new", badgeColor = "green"),
       
           menuItem("Cite", tabName = "cite")
         )
