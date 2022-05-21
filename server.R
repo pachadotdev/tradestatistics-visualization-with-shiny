@@ -160,7 +160,7 @@ shinyServer(
     
     ## Data ----
     
-    df_agg_cp <- eventReactive(input$cp_go, {
+    df_agg_cp <- reactive({
       wt_cp$start()
       
       d <- tbl(con, table_agg_cp())
@@ -189,9 +189,11 @@ shinyServer(
       wt_cp$inc(2)
       
       return(d)
-    })
+    }) %>% 
+      bindCache(inp_cp_y(), inp_cp_r(), inp_cp_p(), inp_cp_convert_dollars()) %>% 
+      bindEvent(input$cp_go)
     
-    df_dtl_cp <- eventReactive(input$cp_go, {
+    df_dtl_cp <- reactive({
       d <- tbl(con, tbl_dtl_cp())
           
       if (inp_cp_p() == "all") {
@@ -218,7 +220,10 @@ shinyServer(
       wt_cp$inc(2)
       
       return(d)
-    })
+    }) %>% 
+      bindCache(inp_cp_y(), inp_cp_r(), inp_cp_p(), inp_cp_convert_dollars(),
+                tbl_dtl_cp()) %>% 
+      bindEvent(input$cp_go)
     
     ## Trade ----
     
@@ -477,7 +482,7 @@ shinyServer(
       )
     })
     
-    trd_exc_lines_agg_cp <- eventReactive(input$cp_go, {
+    trd_exc_lines_agg_cp <- reactive({
       d <- tr_tbl_agg_cp()
       
       d <- tibble(
@@ -506,13 +511,15 @@ shinyServer(
         hc_yAxis(title = list(text = "USD billion"),
                  labels = list(formatter = JS("function() { return this.value / 1000000000 }"))) %>% 
         hc_title(text = trd_exc_lines_title_cp())
-    })
+    }) %>%
+      bindCache(inp_cp_y(), inp_cp_r(), inp_cp_p(), inp_cp_convert_dollars()) %>% 
+      bindEvent(input$cp_go)
     
     ## Exports ----
     
     ### Tables ----
     
-    exports_imports_table_origin_destination_yr_cp <- eventReactive(input$cp_go, {
+    exports_imports_table_origin_destination_yr_cp <- reactive({
       min_max_y <- c(min(inp_cp_y()), max(inp_cp_y()))
       
       d <- tbl(con, "yrp") %>% 
@@ -529,7 +536,9 @@ shinyServer(
       wt_cp$inc(1)
       
       return(d)
-    })
+    }) %>% 
+      bindCache(inp_cp_y(), inp_cp_r(), inp_cp_p(), inp_cp_convert_dollars()) %>% 
+      bindEvent(input$cp_go)
     
     ### Visual elements ----
     
@@ -545,7 +554,7 @@ shinyServer(
       glue("{ min(inp_cp_y()) }")
     })
     
-    exp_tm_dtl_min_yr_cp <- eventReactive(input$cp_go, {
+    exp_tm_dtl_min_yr_cp <- reactive({
       d <- df_dtl_cp() %>%
         filter(year == min(inp_cp_y())) %>% 
         pd_fix_section_and_aggregate(col = "trade_value_usd_exp")
@@ -553,13 +562,15 @@ shinyServer(
       d2 <- pd_colors(d)
       
       pd_to_highcharts(d, d2)
-    })
+    }) %>% 
+      bindCache(inp_cp_y(), inp_cp_r(), inp_cp_p(), inp_cp_convert_dollars()) %>% 
+      bindEvent(input$cp_go)
     
     exp_tt_max_yr_cp <- eventReactive(input$cp_go, {
       glue("{ max(inp_cp_y()) }")
     })
     
-    exp_tm_dtl_max_yr_cp <- eventReactive(input$cp_go, {
+    exp_tm_dtl_max_yr_cp <- reactive({
       d <- df_dtl_cp() %>%
         filter(year == max(inp_cp_y())) %>% 
         pd_fix_section_and_aggregate(col = "trade_value_usd_exp")
@@ -569,7 +580,9 @@ shinyServer(
       wt_cp$inc(1)
       
       pd_to_highcharts(d, d2)
-    })
+    }) %>% 
+      bindCache(inp_cp_y(), inp_cp_r(), inp_cp_p(), inp_cp_convert_dollars()) %>% 
+      bindEvent(input$cp_go)
     
     ## Imports ----
     
@@ -587,7 +600,7 @@ shinyServer(
       glue("{ min(inp_cp_y()) }")
     })
     
-    imp_tm_ori_min_yr_cp <- eventReactive(input$cp_go, {
+    imp_tm_ori_min_yr_cp <- reactive({
       d <- exports_imports_table_origin_destination_yr_cp() %>%
         filter(year == min(year)) %>% 
         od_order_and_add_continent(col = "trade_value_usd_imp")
@@ -595,9 +608,11 @@ shinyServer(
       d2 <- od_colors(d)
       
       od_to_highcharts(d, d2)
-    })
+    }) %>% 
+      bindCache(inp_cp_y(), inp_cp_r(), inp_cp_p(), inp_cp_convert_dollars()) %>% 
+      bindEvent(input$cp_go)
     
-    imp_tm_dtl_min_yr_cp <- eventReactive(input$cp_go, {
+    imp_tm_dtl_min_yr_cp <- reactive({
       d <- df_dtl_cp() %>%
         filter(year == min(inp_cp_y())) %>% 
         pd_fix_section_and_aggregate(col = "trade_value_usd_imp")
@@ -605,13 +620,15 @@ shinyServer(
       d2 <- pd_colors(d)
       
       pd_to_highcharts(d, d2)
-    })
+    }) %>% 
+      bindCache(inp_cp_y(), inp_cp_r(), inp_cp_p(), inp_cp_convert_dollars()) %>% 
+      bindEvent(input$cp_go)
     
     imp_tt_max_yr_cp <- eventReactive(input$cp_go, {
       glue("{ max(inp_cp_y()) }")
     })
     
-    imp_tm_ori_max_yr_cp <- eventReactive(input$cp_go, {
+    imp_tm_ori_max_yr_cp <- reactive({
       d <- exports_imports_table_origin_destination_yr_cp() %>%
         filter(year == max(year)) %>% 
         od_order_and_add_continent(col = "trade_value_usd_imp")
@@ -619,9 +636,11 @@ shinyServer(
       d2 <- od_colors(d)
       
       od_to_highcharts(d, d2)
-    })
+    }) %>% 
+      bindCache(inp_cp_y(), inp_cp_r(), inp_cp_p(), inp_cp_convert_dollars()) %>% 
+      bindEvent(input$cp_go)
     
-    imp_tm_dtl_max_yr_cp <- eventReactive(input$cp_go, {
+    imp_tm_dtl_max_yr_cp <- reactive({
       d <- df_dtl_cp() %>%
         filter(year == max(inp_cp_y())) %>% 
         pd_fix_section_and_aggregate(col = "trade_value_usd_imp")
@@ -634,7 +653,9 @@ shinyServer(
       
       wt_cp$close()
       return(out)
-    })
+    }) %>% 
+      bindCache(inp_cp_y(), inp_cp_r(), inp_cp_p(), inp_cp_convert_dollars()) %>% 
+      bindEvent(input$cp_go)
     
     # Product profile ----
     
@@ -642,7 +663,7 @@ shinyServer(
     
     ## Data ----
     
-    df_dtl_pp <- eventReactive(input$pp_go, {
+    df_dtl_pp <- reactive({
       wt_pp$start()
       
       d <- tbl(con, "yrpc") %>% 
@@ -682,7 +703,9 @@ shinyServer(
       wt_pp$inc(3)
       
       return(d)
-    })
+    }) %>% 
+      bindCache(inp_pp_y(), inp_pp_section_code(), inp_pp_convert_dollars()) %>% 
+      bindEvent(input$pp_go)
     
     ## Trade ----
     
@@ -794,7 +817,7 @@ shinyServer(
       glue("{ section_name_pp() } exchange in { min(inp_cp_y()) } and { max(inp_cp_y()) }")
     })
     
-    trd_exc_columns_pp <- eventReactive(input$pp_go, {
+    trd_exc_columns_pp <- reactive({
       d <- df_dtl_pp() %>% 
         group_by(year) %>% 
         summarise(
@@ -828,7 +851,9 @@ shinyServer(
         hc_yAxis(title = list(text = "USD billion"),
                  labels = list(formatter = JS("function() { return this.value / 1000000000 }"))) %>% 
         hc_title(text = trd_exc_columns_title_pp())
-    })
+    }) %>% 
+      bindCache(inp_pp_y(), inp_pp_section_code(), inp_pp_convert_dollars()) %>% 
+      bindEvent(input$pp_go)
     
     ## Exports ----
     
@@ -842,7 +867,7 @@ shinyServer(
       glue("{ min(inp_pp_y()) }")
     })
     
-    exp_tm_ori_min_yr_pp <- eventReactive(input$pp_go, {
+    exp_tm_ori_min_yr_pp <- reactive({
       d <- df_dtl_pp() %>%
         filter(year == min(year)) %>% 
         od_order_and_add_continent(col = "trade_value_usd_exp")
@@ -852,13 +877,15 @@ shinyServer(
       wt_pp$inc(1)
       
       od_to_highcharts(d, d2)
-    })
+    }) %>% 
+      bindCache(inp_pp_y(), inp_pp_section_code(), inp_pp_convert_dollars()) %>% 
+      bindEvent(input$pp_go)
     
     exp_tt_max_yr_pp <- eventReactive(input$pp_go, {
       glue("{ max(inp_pp_y()) }")
     })
     
-    exp_tm_ori_max_yr_pp <- eventReactive(input$pp_go, {
+    exp_tm_ori_max_yr_pp <- reactive({
       d <- df_dtl_pp() %>%
         filter(year == max(year)) %>% 
         od_order_and_add_continent(col = "trade_value_usd_exp")
@@ -868,7 +895,9 @@ shinyServer(
       wt_pp$inc(1)
       
       od_to_highcharts(d, d2)
-    })
+    }) %>% 
+      bindCache(inp_pp_y(), inp_pp_section_code(), inp_pp_convert_dollars()) %>% 
+      bindEvent(input$pp_go)
     
     ## Imports ----
     
@@ -882,7 +911,7 @@ shinyServer(
       glue("{ min(inp_pp_y()) }")
     })
     
-    imp_tm_ori_min_yr_pp <- eventReactive(input$pp_go, {
+    imp_tm_ori_min_yr_pp <- reactive({
       d <- df_dtl_pp() %>%
         filter(year == min(year)) %>% 
         od_order_and_add_continent(col = "trade_value_usd_imp")
@@ -892,13 +921,15 @@ shinyServer(
       wt_pp$inc(1)
       
       od_to_highcharts(d, d2)
-    })
+    }) %>% 
+      bindCache(inp_pp_y(), inp_pp_section_code(), inp_pp_convert_dollars()) %>% 
+      bindEvent(input$pp_go)
     
     imp_tt_max_yr_pp <- eventReactive(input$pp_go, {
       glue("{ max(inp_pp_y()) }")
     })
     
-    imp_tm_ori_max_yr_pp <- eventReactive(input$pp_go, {
+    imp_tm_ori_max_yr_pp <- reactive({
       d <- df_dtl_pp() %>%
         filter(year == max(year)) %>% 
         od_order_and_add_continent(col = "trade_value_usd_imp")
@@ -911,7 +942,9 @@ shinyServer(
       
       wt_pp$close()
       return(out)
-    })
+    }) %>% 
+      bindCache(inp_pp_y(), inp_pp_section_code(), inp_pp_convert_dollars()) %>% 
+      bindEvent(input$pp_go)
     
     # Model ----
   
