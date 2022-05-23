@@ -148,7 +148,7 @@ shinyServer(
     
     # Titles ----
     
-    reporter_add_the <- eventReactive(input$cp_go, {
+    r_add_the <- eventReactive(input$cp_go, {
       if (substr(rname_cp(), 1, 6) == "United" | 
           substr(rname_cp(), 1, 3) == "USA" |
           substr(rname_cp(), 1, 7) == "Russian") {
@@ -158,7 +158,7 @@ shinyServer(
       }
     })
     
-    reporter_add_proper_the <- eventReactive(input$cp_go, {
+    r_add_upp_the <- eventReactive(input$cp_go, {
       if (substr(rname_cp(), 1, 6) == "United" | 
           substr(rname_cp(), 1, 3) == "USA" |
           substr(rname_cp(), 1, 7) == "Russian") {
@@ -168,7 +168,7 @@ shinyServer(
       }
     })
     
-    partner_add_the <- eventReactive(input$cp_go, {
+    p_add_the <- eventReactive(input$cp_go, {
       if (substr(pname_cp(), 1, 6) == "United" | 
           substr(pname_cp(), 1, 3) == "USA" |
           substr(pname_cp(), 1, 7) == "Russian") {
@@ -181,16 +181,46 @@ shinyServer(
     title_cp <- eventReactive(input$cp_go, {
       switch(
         tbl_dtl_cp(),
-        "yrc" = glue("{ reporter_add_proper_the() } { rname_cp() } multilateral trade between { min(inp_cp_y()) } and { max(inp_cp_y()) }"),
-        "yrpc" = glue("{ reporter_add_proper_the() } { rname_cp() } and { partner_add_the() } { pname_cp() } trade between { min(inp_cp_y()) } and { max(inp_cp_y()) }")
+        "yrc" = glue("{ r_add_upp_the() } { rname_cp() } multilateral trade between { min(inp_cp_y()) } and { max(inp_cp_y()) }"),
+        "yrpc" = glue("{ r_add_upp_the() } { rname_cp() } and { p_add_the() } { pname_cp() } trade between { min(inp_cp_y()) } and { max(inp_cp_y()) }")
       )
+    })
+    
+    r1_add_proper_the <- eventReactive(input$cc_go, {
+      if (substr(r1name_cc(), 1, 6) == "United" | 
+          substr(r1name_cc(), 1, 3) == "USA" |
+          substr(r1name_cc(), 1, 7) == "Russian") {
+        "The"
+      } else {
+        ""
+      }
+    })
+    
+    r2_add_the <- eventReactive(input$cc_go, {
+      if (substr(r2name_cc(), 1, 6) == "United" | 
+          substr(r2name_cc(), 1, 3) == "USA" |
+          substr(r2name_cc(), 1, 7) == "Russian") {
+        "the"
+      } else {
+        ""
+      }
+    })
+    
+    p2_add_the <- eventReactive(input$cc_go, {
+      if (substr(pname_cc(), 1, 6) == "United" | 
+          substr(pname_cc(), 1, 3) == "USA" |
+          substr(pname_cc(), 1, 7) == "Russian") {
+        "the"
+      } else {
+        ""
+      }
     })
     
     title_cc <- eventReactive(input$cc_go, {
       switch(
         tbl_dtl_p_cc(),
-        "yrc" = glue("{ r1name_cc() } and { r2name_cc() } multilateral trade in { inp_cc_y() }"),
-        "yrpc" = glue("{ r1name_cc() } and { r2name_cc() } bilateral trade with { pname_cc() } in { inp_cc_y() }")
+        "yrc" = glue("{ r1_add_proper_the() } { r1name_cc() } and { r2_add_the() } { r2name_cc() } multilateral trade in { inp_cc_y() }"),
+        "yrpc" = glue("{ r1_add_proper_the() } { r1name_cc() } and { r2_add_the() } { r2name_cc() } bilateral trade with { p2_add_the() } { pname_cc() } in { inp_cc_y() }")
       )
     })
     
@@ -489,15 +519,15 @@ shinyServer(
     
     trd_smr_txt_exp_cp <- eventReactive(input$cp_go, {
       switch(table_agg_cp(),
-             "yr" = glue("The exports of { reporter_add_the() } { rname_cp() } to the World { exports_growth_increase_decrease_cp() } from 
+             "yr" = glue("The exports of { r_add_the() } { rname_cp() } to the World { exports_growth_increase_decrease_cp() } from 
                           { exp_val_min_yr_2_cp() } in { min(inp_cp_y()) } to { exp_val_max_yr_2_cp() } in { max(inp_cp_y()) } 
                           (annualized { exports_growth_increase_decrease_2_cp() } of { exports_growth_2_cp() })."),
              
-             "yrp" = glue("The exports of { reporter_add_the() } { rname_cp() } to { partner_add_the() } { pname_cp() } { exports_growth_increase_decrease_cp() } from 
+             "yrp" = glue("The exports of { r_add_the() } { rname_cp() } to { p_add_the() } { pname_cp() } { exports_growth_increase_decrease_cp() } from 
                           { exp_val_min_yr_2_cp() } in { min(inp_cp_y()) } 
                           to { exp_val_max_yr_2_cp() } in { max(inp_cp_y()) } (annualized { exports_growth_increase_decrease_2_cp() } of 
-                          { exports_growth_2_cp() }). { partner_add_the() } { pname_cp() } was the No. { trd_rankings_no_min_yr_cp() } trading partner of 
-                          { reporter_add_the() } { rname_cp() } in { min(inp_cp_y()) } (represented { trd_rankings_exp_share_min_yr_2_cp() } of its exports), and 
+                          { exports_growth_2_cp() }). { p_add_the() } { pname_cp() } was the No. { trd_rankings_no_min_yr_cp() } trading partner of 
+                          { r_add_the() } { rname_cp() } in { min(inp_cp_y()) } (represented { trd_rankings_exp_share_min_yr_2_cp() } of its exports), and 
                           then { trd_rankings_remained_cp() } No. { trd_rankings_no_max_yr_cp() } in { max(inp_cp_y()) } (represented { trd_rankings_exp_share_max_yr_2_cp() } 
                           of its exports).")
       )
@@ -505,15 +535,15 @@ shinyServer(
     
     trd_smr_txt_imp_cp <- eventReactive(input$cp_go, {
       switch(table_agg_cp(),
-             "yr" = glue("The imports of { reporter_add_the() } { rname_cp() } to the World { imports_growth_increase_decrease_cp() } from 
+             "yr" = glue("The imports of { r_add_the() } { rname_cp() } to the World { imports_growth_increase_decrease_cp() } from 
                          { imp_val_min_yr_2_cp() } in { min(inp_cp_y()) } to { imp_val_max_yr_2_cp() } in { max(inp_cp_y()) } 
                          (annualized { imports_growth_increase_decrease_2_cp() } of { imports_growth_2_cp() })."),
              
-             "yrp" = glue("The imports of { reporter_add_the() } { rname_cp() } to { partner_add_the() } { pname_cp() } { imports_growth_increase_decrease_cp() } from 
+             "yrp" = glue("The imports of { r_add_the() } { rname_cp() } to { p_add_the() } { pname_cp() } { imports_growth_increase_decrease_cp() } from 
                           { imp_val_min_yr_2_cp() } in { min(inp_cp_y()) } 
                           to { imp_val_max_yr_2_cp() } in { max(inp_cp_y()) } (annualized { imports_growth_increase_decrease_2_cp() } of 
-                          { imports_growth_2_cp() }). { partner_add_the() } { pname_cp() } was the No. { trd_rankings_no_min_yr_cp() } trading partner of 
-                          { reporter_add_the() } { rname_cp() } in { min(inp_cp_y()) } (represented { trd_rankings_imp_share_min_yr_2_cp() } of its imports), and 
+                          { imports_growth_2_cp() }). { p_add_the() } { pname_cp() } was the No. { trd_rankings_no_min_yr_cp() } trading partner of 
+                          { r_add_the() } { rname_cp() } in { min(inp_cp_y()) } (represented { trd_rankings_imp_share_min_yr_2_cp() } of its imports), and 
                           then { trd_rankings_remained_cp() } No. { trd_rankings_no_max_yr_cp() } in { max(inp_cp_y()) } (represented { trd_rankings_imp_share_max_yr_2_cp() } 
                           of its imports).")
       )
@@ -521,8 +551,8 @@ shinyServer(
 
     trd_exc_lines_title_cp <- eventReactive(input$cp_go, {
       switch(table_agg_cp(),
-             "yr" = glue("{ reporter_add_proper_the() } { rname_cp() } multilateral trade between { min(inp_cp_y()) } and { max(inp_cp_y()) }"),
-             "yrp" = glue("{ reporter_add_proper_the() } { rname_cp() } and { partner_add_the() } { pname_cp() } exchange between { min(inp_cp_y()) } and { max(inp_cp_y()) }")
+             "yr" = glue("{ r_add_upp_the() } { rname_cp() } multilateral trade between { min(inp_cp_y()) } and { max(inp_cp_y()) }"),
+             "yrp" = glue("{ r_add_upp_the() } { rname_cp() } and { p_add_the() } { pname_cp() } exchange between { min(inp_cp_y()) } and { max(inp_cp_y()) }")
       )
     })
     
@@ -589,8 +619,8 @@ shinyServer(
     exp_tt_yr_cp <- eventReactive(input$cp_go, {
       switch(
         tbl_dtl_cp(),
-        "yrc" = glue("Exports of { reporter_add_the() } { rname_cp() } to the rest of the World in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product"),
-        "yrpc" = glue("Exports of { reporter_add_the() } { rname_cp() } to { partner_add_the() } { pname_cp() } in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product")
+        "yrc" = glue("Exports of { r_add_the() } { rname_cp() } to the rest of the World in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product"),
+        "yrpc" = glue("Exports of { r_add_the() } { rname_cp() } to { p_add_the() } { pname_cp() } in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product")
       )
     })
     
@@ -635,8 +665,8 @@ shinyServer(
     imp_tt_yr_cp <- eventReactive(input$cp_go, {
       switch(
         tbl_dtl_cp(),
-        "yrc" = glue("Imports of { reporter_add_the() } { rname_cp() } from the rest of the World in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product"),
-        "yrpc" = glue("Imports of { reporter_add_the() } { rname_cp() } from { partner_add_the() } { pname_cp() } in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product")
+        "yrc" = glue("Imports of { r_add_the() } { rname_cp() } from the rest of the World in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product"),
+        "yrpc" = glue("Imports of { r_add_the() } { rname_cp() } from { p_add_the() } { pname_cp() } in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product")
       )
     })
     
