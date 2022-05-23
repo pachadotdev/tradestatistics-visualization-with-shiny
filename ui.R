@@ -16,6 +16,8 @@ shinyUI(
 
           menuItem("Country profile", tabName = "cp"),
           
+          menuItem("Compare countries", tabName = "cc", badgeLabel = "new", badgeColor = "green"),
+          
           menuItem("Product profile", tabName = "pp", badgeLabel = "new", badgeColor = "green"),
           
           # THIS IS NOT READY
@@ -169,10 +171,151 @@ shinyUI(
             column(
               12,
               htmlOutput("dwn_cp_stl", container = tags$h2),
-              htmlOutput("dwn_cp_text", container = tags$p),
-              uiOutput("dwn_cp_format"),
-              uiOutput("dwn_cp_aggregated"),
+              htmlOutput("dwn_cp_txt", container = tags$p),
+              uiOutput("dwn_cp_fmt"),
+              uiOutput("dwn_cp_agg"),
               uiOutput("dwn_cp_dtl")
+            )
+          ),
+          
+          tabItem(
+            tabName = "cc",
+            
+            # Compare Countries ----
+            
+            useWaitress(),
+            
+            column(
+              12,
+              HTML("<h1>Compare Countries</h1>"),
+              htmlOutput("title_cc_legend", container = tags$p)
+            ),
+            
+            column(
+              12,
+              h2("Filter")
+            ),
+            
+            column(
+              12,
+              sliderInput(
+                "cc_y",
+                "Years:",
+                min = available_yrs_min,
+                max = available_yrs_max,
+                value = 2019,
+                sep = "",
+                step = 1,
+                ticks = FALSE,
+                width = "100%"
+              )
+            ),
+            
+            column(
+              3,
+              selectInput(
+                "cc_r1",
+                "Reporter 1:",
+                choices = available_reporters_iso[available_reporters_iso != "all"],
+                selected = "can",
+                selectize = TRUE,
+                width = "100%"
+              )
+            ),
+            
+            column(
+              3,
+              selectInput(
+                "cc_r2",
+                "Reporter 2:",
+                choices = available_reporters_iso[available_reporters_iso != "all"],
+                selected = "can",
+                selectize = TRUE,
+                width = "100%"
+              )
+            ),
+            
+            column(
+              3,
+              selectInput(
+                "cc_p",
+                "Partner:",
+                choices = available_reporters_iso,
+                selected = "",
+                selectize = TRUE,
+                width = "100%"
+              )
+            ),
+            
+            column(
+              3,
+              selectInput(
+                "cc_a",
+                "Convert to constant dollars of the year:",
+                choices = c("No conversion", 2000:2019),
+                selected = "",
+                selectize = TRUE,
+                width = "100%"
+              )
+            ),
+            
+            column(
+              12,
+              align="center",
+              actionButton("cc_go", "Give me the country comparison",
+                           class = "btn-primary")
+            ),
+            
+            column(
+              12,
+              htmlOutput("title_cc", container = tags$h1)
+            ),
+            
+            ## Detailed trade ----
+            
+            column(
+              12,
+              htmlOutput("exp_tt_yr_cc", container = tags$h2)
+            ),
+            
+            column(
+              6,
+              htmlOutput("exp_tt_r1_yr_cc", container = tags$h3),
+              highchartOutput("exp_tm_dtl_r1_yr_cc", height = "500px")
+            ),
+            
+            column(
+              6,
+              htmlOutput("exp_tt_r2_yr_cc", container = tags$h3),
+              highchartOutput("exp_tm_dtl_r2_yr_cc", height = "500px")
+            ),
+            
+            column(
+              12,
+              htmlOutput("imp_tt_yr_cc", container = tags$h2)
+            ),
+            
+            column(
+              6,
+              htmlOutput("imp_tt_r1_yr_cc", container = tags$h3),
+              highchartOutput("imp_tm_dtl_r1_yr_cc", height = "500px")
+            ),
+            
+            column(
+              6,
+              htmlOutput("imp_tt_r2_yr_cc", container = tags$h3),
+              highchartOutput("imp_tm_dtl_r2_yr_cc", height = "500px")
+            ),
+            
+            ## Download ----
+            
+            column(
+              12,
+              htmlOutput("dwn_cc_stl", container = tags$h2),
+              htmlOutput("dwn_cc_text", container = tags$p),
+              uiOutput("dwn_cc_fmt"),
+              uiOutput("dwn_cc_agg"),
+              uiOutput("dwn_cc_dtl")
             )
           ),
           
@@ -290,9 +433,9 @@ shinyUI(
             column(
               12,
               htmlOutput("dwn_pp_stl", container = tags$h2),
-              htmlOutput("dwn_pp_text", container = tags$p),
-              uiOutput("dwn_pp_format"),
-              uiOutput("dwn_pp_aggregated"),
+              htmlOutput("dwn_pp_txt", container = tags$p),
+              uiOutput("dwn_pp_fmt"),
+              uiOutput("dwn_pp_agg"),
               uiOutput("dwn_pp_dtl")
             )
           ),
@@ -515,10 +658,10 @@ shinyUI(
             column(
               12,
               htmlOutput("md_data_stl", container = tags$h2),
-              htmlOutput("data_dtl_md_text", container = tags$p),
+              htmlOutput("data_dtl_md_txt", container = tags$p),
               tableOutput("data_dtl_md_preview"),
               htmlOutput("md_smr_stl", container = tags$h2),
-              htmlOutput("md_smr_text", container = tags$p),
+              htmlOutput("md_smr_txt", container = tags$p),
               tableOutput("md_smr_tidy"),
               tableOutput("md_smr_glance")
             ),
@@ -528,8 +671,8 @@ shinyUI(
             column(
               12,
               htmlOutput("dwn_md_stl", container = tags$h2),
-              htmlOutput("dwn_md_text", container = tags$p),
-              uiOutput("dwn_md_format"),
+              htmlOutput("dwn_md_txt", container = tags$p),
+              uiOutput("dwn_md_fmt"),
               uiOutput("dwn_md_dtl"),
               uiOutput("dwn_md_fit")
             )

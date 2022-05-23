@@ -27,20 +27,50 @@ shinyServer(
       ifelse(inp_cp_p() == "all", "yrc", "yrpc")
     })
     
-    reporter_name <- eventReactive(input$cp_go, {
+    rname_cp <- eventReactive(input$cp_go, {
       reporters_to_display %>%
         filter(available_reporters_iso == inp_cp_r()) %>%
         select(available_reporters_names) %>%
         as.character()
     })
     
-    partner_name <- eventReactive(input$cp_go, {
+    pname_cp <- eventReactive(input$cp_go, {
       reporters_to_display %>%
         filter(available_reporters_iso == inp_cp_p()) %>%
         select(available_reporters_names) %>%
         as.character()
     })
     
+    ## Compare countries ----
+    
+    inp_cc_y <- reactive({ input$cc_y })
+    
+    inp_cc_r1 <- reactive({ input$cc_r1 })
+    inp_cc_r2 <- reactive({ input$cc_r2 })
+    inp_cc_p <- reactive({ input$cc_p })
+
+    inp_cc_f <- reactive({ input$cc_f })
+    
+    inp_cc_convert_dollars <- reactive({ input$cc_a })
+    
+    tbl_dtl_r1_cc <- eventReactive(input$cc_go, {
+      ifelse(inp_cc_p() == "all", "yrc", "yrpc")
+    })
+    
+    r1name_cc <- eventReactive(input$cc_go, {
+      reporters_to_display %>%
+        filter(available_reporters_iso == inp_cc_r1()) %>%
+        select(available_reporters_names) %>%
+        as.character()
+    })
+    
+    r2name_cc <- eventReactive(input$cc_go, {
+      reporters_to_display %>%
+        filter(available_reporters_iso == inp_cc_r2()) %>%
+        select(available_reporters_names) %>%
+        as.character()
+    })
+
     ## Product profile ----
     
     updateSelectizeInput(
@@ -112,9 +142,9 @@ shinyServer(
     # Titles ----
     
     reporter_add_the <- eventReactive(input$cp_go, {
-      if (substr(reporter_name(), 1, 6) == "United" | 
-          substr(reporter_name(), 1, 3) == "USA" |
-          substr(reporter_name(), 1, 7) == "Russian") {
+      if (substr(rname_cp(), 1, 6) == "United" | 
+          substr(rname_cp(), 1, 3) == "USA" |
+          substr(rname_cp(), 1, 7) == "Russian") {
         "the"
       } else {
         ""
@@ -122,9 +152,9 @@ shinyServer(
     })
     
     reporter_add_proper_the <- eventReactive(input$cp_go, {
-      if (substr(reporter_name(), 1, 6) == "United" | 
-          substr(reporter_name(), 1, 3) == "USA" |
-          substr(reporter_name(), 1, 7) == "Russian") {
+      if (substr(rname_cp(), 1, 6) == "United" | 
+          substr(rname_cp(), 1, 3) == "USA" |
+          substr(rname_cp(), 1, 7) == "Russian") {
         "The"
       } else {
         ""
@@ -132,9 +162,9 @@ shinyServer(
     })
     
     partner_add_the <- eventReactive(input$cp_go, {
-      if (substr(partner_name(), 1, 6) == "United" | 
-          substr(partner_name(), 1, 3) == "USA" |
-          substr(partner_name(), 1, 7) == "Russian") {
+      if (substr(pname_cp(), 1, 6) == "United" | 
+          substr(pname_cp(), 1, 3) == "USA" |
+          substr(pname_cp(), 1, 7) == "Russian") {
         "the"
       } else {
         ""
@@ -144,8 +174,16 @@ shinyServer(
     title_cp <- eventReactive(input$cp_go, {
       switch(
         tbl_dtl_cp(),
-        "yrc" = glue("{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(inp_cp_y()) } and { max(inp_cp_y()) }"),
-        "yrpc" = glue("{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } between { min(inp_cp_y()) } and { max(inp_cp_y()) }")
+        "yrc" = glue("{ reporter_add_proper_the() } { rname_cp() } multilateral trade between { min(inp_cp_y()) } and { max(inp_cp_y()) }"),
+        "yrpc" = glue("{ reporter_add_proper_the() } { rname_cp() } and { partner_add_the() } { pname_cp() } between { min(inp_cp_y()) } and { max(inp_cp_y()) }")
+      )
+    })
+    
+    title_cc <- eventReactive(input$cc_go, {
+      switch(
+        tbl_dtl_r1_cc(),
+        "yrc" = glue("{ r1name_cc() } multilateral trade in { inp_cc_y() }"),
+        "yrpc" = glue("{ r1name_cc() } and { p1name_cc() } in { inp_cp_y() }")
       )
     })
     
@@ -442,33 +480,33 @@ shinyServer(
     
     ### Text/Visual elements ----
     
-    trd_smr_text_exp_cp <- eventReactive(input$cp_go, {
+    trd_smr_txt_exp_cp <- eventReactive(input$cp_go, {
       switch(table_agg_cp(),
-             "yr" = glue("The exports of { reporter_add_the() } { reporter_name() } to the World { exports_growth_increase_decrease_cp() } from 
+             "yr" = glue("The exports of { reporter_add_the() } { rname_cp() } to the World { exports_growth_increase_decrease_cp() } from 
                           { exp_val_min_yr_2_cp() } in { min(inp_cp_y()) } to { exp_val_max_yr_2_cp() } in { max(inp_cp_y()) } 
                           (annualized { exports_growth_increase_decrease_2_cp() } of { exports_growth_2_cp() })."),
              
-             "yrp" = glue("The exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { exports_growth_increase_decrease_cp() } from 
+             "yrp" = glue("The exports of { reporter_add_the() } { rname_cp() } to { partner_add_the() } { pname_cp() } { exports_growth_increase_decrease_cp() } from 
                           { exp_val_min_yr_2_cp() } in { min(inp_cp_y()) } 
                           to { exp_val_max_yr_2_cp() } in { max(inp_cp_y()) } (annualized { exports_growth_increase_decrease_2_cp() } of 
-                          { exports_growth_2_cp() }). { partner_add_the() } { partner_name() } was the No. { trd_rankings_no_min_yr_cp() } trading partner of 
-                          { reporter_add_the() } { reporter_name() } in { min(inp_cp_y()) } (represented { trd_rankings_exp_share_min_yr_2_cp() } of its exports), and 
+                          { exports_growth_2_cp() }). { partner_add_the() } { pname_cp() } was the No. { trd_rankings_no_min_yr_cp() } trading partner of 
+                          { reporter_add_the() } { rname_cp() } in { min(inp_cp_y()) } (represented { trd_rankings_exp_share_min_yr_2_cp() } of its exports), and 
                           then { trd_rankings_remained_cp() } No. { trd_rankings_no_max_yr_cp() } in { max(inp_cp_y()) } (represented { trd_rankings_exp_share_max_yr_2_cp() } 
                           of its exports).")
       )
     })
     
-    trd_smr_text_imp_cp <- eventReactive(input$cp_go, {
+    trd_smr_txt_imp_cp <- eventReactive(input$cp_go, {
       switch(table_agg_cp(),
-             "yr" = glue("The imports of { reporter_add_the() } { reporter_name() } to the World { imports_growth_increase_decrease_cp() } from 
+             "yr" = glue("The imports of { reporter_add_the() } { rname_cp() } to the World { imports_growth_increase_decrease_cp() } from 
                          { imp_val_min_yr_2_cp() } in { min(inp_cp_y()) } to { imp_val_max_yr_2_cp() } in { max(inp_cp_y()) } 
                          (annualized { imports_growth_increase_decrease_2_cp() } of { imports_growth_2_cp() })."),
              
-             "yrp" = glue("The imports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } { imports_growth_increase_decrease_cp() } from 
+             "yrp" = glue("The imports of { reporter_add_the() } { rname_cp() } to { partner_add_the() } { pname_cp() } { imports_growth_increase_decrease_cp() } from 
                           { imp_val_min_yr_2_cp() } in { min(inp_cp_y()) } 
                           to { imp_val_max_yr_2_cp() } in { max(inp_cp_y()) } (annualized { imports_growth_increase_decrease_2_cp() } of 
-                          { imports_growth_2_cp() }). { partner_add_the() } { partner_name() } was the No. { trd_rankings_no_min_yr_cp() } trading partner of 
-                          { reporter_add_the() } { reporter_name() } in { min(inp_cp_y()) } (represented { trd_rankings_imp_share_min_yr_2_cp() } of its imports), and 
+                          { imports_growth_2_cp() }). { partner_add_the() } { pname_cp() } was the No. { trd_rankings_no_min_yr_cp() } trading partner of 
+                          { reporter_add_the() } { rname_cp() } in { min(inp_cp_y()) } (represented { trd_rankings_imp_share_min_yr_2_cp() } of its imports), and 
                           then { trd_rankings_remained_cp() } No. { trd_rankings_no_max_yr_cp() } in { max(inp_cp_y()) } (represented { trd_rankings_imp_share_max_yr_2_cp() } 
                           of its imports).")
       )
@@ -476,8 +514,8 @@ shinyServer(
 
     trd_exc_lines_title_cp <- eventReactive(input$cp_go, {
       switch(table_agg_cp(),
-             "yr" = glue("{ reporter_add_proper_the() } { reporter_name() } multilateral trade between { min(inp_cp_y()) } and { max(inp_cp_y()) }"),
-             "yrp" = glue("{ reporter_add_proper_the() } { reporter_name() } and { partner_add_the() } { partner_name() } exchange between { min(inp_cp_y()) } and { max(inp_cp_y()) }")
+             "yr" = glue("{ reporter_add_proper_the() } { rname_cp() } multilateral trade between { min(inp_cp_y()) } and { max(inp_cp_y()) }"),
+             "yrp" = glue("{ reporter_add_proper_the() } { rname_cp() } and { partner_add_the() } { pname_cp() } exchange between { min(inp_cp_y()) } and { max(inp_cp_y()) }")
       )
     })
     
@@ -518,7 +556,7 @@ shinyServer(
     
     ### Tables ----
     
-    exports_imports_table_origin_destination_yr_cp <- reactive({
+    exp_imp_tbl_od_yr_cp <- reactive({
       min_max_y <- c(min(inp_cp_y()), max(inp_cp_y()))
       
       d <- tbl(con, "yrp") %>% 
@@ -544,8 +582,8 @@ shinyServer(
     exp_tt_yr_cp <- eventReactive(input$cp_go, {
       switch(
         tbl_dtl_cp(),
-        "yrc" = glue("Exports of { reporter_add_the() } { reporter_name() } to the rest of the World in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product"),
-        "yrpc" = glue("Exports of { reporter_add_the() } { reporter_name() } to { partner_add_the() } { partner_name() } in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product")
+        "yrc" = glue("Exports of { reporter_add_the() } { rname_cp() } to the rest of the World in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product"),
+        "yrpc" = glue("Exports of { reporter_add_the() } { rname_cp() } to { partner_add_the() } { pname_cp() } in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product")
       )
     })
     
@@ -590,26 +628,14 @@ shinyServer(
     imp_tt_yr_cp <- eventReactive(input$cp_go, {
       switch(
         tbl_dtl_cp(),
-        "yrc" = glue("Imports of { reporter_add_the() } { reporter_name() } from the rest of the World in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product"),
-        "yrpc" = glue("Imports of { reporter_add_the() } { reporter_name() } from { partner_add_the() } { partner_name() } in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product")
+        "yrc" = glue("Imports of { reporter_add_the() } { rname_cp() } from the rest of the World in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product"),
+        "yrpc" = glue("Imports of { reporter_add_the() } { rname_cp() } from { partner_add_the() } { pname_cp() } in { min(inp_cp_y()) } and { max(inp_cp_y()) }, by product")
       )
     })
     
     imp_tt_min_yr_cp <- eventReactive(input$cp_go, {
       glue("{ min(inp_cp_y()) }")
     })
-    
-    imp_tm_ori_min_yr_cp <- reactive({
-      d <- exports_imports_table_origin_destination_yr_cp() %>%
-        filter(year == min(year)) %>% 
-        od_order_and_add_continent(col = "trade_value_usd_imp")
-      
-      d2 <- od_colors(d)
-      
-      od_to_highcharts(d, d2)
-    }) %>% 
-      bindCache(inp_cp_y(), inp_cp_r(), inp_cp_p(), inp_cp_convert_dollars()) %>% 
-      bindEvent(input$cp_go)
     
     imp_tm_dtl_min_yr_cp <- reactive({
       d <- df_dtl_cp() %>%
@@ -627,18 +653,6 @@ shinyServer(
       glue("{ max(inp_cp_y()) }")
     })
     
-    imp_tm_ori_max_yr_cp <- reactive({
-      d <- exports_imports_table_origin_destination_yr_cp() %>%
-        filter(year == max(year)) %>% 
-        od_order_and_add_continent(col = "trade_value_usd_imp")
-      
-      d2 <- od_colors(d)
-      
-      od_to_highcharts(d, d2)
-    }) %>% 
-      bindCache(inp_cp_y(), inp_cp_r(), inp_cp_p(), inp_cp_convert_dollars()) %>% 
-      bindEvent(input$cp_go)
-    
     imp_tm_dtl_max_yr_cp <- reactive({
       d <- df_dtl_cp() %>%
         filter(year == max(inp_cp_y())) %>% 
@@ -655,6 +669,10 @@ shinyServer(
     }) %>% 
       bindCache(inp_cp_y(), inp_cp_r(), inp_cp_p(), inp_cp_convert_dollars()) %>% 
       bindEvent(input$cp_go)
+    
+    # Compare countries ----
+    
+    
     
     # Product profile ----
     
@@ -800,13 +818,13 @@ shinyServer(
     
     ### Text/Visual elements ----
     
-    trd_smr_text_exp_pp <- eventReactive(input$pp_go, {
+    trd_smr_txt_exp_pp <- eventReactive(input$pp_go, {
       glue("The exports of { section_name_pp() } { exports_growth_increase_decrease_pp() } from 
                           { exp_val_min_yr_2_pp() } in { min(inp_pp_y()) } to { exp_val_max_yr_2_pp() } in { max(inp_pp_y()) } 
                           (annualized { exports_growth_increase_decrease_2_pp() } of { exports_growth_2_pp() }).")
     })
     
-    trd_smr_text_imp_pp <- eventReactive(input$pp_go, {
+    trd_smr_txt_imp_pp <- eventReactive(input$pp_go, {
       glue("The imports of { section_name_pp() } { imports_growth_increase_decrease_pp() } from 
                           { imp_val_min_yr_2_pp() } in { min(inp_pp_y()) } to { imp_val_max_yr_2_pp() } in { max(inp_pp_y()) } 
                           (annualized { imports_growth_increase_decrease_2_pp() } of { imports_growth_2_pp() }).")
@@ -1196,7 +1214,7 @@ shinyServer(
       )
     })
     
-    df_dtl_md_text <- eventReactive(input$md_go, { 
+    df_dtl_md_txt <- eventReactive(input$md_go, { 
       glue("The filtered dataset contains { nrow(df_dtl_md()) } rows and
            { ncol(df_dtl_md()) } columns. Here's a preview of the table to use to fit regression mds:")
     })
@@ -1387,21 +1405,18 @@ shinyServer(
     
     ## Titles ----
     
-    output$title_cp <- renderText({
-      title_cp()
-    })
-    
-    output$title_pp <- renderText({
-      title_pp()
-    })
+    output$title_cp <- renderText({ title_cp() })
+    output$title_cc <- renderText({ title_cc() })
+    output$title_pp <- renderText({ title_pp() })
     
     # put here to avoid repetition in UI
-    legend_text <- "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
+    legend_txt <- "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
       of restrictions and applicable licenses. These figures do not include services or foreign direct investment."
     
-    output$title_cp_legend <- renderText({ legend_text })
-    output$title_pp_legend <- renderText({ legend_text })
-    output$title_md_legend <- renderText({ legend_text })
+    output$title_cp_legend <- renderText({ legend_txt })
+    output$title_cc_legend <- renderText({ legend_txt })
+    output$title_pp_legend <- renderText({ legend_txt })
+    output$title_md_legend <- renderText({ legend_txt })
     
     ## Country profile ----
     
@@ -1423,8 +1438,8 @@ shinyServer(
       "Imports"
     })
     
-    output$trd_smr_exp_cp <- renderText(trd_smr_text_exp_cp())
-    output$trd_smr_imp_cp <- renderText(trd_smr_text_imp_cp())
+    output$trd_smr_exp_cp <- renderText(trd_smr_txt_exp_cp())
+    output$trd_smr_imp_cp <- renderText(trd_smr_txt_imp_cp())
     
     output$trd_exc_lines_agg_cp <- renderHighchart({
       trd_exc_lines_agg_cp()
@@ -1446,6 +1461,10 @@ shinyServer(
     output$imp_tt_max_yr_cp <- renderText(imp_tt_max_yr_cp())
     output$imp_tm_dtl_max_yr_cp <- renderHighchart({imp_tm_dtl_max_yr_cp()})
     
+    ## Compare countries ----
+    
+    
+    
     ## Product profile ----
     
     output$trd_stl_pp <- eventReactive(input$pp_go, {
@@ -1460,8 +1479,8 @@ shinyServer(
       "Imports"
     })
     
-    output$trd_smr_exp_pp <- renderText(trd_smr_text_exp_pp())
-    output$trd_smr_imp_pp <- renderText(trd_smr_text_imp_pp())
+    output$trd_smr_exp_pp <- renderText(trd_smr_txt_exp_pp())
+    output$trd_smr_imp_pp <- renderText(trd_smr_txt_imp_pp())
     
     output$trd_exc_columns_pp <- renderHighchart({
       trd_exc_columns_pp()
@@ -1482,7 +1501,7 @@ shinyServer(
     ## Model ----
     
     output$md_df_stl <- eventReactive(input$md_go, { "Data preview" })
-    output$df_dtl_md_text <- renderText(df_dtl_md_text())
+    output$df_dtl_md_txt <- renderText(df_dtl_md_txt())
     output$df_dtl_md_preview <- renderTable(df_dtl_md_preview())
     
     output$md_formula_latex <- renderUI({
@@ -1550,7 +1569,7 @@ shinyServer(
     })
     
     output$md_smr_stl <- eventReactive(input$md_go, { "Model summary" })
-    output$md_smr_text <- eventReactive(input$md_go, { 
+    output$md_smr_txt <- eventReactive(input$md_go, { 
       "WIP: some selections create errors messages such as 'contrasts can be applied only to factors with 2 or more levels' but Shiny hides those."
     })
     output$md_smr_tidy <- renderTable(tidy(md_output()))
@@ -1564,11 +1583,11 @@ shinyServer(
       "Download country profile data"
     })
     
-    dwn_cp_text <- eventReactive(input$cp_go, {
+    dwn_cp_txt <- eventReactive(input$cp_go, {
       "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
     })
     
-    dwn_cp_f <- eventReactive(input$cp_go, {
+    dwn_cp_fmt <- eventReactive(input$cp_go, {
       selectInput(
         "cp_f",
         "Download data as:",
@@ -1599,9 +1618,9 @@ shinyServer(
     )
     
     output$dwn_cp_stl <- renderText({dwn_cp_stl()})
-    output$dwn_cp_text <- renderText({dwn_cp_text()})
-    output$dwn_cp_f <- renderUI({dwn_cp_f()})
-    output$dwn_cp_aggregated <- renderUI({
+    output$dwn_cp_txt <- renderText({dwn_cp_txt()})
+    output$dwn_cp_fmt <- renderUI({dwn_cp_fmt()})
+    output$dwn_cp_agg <- renderUI({
       req(input$cp_go)
       downloadButton('dwn_cp_agg_pre', label = 'Aggregated data')
     })
@@ -1616,11 +1635,11 @@ shinyServer(
       "Download product profile data"
     })
     
-    dwn_pp_text <- eventReactive(input$pp_go, {
+    dwn_pp_txt <- eventReactive(input$pp_go, {
       "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
     })
     
-    dwn_pp_f <- eventReactive(input$pp_go, {
+    dwn_pp_fmt <- eventReactive(input$pp_go, {
       selectInput(
         "pp_f",
         "Download data as:",
@@ -1641,9 +1660,9 @@ shinyServer(
     )
     
     output$dwn_pp_stl <- renderText({dwn_pp_stl()})
-    output$dwn_pp_text <- renderText({dwn_pp_text()})
-    output$dwn_pp_f <- renderUI({dwn_pp_f()})
-    output$dwn_pp_aggregated <- renderUI({
+    output$dwn_pp_txt <- renderText({dwn_pp_txt()})
+    output$dwn_pp_fmt <- renderUI({dwn_pp_fmt()})
+    output$dwn_pp_agg <- renderUI({
       req(input$pp_go)
       downloadButton('dwn_pp_pre', label = 'Aggregated data')
     })
@@ -1652,11 +1671,11 @@ shinyServer(
     
     dwn_md_stl <- eventReactive(input$md_go, { "Download model data" })
     
-    dwn_md_text <- eventReactive(input$md_go, {
+    dwn_md_txt <- eventReactive(input$md_go, {
       "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
     })
     
-    dwn_md_f <- eventReactive(input$md_go, {
+    dwn_md_fmt <- eventReactive(input$md_go, {
       selectInput(
         "md_f",
         "Download data as:",
@@ -1687,8 +1706,8 @@ shinyServer(
     )
     
     output$dwn_md_stl <- renderText({dwn_md_stl()})
-    output$dwn_md_text <- renderText({dwn_md_text()})
-    output$dwn_md_f <- renderUI({dwn_md_f()})
+    output$dwn_md_txt <- renderText({dwn_md_txt()})
+    output$dwn_md_fmt <- renderUI({dwn_md_fmt()})
     output$dwn_md_dtl <- renderUI({
       req(input$md_go)
       downloadButton('dwn_md_dtl_pre', label = 'Detailed data')
@@ -1729,7 +1748,7 @@ shinyServer(
       # strip shiny related URL parameters
       reactiveValuesToList(input)
       setBookmarkExclude(c(
-        "md_own", "md_f", "cp_f", "go", "sidebarCollapsed", "sidebarItemExpanded"
+        "md_own", "md_f", "cp_f", "cc_f", "go", "sidebarCollapsed", "sidebarItemExpanded"
       ))
       session$doBookmark()
     })
