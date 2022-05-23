@@ -180,22 +180,22 @@ shinyUI(
           
           tabItem(
             tabName = "cc",
-            
+
             # Compare Countries ----
-            
-            useWaitress(),
-            
+
+            # useWaitress(),
+
             column(
               12,
               HTML("<h1>Compare Countries</h1>"),
               htmlOutput("title_cc_legend", container = tags$p)
             ),
-            
+
             column(
               12,
               h2("Filter")
             ),
-            
+
             column(
               12,
               sliderInput(
@@ -210,7 +210,7 @@ shinyUI(
                 width = "100%"
               )
             ),
-            
+
             column(
               3,
               selectInput(
@@ -222,7 +222,7 @@ shinyUI(
                 width = "100%"
               )
             ),
-            
+
             column(
               3,
               selectInput(
@@ -234,7 +234,7 @@ shinyUI(
                 width = "100%"
               )
             ),
-            
+
             column(
               3,
               selectInput(
@@ -246,7 +246,7 @@ shinyUI(
                 width = "100%"
               )
             ),
-            
+
             column(
               3,
               selectInput(
@@ -258,65 +258,65 @@ shinyUI(
                 width = "100%"
               )
             ),
-            
+
             column(
               12,
               align="center",
               actionButton("cc_go", "Give me the country comparison",
                            class = "btn-primary")
             ),
-            
+
             column(
               12,
               htmlOutput("title_cc", container = tags$h1)
             ),
-            
+
             ## Detailed trade ----
+
+            column(
+              12,
+              htmlOutput("trd_stl_exp_cc", container = tags$h2)
+            ),
+            
+            column(
+              6,
+              htmlOutput("exp_tt_yr_r1_cc", container = tags$h3),
+              highchartOutput("exp_tm_dtl_yr_r1_cc", height = "500px")
+            ),
+
+            column(
+              6,
+              htmlOutput("exp_tt_yr_r2_cc", container = tags$h3),
+              highchartOutput("exp_tm_dtl_yr_r2_cc", height = "500px")
+            ),
             
             column(
               12,
-              htmlOutput("exp_tt_yr_cc", container = tags$h2)
+              htmlOutput("trd_stl_imp_cc", container = tags$h2)
             ),
             
             column(
               6,
-              htmlOutput("exp_tt_r1_yr_cc", container = tags$h3),
-              highchartOutput("exp_tm_dtl_r1_yr_cc", height = "500px")
+              htmlOutput("imp_tt_yr_r1_cc", container = tags$h3),
+              highchartOutput("imp_tm_dtl_yr_r1_cc", height = "500px")
             ),
             
             column(
               6,
-              htmlOutput("exp_tt_r2_yr_cc", container = tags$h3),
-              highchartOutput("exp_tm_dtl_r2_yr_cc", height = "500px")
+              htmlOutput("imp_tt_yr_r2_cc", container = tags$h3),
+              highchartOutput("imp_tm_dtl_yr_r2_cc", height = "500px")
             ),
-            
-            column(
-              12,
-              htmlOutput("imp_tt_yr_cc", container = tags$h2)
-            ),
-            
-            column(
-              6,
-              htmlOutput("imp_tt_r1_yr_cc", container = tags$h3),
-              highchartOutput("imp_tm_dtl_r1_yr_cc", height = "500px")
-            ),
-            
-            column(
-              6,
-              htmlOutput("imp_tt_r2_yr_cc", container = tags$h3),
-              highchartOutput("imp_tm_dtl_r2_yr_cc", height = "500px")
-            ),
-            
+
             ## Download ----
-            
-            column(
-              12,
-              htmlOutput("dwn_cc_stl", container = tags$h2),
-              htmlOutput("dwn_cc_text", container = tags$p),
-              uiOutput("dwn_cc_fmt"),
-              uiOutput("dwn_cc_agg"),
-              uiOutput("dwn_cc_dtl")
-            )
+
+            # column(
+            #   12,
+            #   htmlOutput("dwn_cc_stl", container = tags$h2),
+            #   htmlOutput("dwn_cc_text", container = tags$p),
+            #   uiOutput("dwn_cc_fmt"),
+            #   uiOutput("dwn_cc_agg"),
+            #   uiOutput("dwn_cc_dtl")
+            # )
           ),
           
           tabItem(
