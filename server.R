@@ -2214,6 +2214,59 @@ shinyServer(
       downloadButton('dwn_cp_dtl_pre', label = 'Detailed data')
     })
     
+    
+    ### Compare countries ----
+    
+    dwn_cc_stl <- eventReactive(input$cc_go, {
+      "Download country profile data"
+    })
+    
+    dwn_cc_txt <- eventReactive(input$cc_go, {
+      "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
+    })
+    
+    dwn_cc_fmt <- eventReactive(input$cc_go, {
+      selectInput(
+        "cc_f",
+        "Download data as:",
+        choices = available_formats,
+        selected = NULL,
+        selectize = TRUE
+      )
+    })
+    
+    output$dwn_cc_agg_pre <- downloadHandler(
+      filename = function() {
+        glue("{ tbl_agg_cc() }_{ inp_cc_r1() }_{ inp_cc_r2() }_{ inp_cc_p() }_{ inp_cc_y() }.{ inp_cc_f() }")
+      },
+      content = function(filename) {
+        rio::export(dplyr::bind_rows(df_agg_r1_cc(), df_agg_r2_cc()), filename)
+      },
+      contentType = "application/zip"
+    )
+    
+    output$dwn_cc_dtl_pre <- downloadHandler(
+      filename = function() {
+        glue("{ tbl_dtl_cc() }_{ inp_cc_r1() }_{ inp_cc_r2() }_{ inp_cc_p() }_{ inp_cc_y() }.{ inp_cc_f() }")
+      },
+      content = function(filename) {
+        rio::export(dplyr::bind_rows(df_dtl_r1_cc(), df_dtl_r2_cc()), filename)
+      },
+      contentType = "application/zip"
+    )
+    
+    output$dwn_cc_stl <- renderText({dwn_cc_stl()})
+    output$dwn_cc_txt <- renderText({dwn_cc_txt()})
+    output$dwn_cc_fmt <- renderUI({dwn_cc_fmt()})
+    output$dwn_cc_agg <- renderUI({
+      req(input$cc_go)
+      downloadButton('dwn_cc_agg_pre', label = 'Aggregated data')
+    })
+    output$dwn_cc_dtl <- renderUI({
+      req(input$cc_go)
+      downloadButton('dwn_cc_dtl_pre', label = 'Detailed data')
+    })
+    
     ### Product profile ----
     
     dwn_pp_stl <- eventReactive(input$pp_go, {

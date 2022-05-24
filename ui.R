@@ -330,14 +330,14 @@ shinyUI(
 
             ## Download ----
 
-            # column(
-            #   12,
-            #   htmlOutput("dwn_cc_stl", container = tags$h2),
-            #   htmlOutput("dwn_cc_text", container = tags$p),
-            #   uiOutput("dwn_cc_fmt"),
-            #   uiOutput("dwn_cc_agg"),
-            #   uiOutput("dwn_cc_dtl")
-            # )
+            column(
+              12,
+              htmlOutput("dwn_cc_stl", container = tags$h2),
+              htmlOutput("dwn_cc_text", container = tags$p),
+              uiOutput("dwn_cc_fmt"),
+              uiOutput("dwn_cc_agg"),
+              uiOutput("dwn_cc_dtl")
+            )
           ),
           
           tabItem(
