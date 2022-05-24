@@ -183,7 +183,7 @@ shinyUI(
 
             # Compare Countries ----
 
-            # useWaitress(),
+            useWaitress(),
 
             column(
               12,
@@ -229,7 +229,7 @@ shinyUI(
                 "cc_r2",
                 "Reporter 2:",
                 choices = available_reporters_iso[available_reporters_iso != "all"],
-                selected = "can",
+                selected = "nor",
                 selectize = TRUE,
                 width = "100%"
               )
@@ -269,6 +269,27 @@ shinyUI(
             column(
               12,
               htmlOutput("title_cc", container = tags$h1)
+            ),
+            
+            ## Aggregated trade ----
+            
+            column(
+              12,
+              htmlOutput("trd_stl_cc", container = tags$h2)
+            ),
+            
+            column(
+              6,
+              highchartOutput("trd_exc_cols_agg_r1_cc", height = "500px"),
+              htmlOutput("trd_smr_txt_exp_r1_cc", container = tags$p),
+              htmlOutput("trd_smr_txt_imp_r1_cc", container = tags$p)
+            ),
+            
+            column(
+              6,
+              highchartOutput("trd_exc_cols_agg_r2_cc", height = "500px"),
+              htmlOutput("trd_smr_txt_exp_r2_cc", container = tags$p),
+              htmlOutput("trd_smr_txt_imp_r2_cc", container = tags$p)
             ),
 
             ## Detailed trade ----

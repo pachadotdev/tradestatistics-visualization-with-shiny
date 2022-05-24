@@ -19,7 +19,7 @@ shinyServer(
     
     inp_cp_convert_dollars <- reactive({ input$cp_a })
     
-    table_agg_cp <- eventReactive(input$cp_go, {
+    tbl_agg_cp <- eventReactive(input$cp_go, {
       ifelse(inp_cp_p() == "all", "yr", "yrp")
     })
     
@@ -53,7 +53,11 @@ shinyServer(
     
     inp_cc_convert_dollars <- reactive({ input$cc_a })
     
-    tbl_dtl_p_cc <- eventReactive(input$cc_go, {
+    tbl_agg_cc <- eventReactive(input$cc_go, {
+      ifelse(inp_cc_p() == "all", "yr", "yrp")
+    })
+    
+    tbl_dtl_cc <- eventReactive(input$cc_go, {
       ifelse(inp_cc_p() == "all", "yrc", "yrpc")
     })
     
@@ -186,7 +190,17 @@ shinyServer(
       )
     })
     
-    r1_add_proper_the <- eventReactive(input$cc_go, {
+    r1_add_the <- eventReactive(input$cc_go, {
+      if (substr(r1name_cc(), 1, 6) == "United" | 
+          substr(r1name_cc(), 1, 3) == "USA" |
+          substr(r1name_cc(), 1, 7) == "Russian") {
+        "the"
+      } else {
+        ""
+      }
+    })
+    
+    r1_add_upp_the <- eventReactive(input$cc_go, {
       if (substr(r1name_cc(), 1, 6) == "United" | 
           substr(r1name_cc(), 1, 3) == "USA" |
           substr(r1name_cc(), 1, 7) == "Russian") {
@@ -206,6 +220,16 @@ shinyServer(
       }
     })
     
+    r2_add_upp_the <- eventReactive(input$cc_go, {
+      if (substr(r2name_cc(), 1, 6) == "United" | 
+          substr(r2name_cc(), 1, 3) == "USA" |
+          substr(r2name_cc(), 1, 7) == "Russian") {
+        "The"
+      } else {
+        ""
+      }
+    })
+    
     p2_add_the <- eventReactive(input$cc_go, {
       if (substr(pname_cc(), 1, 6) == "United" | 
           substr(pname_cc(), 1, 3) == "USA" |
@@ -216,11 +240,21 @@ shinyServer(
       }
     })
     
+    p2_add_upp_the <- eventReactive(input$cc_go, {
+      if (substr(pname_cc(), 1, 6) == "United" | 
+          substr(pname_cc(), 1, 3) == "USA" |
+          substr(pname_cc(), 1, 7) == "Russian") {
+        "The"
+      } else {
+        ""
+      }
+    })
+    
     title_cc <- eventReactive(input$cc_go, {
       switch(
-        tbl_dtl_p_cc(),
-        "yrc" = glue("{ r1_add_proper_the() } { r1name_cc() } and { r2_add_the() } { r2name_cc() } multilateral trade in { inp_cc_y() }"),
-        "yrpc" = glue("{ r1_add_proper_the() } { r1name_cc() } and { r2_add_the() } { r2name_cc() } bilateral trade with { p2_add_the() } { pname_cc() } in { inp_cc_y() }")
+        tbl_dtl_cc(),
+        "yrc" = glue("{ r1_add_upp_the() } { r1name_cc() } and { r2_add_the() } { r2name_cc() } multilateral trade in { inp_cc_y() }"),
+        "yrpc" = glue("{ r1_add_upp_the() } { r1name_cc() } and { r2_add_the() } { r2name_cc() } bilateral trade with { p2_add_the() } { pname_cc() } in { inp_cc_y() }")
       )
     })
     
@@ -237,7 +271,7 @@ shinyServer(
     df_agg_cp <- reactive({
       wt_cp$start()
       
-      d <- tbl(con, table_agg_cp())
+      d <- tbl(con, tbl_agg_cp())
       
       if (inp_cp_p() == "all") {
         d <- d %>% 
@@ -260,7 +294,7 @@ shinyServer(
         d <- gdp_deflator_adjustment(d, as.integer(inp_cp_convert_dollars()))
       }
       
-      wt_cp$inc(2)
+      wt_cp$inc(2.5)
       
       return(d)
     }) %>% 
@@ -291,7 +325,7 @@ shinyServer(
         d <- gdp_deflator_adjustment(d, as.integer(inp_cp_convert_dollars()))
       }
       
-      wt_cp$inc(2)
+      wt_cp$inc(2.5)
       
       return(d)
     }) %>% 
@@ -518,7 +552,7 @@ shinyServer(
     ### Text/Visual elements ----
     
     trd_smr_txt_exp_cp <- eventReactive(input$cp_go, {
-      switch(table_agg_cp(),
+      switch(tbl_agg_cp(),
              "yr" = glue("The exports of { r_add_the() } { rname_cp() } to the World { exports_growth_increase_decrease_cp() } from 
                           { exp_val_min_yr_2_cp() } in { min(inp_cp_y()) } to { exp_val_max_yr_2_cp() } in { max(inp_cp_y()) } 
                           (annualized { exports_growth_increase_decrease_2_cp() } of { exports_growth_2_cp() })."),
@@ -534,7 +568,7 @@ shinyServer(
     })
     
     trd_smr_txt_imp_cp <- eventReactive(input$cp_go, {
-      switch(table_agg_cp(),
+      switch(tbl_agg_cp(),
              "yr" = glue("The imports of { r_add_the() } { rname_cp() } to the World { imports_growth_increase_decrease_cp() } from 
                          { imp_val_min_yr_2_cp() } in { min(inp_cp_y()) } to { imp_val_max_yr_2_cp() } in { max(inp_cp_y()) } 
                          (annualized { imports_growth_increase_decrease_2_cp() } of { imports_growth_2_cp() })."),
@@ -550,7 +584,7 @@ shinyServer(
     })
 
     trd_exc_lines_title_cp <- eventReactive(input$cp_go, {
-      switch(table_agg_cp(),
+      switch(tbl_agg_cp(),
              "yr" = glue("{ r_add_upp_the() } { rname_cp() } multilateral trade between { min(inp_cp_y()) } and { max(inp_cp_y()) }"),
              "yrp" = glue("{ r_add_upp_the() } { rname_cp() } and { p_add_the() } { pname_cp() } exchange between { min(inp_cp_y()) } and { max(inp_cp_y()) }")
       )
@@ -590,29 +624,6 @@ shinyServer(
       bindEvent(input$cp_go)
     
     ## Exports ----
-    
-    ### Tables ----
-    
-    exp_imp_tbl_od_yr_cp <- reactive({
-      min_max_y <- c(min(inp_cp_y()), max(inp_cp_y()))
-      
-      d <- tbl(con, "yrp") %>% 
-        filter(
-          year %in% min_max_y &
-            reporter_iso == !!inp_cp_r()
-        ) %>% 
-        collect()
-      
-      if (inp_cp_convert_dollars() != "No conversion") {
-        d <- gdp_deflator_adjustment(d, as.integer(inp_cp_convert_dollars()))
-      }
-      
-      wt_cp$inc(1)
-      
-      return(d)
-    }) %>% 
-      bindCache(inp_cp_y(), inp_cp_r(), inp_cp_p(), inp_cp_convert_dollars()) %>% 
-      bindEvent(input$cp_go)
     
     ### Visual elements ----
     
@@ -709,25 +720,25 @@ shinyServer(
     
     # Compare countries ----
     
-    # wt_cc <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
+    wt_cc <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
     
     ## Data ----
     
     df_agg_r1_cc <- reactive({
-      # wt_cc$start()
+      wt_cc$start()
 
-      d <- tbl(con, table_agg_cc())
+      d <- tbl(con, tbl_agg_cc())
 
       if (inp_cc_p() == "all") {
         d <- d %>%
           filter(
-            year %in% !!inp_cc_y() &
+            year == !!inp_cc_y() &
               reporter_iso == !!inp_cc_r1()
           )
       } else {
         d <- d %>%
           filter(
-            year %in% !!inp_cc_y() &
+            year == !!inp_cc_y() &
               reporter_iso == !!inp_cc_r1() &
               partner_iso == !!inp_cc_p()
           )
@@ -739,7 +750,7 @@ shinyServer(
         d <- gdp_deflator_adjustment(d, as.integer(inp_cc_convert_dollars()))
       }
 
-      # wt_cc$inc(2)
+      wt_cc$inc(1)
 
       return(d)
     }) %>%
@@ -747,18 +758,18 @@ shinyServer(
       bindEvent(input$cc_go)
     
     df_dtl_r1_cc <- reactive({
-      d <- tbl(con, tbl_dtl_p_cc())
+      d <- tbl(con, tbl_dtl_cc())
 
       if (inp_cc_p() == "all") {
         d <- d %>%
           filter(
-            year %in% !!inp_cc_y() &
+            year == !!inp_cc_y() &
               reporter_iso == !!inp_cc_r1()
           )
       } else {
         d <- d %>%
           filter(
-            year %in% !!inp_cc_y() &
+            year == !!inp_cc_y() &
               reporter_iso == !!inp_cc_r1() &
               partner_iso == !!inp_cc_p()
           )
@@ -770,29 +781,27 @@ shinyServer(
         d <- gdp_deflator_adjustment(d, as.integer(inp_cc_convert_dollars()))
       }
 
-      # wt_cc$inc(2)
+      wt_cc$inc(1)
 
       return(d)
     }) %>%
       bindCache(inp_cc_y(), inp_cc_r1(), inp_cc_p(), inp_cc_convert_dollars(),
-                tbl_dtl_p_cc()) %>%
+                tbl_dtl_cc()) %>%
       bindEvent(input$cc_go)
     
     df_agg_r2_cc <- reactive({
-      # wt_cc$start()
-      
-      d <- tbl(con, table_agg_cc())
+      d <- tbl(con, tbl_agg_cc())
       
       if (inp_cc_p() == "all") {
         d <- d %>%
           filter(
-            year %in% !!inp_cc_y() &
+            year == !!inp_cc_y() &
               reporter_iso == !!inp_cc_r2()
           )
       } else {
         d <- d %>%
           filter(
-            year %in% !!inp_cc_y() &
+            year == !!inp_cc_y() &
               reporter_iso == !!inp_cc_r2() &
               partner_iso == !!inp_cc_p()
           )
@@ -804,7 +813,7 @@ shinyServer(
         d <- gdp_deflator_adjustment(d, as.integer(inp_cc_convert_dollars()))
       }
       
-      # wt_cc$inc(2)
+      wt_cc$inc(1)
       
       return(d)
     }) %>%
@@ -812,12 +821,12 @@ shinyServer(
       bindEvent(input$cc_go)
     
     df_dtl_r2_cc <- reactive({
-      d <- tbl(con, tbl_dtl_p_cc())
+      d <- tbl(con, tbl_dtl_cc())
       
       if (inp_cc_p() == "all") {
         d <- d %>%
           filter(
-            year %in% !!inp_cc_y() &
+            year == !!inp_cc_y() &
               reporter_iso == !!inp_cc_r2()
           )
       } else {
@@ -835,222 +844,336 @@ shinyServer(
         d <- gdp_deflator_adjustment(d, as.integer(inp_cc_convert_dollars()))
       }
       
-      # wt_cc$inc(2)
+      wt_cc$inc(1)
       
       return(d)
     }) %>%
       bindCache(inp_cc_y(), inp_cc_r2(), inp_cc_p(), inp_cc_convert_dollars(),
-                tbl_dtl_p_cc()) %>%
+                tbl_dtl_cc()) %>%
       bindEvent(input$cc_go)
     
     ## Trade ----
     
     ### Tables ----
     
-    # tr_tbl_agg_r1_cc <- eventReactive(input$cc_go, {
-    #   df_agg_r1_cc() %>%
-    #     select(year, trade_value_usd_exp, trade_value_usd_imp)
-    # })
-    # 
-    # exp_val_min_yr_r1_cc <- eventReactive(input$cc_go, {
-    #   tr_tbl_agg_r1_cc() %>%
-    #     filter(year == min(inp_cc_y())) %>%
-    #     select(trade_value_usd_exp) %>%
-    #     as.numeric()
-    # })
-    # 
-    # exp_val_max_yr_r1_cc <- eventReactive(input$cc_go, {
-    #   tr_tbl_agg_r1_cc() %>%
-    #     filter(year == max(inp_cc_y())) %>%
-    #     select(trade_value_usd_exp) %>%
-    #     as.numeric()
-    # })
-    # 
-    # imp_val_min_yr_r1_cc <- eventReactive(input$cc_go, {
-    #   tr_tbl_agg_r1_cc() %>%
-    #     filter(year == min(inp_cc_y())) %>%
-    #     select(trade_value_usd_imp) %>%
-    #     as.numeric()
-    # })
-    # 
-    # imp_val_max_yr_r1_cc <- eventReactive(input$cc_go, {
-    #   tr_tbl_agg_r1_cc() %>%
-    #     filter(year == max(inp_cc_y())) %>%
-    #     select(trade_value_usd_imp) %>%
-    #     as.numeric()
-    # })
-    # 
-    # exp_val_min_yr_2_r1_cc <- eventReactive(input$cc_go, {
-    #   show_dollars(exp_val_min_yr_r1_cc())
-    # })
-    # 
-    # exp_val_max_yr_2_r1_cc <- eventReactive(input$cc_go, {
-    #   show_dollars(exp_val_max_yr_r1_cc())
-    # })
-    # 
-    # imp_val_min_yr_2_r1_cc <- eventReactive(input$cc_go, {
-    #   show_dollars(imp_val_min_yr_r1_cc())
-    # })
-    # 
-    # imp_val_max_yr_2_r1_cc <- eventReactive(input$cc_go, {
-    #   show_dollars(imp_val_max_yr_r1_cc())
-    # })
-    # 
-    # trd_rankings_r1_cc <- eventReactive(input$cc_go, {
-    #   d <- tbl(con, "yrp") %>% 
-    #     filter(
-    #       year %in% !!inp_cc_y() &
-    #         reporter_iso == inp_cc_r1()
-    #     ) %>% 
-    #     collect()
-    #   
-    #   if (inp_cc_convert_dollars() != "No conversion") {
-    #     d <- gdp_deflator_adjustment(d, as.integer(inp_cc_convert_dollars()))
-    #   }
-    #   
-    #   d <- d %>% 
-    #     # filter(partner_iso != "0-unspecified") %>% 
-    #     mutate(
-    #       trd_value_usd_bal = trade_value_usd_exp + trade_value_usd_imp
-    #     ) %>% 
-    #     group_by(year) %>% 
-    #     mutate(
-    #       bal_rank = dense_rank(desc(trd_value_usd_bal)),
-    #       exp_share = trade_value_usd_exp / sum(trade_value_usd_exp),
-    #       imp_share = trade_value_usd_imp / sum(trade_value_usd_imp)
-    #     )
-    #   
-    #   return(d)
-    # })
-    # 
-    # trd_rankings_no_yr_r1_cc <- eventReactive(input$cc_go, {
-    #   trd_rankings_r1_cc() %>%
-    #     ungroup() %>% 
-    #     filter(
-    #       year == inp_cc_y(),
-    #       reporter_iso == inp_cc_r1(),
-    #       partner_iso == inp_cc_p()
-    #     ) %>%
-    #     select(bal_rank) %>%
-    #     as.character()
-    # })
-    # 
-    # trd_rankings_exp_share_yr_r1_cc <- eventReactive(input$cc_go, {
-    #   trd_rankings_r1_cc() %>%
-    #     ungroup() %>% 
-    #     filter(
-    #       year == inp_cc_y(),
-    #       reporter_iso == inp_cc_r1(),
-    #       partner_iso == inp_cc_p()
-    #     ) %>%
-    #     select(exp_share) %>%
-    #     as.numeric()
-    # })
-    # 
-    # trd_rankings_exp_share_yr_2_r1_cc <- eventReactive(input$cc_go, {
-    #   show_percentage(trd_rankings_exp_share_yr_r1_cc())
-    # })
-    # 
-    # trd_rankings_imp_share_yr_r1_cc <- eventReactive(input$cc_go, {
-    #   trd_rankings_r1_cc() %>%
-    #     ungroup() %>% 
-    #     filter(
-    #       year == inp_cc_y(),
-    #       reporter_iso == inp_cc_r1(),
-    #       partner_iso == inp_cc_p()
-    #     ) %>%
-    #     select(imp_share) %>%
-    #     as.numeric()
-    # })
-    # 
-    # trd_rankings_imp_share_yr_2_r1_cc <- eventReactive(input$cc_go, {
-    #   show_percentage(trd_rankings_imp_share_yr_r1_cc())
-    # })
+    tr_tbl_agg_r1_cc <- eventReactive(input$cc_go, {
+      df_agg_r1_cc() %>%
+        select(year, trade_value_usd_exp, trade_value_usd_imp)
+    })
+    
+    tr_tbl_agg_r2_cc <- eventReactive(input$cc_go, {
+      df_agg_r2_cc() %>%
+        select(year, trade_value_usd_exp, trade_value_usd_imp)
+    })
+
+    exp_val_yr_r1_cc <- eventReactive(input$cc_go, {
+      tr_tbl_agg_r1_cc() %>%
+        select(trade_value_usd_exp) %>%
+        as.numeric()
+    })
+
+    exp_val_yr_r2_cc <- eventReactive(input$cc_go, {
+      tr_tbl_agg_r2_cc() %>%
+        select(trade_value_usd_exp) %>%
+        as.numeric()
+    })
+
+    imp_val_yr_r1_cc <- eventReactive(input$cc_go, {
+      tr_tbl_agg_r1_cc() %>%
+        select(trade_value_usd_imp) %>%
+        as.numeric()
+    })
+
+    imp_val_yr_r2_cc <- eventReactive(input$cc_go, {
+      tr_tbl_agg_r2_cc() %>%
+        select(trade_value_usd_imp) %>%
+        as.numeric()
+    })
+
+    exp_val_yr_2_r1_cc <- eventReactive(input$cc_go, {
+      show_dollars(exp_val_yr_r1_cc())
+    })
+
+    exp_val_yr_2_r2_cc <- eventReactive(input$cc_go, {
+      show_dollars(exp_val_yr_r2_cc())
+    })
+
+    imp_val_yr_2_r1_cc <- eventReactive(input$cc_go, {
+      show_dollars(imp_val_yr_r1_cc())
+    })
+
+    imp_val_yr_2_r2_cc <- eventReactive(input$cc_go, {
+      show_dollars(imp_val_yr_r2_cc())
+    })
+
+    trd_rankings_r1_cc <- eventReactive(input$cc_go, {
+      d <- tbl(con, "yrp") %>%
+        filter(
+          year %in% !!inp_cc_y() &
+            reporter_iso == !!inp_cc_r1()
+        ) %>%
+        collect()
+
+      if (inp_cc_convert_dollars() != "No conversion") {
+        d <- gdp_deflator_adjustment(d, as.integer(inp_cc_convert_dollars()))
+      }
+
+      d <- d %>%
+        # filter(partner_iso != "0-unspecified") %>%
+        mutate(
+          trd_value_usd_bal = trade_value_usd_exp + trade_value_usd_imp
+        ) %>%
+        group_by(year) %>%
+        mutate(
+          bal_rank = dense_rank(desc(trd_value_usd_bal)),
+          exp_share = trade_value_usd_exp / sum(trade_value_usd_exp),
+          imp_share = trade_value_usd_imp / sum(trade_value_usd_imp)
+        )
+      
+      return(d)
+    })
+
+    trd_rankings_no_yr_r1_cc <- eventReactive(input$cc_go, {
+      trd_rankings_r1_cc() %>%
+        ungroup() %>%
+        filter(
+          reporter_iso == !!inp_cc_r1(),
+          partner_iso == !!inp_cc_p()
+        ) %>%
+        select(bal_rank) %>%
+        as.character()
+    })
+     
+    trd_rankings_exp_share_yr_r1_cc <- eventReactive(input$cc_go, {
+      trd_rankings_r1_cc() %>%
+        ungroup() %>%
+        filter(
+          reporter_iso == !!inp_cc_r1(),
+          partner_iso == !!inp_cc_p()
+        ) %>%
+        select(exp_share) %>%
+        as.numeric()
+    })
+    
+    trd_rankings_exp_share_yr_2_r1_cc <- eventReactive(input$cc_go, {
+      show_percentage(trd_rankings_exp_share_yr_r1_cc())
+    })
+
+    trd_rankings_imp_share_yr_r1_cc <- eventReactive(input$cc_go, {
+      trd_rankings_r1_cc() %>%
+        ungroup() %>%
+        filter(
+          year == inp_cc_y(),
+          reporter_iso == !!inp_cc_r1(),
+          partner_iso == !!inp_cc_p()
+        ) %>%
+        select(imp_share) %>%
+        as.numeric()
+    })
+
+    trd_rankings_imp_share_yr_2_r1_cc <- eventReactive(input$cc_go, {
+      show_percentage(trd_rankings_imp_share_yr_r1_cc())
+    })
+    
+    trd_rankings_r2_cc <- eventReactive(input$cc_go, {
+      d <- tbl(con, "yrp") %>%
+        filter(
+          year %in% !!inp_cc_y() &
+            reporter_iso == !!inp_cc_r2()
+        ) %>%
+        collect()
+      
+      if (inp_cc_convert_dollars() != "No conversion") {
+        d <- gdp_deflator_adjustment(d, as.integer(inp_cc_convert_dollars()))
+      }
+      
+      d <- d %>%
+        # filter(partner_iso != "0-unspecified") %>%
+        mutate(
+          trd_value_usd_bal = trade_value_usd_exp + trade_value_usd_imp
+        ) %>%
+        group_by(year) %>%
+        mutate(
+          bal_rank = dense_rank(desc(trd_value_usd_bal)),
+          exp_share = trade_value_usd_exp / sum(trade_value_usd_exp),
+          imp_share = trade_value_usd_imp / sum(trade_value_usd_imp)
+        )
+      
+      return(d)
+    })
+    
+    trd_rankings_no_yr_r2_cc <- eventReactive(input$cc_go, {
+      trd_rankings_r2_cc() %>%
+        ungroup() %>%
+        filter(
+          reporter_iso == !!inp_cc_r2(),
+          partner_iso == !!inp_cc_p()
+        ) %>%
+        select(bal_rank) %>%
+        as.character()
+    })
+    
+    trd_rankings_exp_share_yr_r2_cc <- eventReactive(input$cc_go, {
+      trd_rankings_r2_cc() %>%
+        ungroup() %>%
+        filter(
+          reporter_iso == !!inp_cc_r2(),
+          partner_iso == !!inp_cc_p()
+        ) %>%
+        select(exp_share) %>%
+        as.numeric()
+    })
+    
+    trd_rankings_exp_share_yr_2_r2_cc <- eventReactive(input$cc_go, {
+      show_percentage(trd_rankings_exp_share_yr_r2_cc())
+    })
+    
+    trd_rankings_imp_share_yr_r2_cc <- eventReactive(input$cc_go, {
+      trd_rankings_r2_cc() %>%
+        ungroup() %>%
+        filter(
+          year == inp_cc_y(),
+          reporter_iso == !!inp_cc_r2(),
+          partner_iso == !!inp_cc_p()
+        ) %>%
+        select(imp_share) %>%
+        as.numeric()
+    })
+    
+    trd_rankings_imp_share_yr_2_r2_cc <- eventReactive(input$cc_go, {
+      show_percentage(trd_rankings_imp_share_yr_r2_cc())
+    })
     
     ### Text/Visual elements ----
     
-    # trd_smr_txt_exp_r1_cc <- eventReactive(input$cc_go, {
-    #   switch(table_agg_cc(),
-    #          "yr" = glue("The exports of { r1name_cc() } to the World were { exp_val_yr_2_r1_cc() } in { inp_cc_y() }."),
-    #          
-    #          "yrp" = glue("The exports of { r1name_cc() } to { pname_cc() } were { exp_val_yr_2_r1_cc() } in { inp_cc_y() }. 
-    #                       { pname_cc() } was the No. { trd_rankings_no_yr_r1_cc() } trading partner of 
-    #                       { r1name_cc() } in { inp_cc_y() } (represented { trd_rankings_exp_share_yr_2_r1_cc() } of its exports).")
-    #   )
-    # })
-    # 
-    # trd_smr_txt_imp_r1_cc <- eventReactive(input$cc_go, {
-    #   switch(table_agg_cc(),
-    #          "yr" = glue("The imports of { r1name_cc() } to the World were { imp_val_yr_2_r1_cc() } in { inp_cc_y() }."),
-    #          
-    #          "yrp" = glue("The imports of { r2name_cc() } to { pname_cc() } were { imp_val_min_yr_2_r1_cc() } in { inp_cc_y() }.
-    #                       { pname_cc() } was the No. { trd_rankings_no_yr_r1_cc() } trading partner of 
-    #                       { r1name_cc() } in { inp_cc_y() } (represented { trd_rankings_imp_share_yr_2_r1_cc() } of its imports).")
-    #   )
-    # })
-    # 
-    # trd_exc_lines_title_r1_cc <- eventReactive(input$cc_go, {
-    #   switch(table_agg_cc(),
-    #          "yr" = glue("{ r1name_cc() } multilateral trade in { inp_cc_y() }"),
-    #          "yrp" = glue("{ r1name_cc() } and { pname_cc() } exchange in { inp_cc_y() }")
-    #   )
-    # })
-    # 
-    # trd_exc_lines_agg_r1_cc <- reactive({
-    #   d <- tr_tbl_agg_r1_cc()
-    #   
-    #   d <- tibble(
-    #     year = d$year,
-    #     trade = d$trade_value_usd_exp,
-    #     flow = "Exports"
-    #   ) %>% 
-    #     bind_rows(
-    #       tibble(
-    #         year = d$year,
-    #         trade = d$trade_value_usd_imp,
-    #         flow = "Imports"
-    #       )
-    #     ) %>% 
-    #     mutate(year = as.character(year))
-    #   
-    #   wt_cc$inc(1)
-    #   
-    #   hchart(d, 
-    #          "line", 
-    #          hcaes(x = year, y = trade, group = flow),
-    #          tooltip = list(
-    #            pointFormatter = custom_tooltip_short()
-    #          )) %>% 
-    #     hc_xAxis(title = list(text = "Year")) %>%
-    #     hc_yAxis(title = list(text = "USD billion"),
-    #              labels = list(formatter = JS("function() { return this.value / 1000000000 }"))) %>% 
-    #     hc_title(text = trd_exc_lines_title_r1_cc())
-    # }) %>%
-    #   bindCache(inp_cc_y(), inp_cc_r1(), inp_cc_p(), inp_cc_convert_dollars()) %>% 
-    #   bindEvent(input$cc_go)
+    trd_smr_txt_exp_r1_cc <- eventReactive(input$cc_go, {
+      switch(tbl_agg_cc(),
+             "yr" = glue("The exports of { r1name_cc() } to the World were { exp_val_yr_2_r1_cc() } in { inp_cc_y() }."),
+
+             "yrp" = glue("The exports of { r1name_cc() } to { pname_cc() } were { exp_val_yr_2_r1_cc() } in { inp_cc_y() }.
+                          { p2_add_upp_the() } { pname_cc() } was the No. { trd_rankings_no_yr_r1_cc() } trading partner of
+                          { r1name_cc() } in { inp_cc_y() } (represented { trd_rankings_exp_share_yr_2_r1_cc() } of its exports).")
+      )
+    })
+
+    trd_smr_txt_imp_r1_cc <- eventReactive(input$cc_go, {
+      switch(tbl_agg_cc(),
+             "yr" = glue("The imports of { r1name_cc() } to the World were { imp_val_yr_2_r1_cc() } in { inp_cc_y() }."),
+
+             "yrp" = glue("The imports of { r1name_cc() } to { pname_cc() } were { imp_val_yr_2_r1_cc() } in { inp_cc_y() }.
+                          { p2_add_upp_the() } { pname_cc() } was the No. { trd_rankings_no_yr_r1_cc() } trading partner of
+                          { r1name_cc() } in { inp_cc_y() } (represented { trd_rankings_imp_share_yr_2_r1_cc() } of its imports).")
+      )
+    })
+
+    trd_smr_txt_exp_r2_cc <- eventReactive(input$cc_go, {
+      switch(tbl_agg_cc(),
+             "yr" = glue("The exports of { r2name_cc() } to the World were { exp_val_yr_2_r2_cc() } in { inp_cc_y() }."),
+             
+             "yrp" = glue("The exports of { r2name_cc() } to { pname_cc() } were { exp_val_yr_2_r2_cc() } in { inp_cc_y() }.
+                          { p2_add_upp_the() } { pname_cc() } was the No. { trd_rankings_no_yr_r2_cc() } trading partner of
+                          { r2name_cc() } in { inp_cc_y() } (represented { trd_rankings_exp_share_yr_2_r2_cc() } of its exports).")
+      )
+    })
+    
+    trd_smr_txt_imp_r2_cc <- eventReactive(input$cc_go, {
+      switch(tbl_agg_cc(),
+             "yr" = glue("The imports of { r2name_cc() } to the World were { imp_val_yr_2_r2_cc() } in { inp_cc_y() }."),
+             
+             "yrp" = glue("The imports of { r2name_cc() } to { pname_cc() } were { imp_val_yr_2_r2_cc() } in { inp_cc_y() }.
+                          { p2_add_upp_the() } { pname_cc() } was the No. { trd_rankings_no_yr_r2_cc() } trading partner of
+                          { r2name_cc() } in { inp_cc_y() } (represented { trd_rankings_imp_share_yr_2_r2_cc() } of its imports).")
+      )
+    })
+    
+    trd_exc_cols_title_r1_cc <- eventReactive(input$cc_go, {
+      switch(tbl_agg_cc(),
+             "yr" = glue("{ r1_add_upp_the() } { r1name_cc() } multilateral trade in { inp_cc_y() }"),
+             "yrp" = glue("{ r1_add_upp_the() } { r1name_cc() } and { p2_add_the() } { pname_cc() } exchange in { inp_c1_y() }")
+      )
+    })
+    
+    trd_exc_cols_title_r1_cc <- eventReactive(input$cc_go, {
+      switch(tbl_agg_cc(),
+             "yr" = glue("{ r1_add_upp_the() } { r1name_cc() } multilateral trade in { inp_cc_y() }"),
+             "yrp" = glue("{ r1_add_upp_the() } { r1name_cc() } and { p2_add_the() } { pname_cc() } exchange in { inp_cc_y() }")
+      )
+    })
+    
+    trd_exc_cols_title_r2_cc <- eventReactive(input$cc_go, {
+      switch(tbl_agg_cc(),
+             "yr" = glue("{ r2_add_upp_the() } { r2name_cc() } multilateral trade in { inp_cc_y() }"),
+             "yrp" = glue("{ r2_add_upp_the() } { r2name_cc() } and { p2_add_the() } { pname_cc() } exchange in { inp_cc_y() }")
+      )
+    })
+    
+    trd_exc_cols_agg_r1_cc <- reactive({
+      d <- tr_tbl_agg_r1_cc()
+      
+      d <- tibble(
+        year = d$year,
+        trade = d$trade_value_usd_exp,
+        flow = "Exports"
+      ) %>% 
+        bind_rows(
+          tibble(
+            year = d$year,
+            trade = d$trade_value_usd_imp,
+            flow = "Imports"
+          )
+        ) %>% 
+        mutate(year = as.character(year))
+      
+      wt_cc$inc(1)
+      
+      hchart(d, 
+             "column", 
+             hcaes(x = year, y = trade, group = flow),
+             tooltip = list(
+               pointFormatter = custom_tooltip_short()
+             )) %>% 
+        hc_xAxis(title = list(text = "Year")) %>%
+        hc_yAxis(title = list(text = "USD billion"),
+                 labels = list(formatter = JS("function() { return this.value / 1000000000 }"))) %>% 
+        hc_title(text = trd_exc_cols_title_r1_cc())
+    }) %>%
+      bindCache(inp_cc_y(), inp_cc_r1(), inp_cc_p(), inp_cc_convert_dollars()) %>% 
+      bindEvent(input$cc_go)
+    
+    trd_exc_cols_agg_r2_cc <- reactive({
+      d <- tr_tbl_agg_r2_cc()
+      
+      d <- tibble(
+        year = d$year,
+        trade = d$trade_value_usd_exp,
+        flow = "Exports"
+      ) %>% 
+        bind_rows(
+          tibble(
+            year = d$year,
+            trade = d$trade_value_usd_imp,
+            flow = "Imports"
+          )
+        ) %>% 
+        mutate(year = as.character(year))
+      
+      wt_cc$inc(1)
+      
+      hchart(d, 
+             "column", 
+             hcaes(x = year, y = trade, group = flow),
+             tooltip = list(
+               pointFormatter = custom_tooltip_short()
+             )) %>% 
+        hc_xAxis(title = list(text = "Year")) %>%
+        hc_yAxis(title = list(text = "USD billion"),
+                 labels = list(formatter = JS("function() { return this.value / 1000000000 }"))) %>% 
+        hc_title(text = trd_exc_cols_title_r2_cc())
+    }) %>%
+      bindCache(inp_cc_y(), inp_cc_r2(), inp_cc_p(), inp_cc_convert_dollars()) %>% 
+      bindEvent(input$cc_go)
     
     ## Exports ----
-    
-    ### Tables ----
-    
-    # exp_imp_tbl_od_yr_r1_cc <- reactive({
-    #   d <- tbl(con, "yrp") %>% 
-    #     filter(
-    #       year %in% !!inp_cc_y() &
-    #         reporter_iso == !!inp_cc_r1()
-    #     ) %>% 
-    #     collect()
-    #   
-    #   if (inp_cc_convert_dollars() != "No conversion") {
-    #     d <- gdp_deflator_adjustment(d, as.integer(inp_cc_convert_dollars()))
-    #   }
-    #   
-    #   # wt_cc$inc(1)
-    #   
-    #   return(d)
-    # }) %>% 
-    #   bindCache(inp_cc_y(), inp_cc_r1(), inp_cc_p(), inp_cc_convert_dollars()) %>% 
-    #   bindEvent(input$cc_go)
     
     ### Visual elements ----
     
@@ -1062,6 +1185,7 @@ shinyServer(
 
       d2 <- pd_colors(d)
 
+      wt_cc$inc(1)
       pd_to_highcharts(d, d2)
     }) %>%
       bindCache(inp_cc_y(), inp_cc_r1(), inp_cc_p(), inp_cc_convert_dollars()) %>%
@@ -1075,33 +1199,13 @@ shinyServer(
       
       d2 <- pd_colors(d)
       
+      wt_cc$inc(1)
       pd_to_highcharts(d, d2)
     }) %>%
       bindCache(inp_cc_y(), inp_cc_r2(), inp_cc_p(), inp_cc_convert_dollars()) %>%
       bindEvent(input$cc_go)
     
     ## Imports ----
-    
-    ### Tables ----
-    
-    # imp_imp_tbl_od_yr_r1_cc <- reactive({
-    #   d <- tbl(con, "yrp") %>% 
-    #     filter(
-    #       year %in% !!inp_cc_y() &
-    #         reporter_iso == !!inp_cc_r1()
-    #     ) %>% 
-    #     collect()
-    #   
-    #   if (inp_cc_convert_dollars() != "No conversion") {
-    #     d <- gdp_deflator_adjustment(d, as.integer(inp_cc_convert_dollars()))
-    #   }
-    #   
-    #   # wt_cc$inc(1)
-    #   
-    #   return(d)
-    # }) %>% 
-    #   bindCache(inp_cc_y(), inp_cc_r1(), inp_cc_p(), inp_cc_convert_dollars()) %>% 
-    #   bindEvent(input$cc_go)
     
     ### Visual elements ----
     
@@ -1113,6 +1217,7 @@ shinyServer(
       
       d2 <- pd_colors(d)
       
+      wt_cc$inc(1)
       pd_to_highcharts(d, d2)
     }) %>%
       bindCache(inp_cc_y(), inp_cc_r1(), inp_cc_p(), inp_cc_convert_dollars()) %>%
@@ -1126,7 +1231,11 @@ shinyServer(
       
       d2 <- pd_colors(d)
       
-      pd_to_highcharts(d, d2)
+      wt_cc$inc(1)
+      out <- pd_to_highcharts(d, d2)
+      
+      wt_cc$close()
+      return(out)
     }) %>%
       bindCache(inp_cc_y(), inp_cc_r2(), inp_cc_p(), inp_cc_convert_dollars()) %>%
       bindEvent(input$cc_go)
@@ -1174,7 +1283,7 @@ shinyServer(
         d <- gdp_deflator_adjustment(d, as.integer(inp_pp_convert_dollars()))
       }
       
-      wt_pp$inc(3)
+      wt_pp$inc(1)
       
       return(d)
     }) %>% 
@@ -1882,8 +1991,8 @@ shinyServer(
     output$trd_stl_cp <- eventReactive(input$cp_go, {
       switch(
         tbl_dtl_cp(),
-        "yrc" = glue("Total multilateral Exports and Imports { min(inp_cp_y()) }-{ max(inp_cp_y()) }"),
-        "yrpc" = glue("Total bilateral Exports and Imports { min(inp_cp_y()) }-{ max(inp_cp_y()) }")
+        "yrc" = glue("Total multilateral Exports and Imports"),
+        "yrpc" = glue("Total bilateral Exports and Imports")
       )
     })
     
@@ -1913,8 +2022,26 @@ shinyServer(
     
     ## Compare countries ----
     
+    output$trd_stl_cc <- eventReactive(input$cc_go, {
+      switch(
+        tbl_dtl_cc(),
+        "yrc" = glue("Total multilateral Exports and Imports"),
+        "yrpc" = glue("Total bilateral Exports and Imports")
+      )
+    })
+    
     output$trd_stl_exp_cc <- eventReactive(input$cc_go, { "Exports" })
     output$trd_stl_imp_cc <- eventReactive(input$cc_go, { "Imports" })
+    
+    output$trd_smr_txt_exp_r1_cc <- renderText(trd_smr_txt_exp_r1_cc())
+    output$trd_smr_txt_imp_r1_cc <- renderText(trd_smr_txt_imp_r1_cc())
+    output$trd_smr_txt_exp_r2_cc <- renderText(trd_smr_txt_exp_r2_cc())
+    output$trd_smr_txt_imp_r2_cc <- renderText(trd_smr_txt_imp_r2_cc())
+    
+    ### Trade ----
+    
+    output$trd_exc_cols_agg_r1_cc <- renderHighchart({ trd_exc_cols_agg_r1_cc() })
+    output$trd_exc_cols_agg_r2_cc <- renderHighchart({ trd_exc_cols_agg_r2_cc() })
     
     ### Exports ----
     
@@ -1934,9 +2061,7 @@ shinyServer(
     
     ## Product profile ----
     
-    output$trd_stl_pp <- eventReactive(input$pp_go, {
-      glue("Total multilateral Exports and Imports { min(inp_cp_y()) } and { max(inp_cp_y()) }")
-    })
+    output$trd_stl_pp <- eventReactive(input$pp_go, { "Total multilateral Exports and Imports" })
     
     output$trd_stl_exp_pp <- eventReactive(input$pp_go, { "Exports" })
     output$trd_stl_imp_pp <- eventReactive(input$pp_go, { "Imports" })
@@ -2059,7 +2184,7 @@ shinyServer(
     
     output$dwn_cp_agg_pre <- downloadHandler(
         filename = function() {
-          glue("{ table_agg_cp() }_{ inp_cp_r() }_{ inp_cp_p() }_{ min(inp_cp_y()) }_{ max(inp_cp_y()) }.{ inp_cp_f() }")
+          glue("{ tbl_agg_cp() }_{ inp_cp_r() }_{ inp_cp_p() }_{ min(inp_cp_y()) }_{ max(inp_cp_y()) }.{ inp_cp_f() }")
         },
         content = function(filename) {
           rio::export(df_agg_cp(), filename)
