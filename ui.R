@@ -21,7 +21,7 @@ shinyUI(
           menuItem("Product profile", tabName = "pp", badgeLabel = "new", badgeColor = "green"),
           
           # THIS IS NOT READY
-          # menuItem("Model", tabName = "md", badgeLabel = "new", badgeColor = "green"),
+          menuItem("Model", tabName = "md", badgeLabel = "new", badgeColor = "green"),
       
           menuItem("Cite", tabName = "cite")
         )
@@ -345,6 +345,8 @@ shinyUI(
           
             # Product profile ----
             
+            useWaitress(),
+            
             column(
               12,
               HTML("<h1>Product Profile</h1>"),
@@ -375,7 +377,7 @@ shinyUI(
               6,
               selectizeInput(
                 "pp_s",
-                label = "Section:",
+                label = NULL,
                 choices = NULL,
                 width = "100%"
               )
@@ -466,6 +468,8 @@ shinyUI(
             
             # Model ----
             
+            # useWaitress(),
+            
             column(
               12,
               HTML("<h1>Gravity Models</h1>"),
@@ -528,7 +532,7 @@ shinyUI(
                 multiple = TRUE
               )
             ),
-            
+
             column(
               4,
               selectInput(
@@ -544,15 +548,18 @@ shinyUI(
             
             column(
               4,
-              radioButtons(
-                "md_d",
-                "Distance for modelling:",
-                choiceNames = list("Simple distance between most populated cities in km (dist)",
-                                   "Simple distance between capitals in km (distcap)"),
-                choiceValues = list("dist", "distcap"),
-                selected = c("dist"),
-                width = "100%",
-              ),
+              selectInput(
+                "md_t",
+                "Model type:",
+                choices = available_models,
+                selected = "ppml",
+                selectize = TRUE,
+                width = "100%"
+              )
+            ),
+            
+            column(
+              4,
               radioButtons(
                 "md_cl",
                 "Use country pairs for clustering:",
@@ -561,43 +568,6 @@ shinyUI(
                 choiceValues = list("yes", "no"),
                 selected = c("no"),
                 width = "100%",
-              )
-            ),
-            
-            column(
-              4,
-              checkboxGroupInput(
-                "md_ct",
-                "Continuous variables for modelling:",
-                choiceNames = list("MFN: Most Favoured Nation tariff"),
-                choiceValues = list("mfn"),
-                selected = NULL,
-                width = "100%",
-              ),
-              checkboxGroupInput(
-                "md_b",
-                "Binary variables for modelling:",
-                choiceNames = list("Colony: The two countries are/were in a colonial relation",
-                                   "Comlang Ethno: The two countries have at least 9% of their population speaking the same language",
-                                   "Comlang Off: The two countries share the same official language",
-                                   "Contig: The two countries are next to each other",
-                                   "RTA: The two countries are in a trade agreement",
-                                   "Smctry: The two countries were or are the same country"),
-                choiceValues = list("colony", "comlang_ethno", "comlang_off", "contig", "rta", "smctry"),
-                selected = c("contig", "comlang_off", "colony"),
-                width = "100%",
-              )
-            ),
-            
-            column(
-              4,
-              selectInput(
-                "md_t",
-                "Model type:",
-                choices = available_models,
-                selected = "ppml",
-                selectize = TRUE,
-                width = "100%"
               )
             ),
             
@@ -618,20 +588,7 @@ shinyUI(
               )
             ),
             
-            # column(
-            #   12,
-            #   selectInput(
-            #     "md_cpf",
-            #     "Custom product filter (optional, overwrites section filter):",
-            #     choices = NULL,
-            #     selected = NULL,
-            #     selectize = TRUE,
-            #     width = "100%",
-            #     multiple = TRUE
-            #   )
-            # ),
-            
-            column(4,
+            column(12,
                    fileInput('md_own', 'Upload your own data:',
                              accept = c(
                                'text/csv',
@@ -648,23 +605,15 @@ shinyUI(
             ),
             
             column(
-              8,
-              textInput(
-                "md_s",
-                "Subset your data (optional, use ';' to separate):",
-                width = "100%"
-              )
-            ),
-            
-            column(12,
-                   p("The max size 100MB and this works with csv, tsv, xlsx, sav or dta only."),
-                   HTML("<p>You can download an example of custom variables that work with UN COMTRADE data from <a href='https://github.com/pachadotdev/tradestatistics-visualization-with-shiny/blob/master/custom_variables_for_modelling_demo.csv?raw=true'>here</a>. See the <i>cepiigeodist</i> package documentation for the details.</p>")
-            ),
-            
-            column(
               12,
               h2("Model formula"),
-              uiOutput("md_formula_latex")
+              textInput(
+                "md_fml",
+                "Model formula (i.e., any valid R formula)",
+                "trade_value_usd_exp ~ log_dist + colony + comlang_off + contig",
+                width = "100%",
+                placeholder = "Any valid R formula"
+              )
             ),
             
             column(
@@ -674,28 +623,12 @@ shinyUI(
                            class = "btn-primary")
             ),
             
-            ## Model results ----
-            
             column(
               12,
-              htmlOutput("md_data_stl", container = tags$h2),
-              htmlOutput("data_dtl_md_txt", container = tags$p),
-              tableOutput("data_dtl_md_preview"),
-              htmlOutput("md_smr_stl", container = tags$h2),
-              htmlOutput("md_smr_txt", container = tags$p),
-              tableOutput("md_smr_tidy"),
-              tableOutput("md_smr_glance")
-            ),
-            
-            ## Download ----
-            
-            column(
-              12,
-              htmlOutput("dwn_md_stl", container = tags$h2),
-              htmlOutput("dwn_md_txt", container = tags$p),
-              uiOutput("dwn_md_fmt"),
-              uiOutput("dwn_md_dtl"),
-              uiOutput("dwn_md_fit")
+              verbatimTextOutput("fml_latex_md"),
+              tableOutput("df_dtl_pre_md"),
+              tableOutput("tidy_md"),
+              tableOutput("glance_md")
             )
           ),
           
@@ -719,18 +652,6 @@ shinyUI(
           hr(),
           htmlOutput("site_footer", container = tags$p)
         ),
-        
-        # Loading ----
-        
-        # conditionalPanel(
-        #   condition = "$('html').hasClass('shiny-busy')",
-        #   div(
-        #     id = "loading",
-        #     img(src = "img/loading_icon.gif", width = "100"),
-        #     p("Loading..."),
-        #     align = "center"
-        #   )
-        # ),
         
         # Footer ----
         

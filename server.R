@@ -87,8 +87,9 @@ shinyServer(
     updateSelectizeInput(
       session,
       inputId = "pp_s",
+      label = "Section:",
       choices = list(
-        "Custom Selections" = c(available_all, available_vaccine),
+        c(available_all, available_vaccine),
         "HS Sections" = available_sections_code,
         "HS Commodities" = available_commodities_code
       ),
@@ -140,16 +141,12 @@ shinyServer(
     
     inp_md_convert_dollars <- reactive({ input$md_a })
     
+    inp_md_cluster <- reactive({ input$md_cl })
+    
     inp_md_product_filter <- reactive({ input$md_pf })
     inp_md_type <- reactive({ input$md_t })
-    inp_md_dist <- reactive({ input$md_d })
-    inp_md_bin <- reactive({ input$md_b })
-    inp_md_ctn <- reactive({ input$md_ct })
-    inp_md_cluster <- reactive({ input$md_cl })
-    inp_md_custom_subset <- reactive({ input$md_s })
-    
-    inp_md_f <- reactive({ input$md_f })
-    
+    inp_md_fml <- reactive({ input$md_fml })
+
     # Titles ----
     
     r_add_the <- eventReactive(input$cp_go, {
@@ -1531,7 +1528,9 @@ shinyServer(
     
     # Model ----
   
-    wt_md <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
+    # wt_md <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
+    
+    ## 1. upload custom data ----
     
     md_custom_data <- eventReactive(input$md_go, {
       uploaded_file <- input$md_own
@@ -1546,37 +1545,66 @@ shinyServer(
       }
     })
     
+    ## 2. define model formula ----
+    
+    lhs_md <- eventReactive(input$md_go, {
+      print(inp_md_fml())
+      lhs <- gsub("\\s+", "", gsub("~.*", "", inp_md_fml()))
+      print(lhs)
+      return(lhs)
+    })
+    
+    rhs_md <- eventReactive(input$md_go, {
+      rhs <- unlist(strsplit(gsub("\\s+", "", gsub(".*~", "", inp_md_fml())), "\\+"))
+      rhs <- rhs[rhs != "+"]
+      print(rhs)
+      return(rhs)
+    })
+    
+    fml_md <- eventReactive(input$md_go, {
+      fml <- paste0(lhs_md(), " ~ ", paste(rhs_md(), collapse = " + "))
+      if (inp_md_type() == "olsrem") {
+        fml <- paste(fml, "| log(remoteness_exp) + log(remoteness_imp)")
+      }
+      if (inp_md_type() == "olsfe") {
+        fml <- paste(fml, "| reporter_yr + partner_yr")
+      }
+      print(fml)
+      return(fml)
+    })
+    
     df_dtl_md <- eventReactive(input$md_go, {
-      wt_md$start()
-      
-      ## 1. read from SQL ----
-      
+      print("Collecting model data...")
+      # wt_md$start()
+
+      ## 3. read from SQL ----
+
       d <- tbl(con, "yrpc")
-          
+
       if (inp_md_piso() == "all") {
-        d <- d %>% 
+        d <- d %>%
           filter(
             year %in% !!inp_md_y() &
               reporter_iso == !!inp_md_riso()
           )
       } else {
-        d <- d %>% 
+        d <- d %>%
           filter(
             year %in% !!inp_md_y() &
               reporter_iso == !!inp_md_riso() &
               partner_iso == !!inp_md_piso()
           )
       }
-          
+
       d <- d %>% collect()
-      
-      wt_md$inc(2)
-      
-      ## 2. apply filters ----
-      
+
+      # wt_md$inc(2)
+
+      ## 4. apply filters ----
+
       if (any(inp_md_product_filter() %in% "vaccine")) {
         vaccine_codes <- as.character(unlist(read.csv("vaccine_codes.csv")))
-        d <- d %>% 
+        d <- d %>%
           mutate(
             section_code = case_when(
               commodity_code %in% vaccine_codes ~ "vaccine",
@@ -1584,109 +1612,106 @@ shinyServer(
             )
           )
       }
-      
+
       if (length(inp_md_product_filter()) > 0) {
-        d <- d %>% 
+        d <- d %>%
           filter(section_code %in% !!inp_md_product_filter())
       }
-        
-      wt_md$inc(1)
-      
-      if (any(inp_md_ctn() %in% "mfn")) {
-        ## 3.1. If MFN ----
-        
+
+      # wt_md$inc(1)
+
+      if (any(rhs_md() %in% "mfn")) {
+        ## 4.1. If MFN ----
+
         ### read from SQL ----
-        
+
         d <- d %>%
           inner_join(
-            tbl(con, "tariffs") %>% 
+            tbl(con, "tariffs") %>%
               filter(
                 years %in% !!inp_md_y(),
                 # here we need the applied tariffs when the product gets to destination
                 reporters = inp_md_piso()
-              ) %>% 
-              select(year, partner_iso = reporter_iso, commodity_code, mfn = simple_average) %>% 
+              ) %>%
+              select(year, partner_iso = reporter_iso, commodity_code, mfn = simple_average) %>%
               collect(),
             by = c("year", "partner_iso", "commodity_code")
           )
-        
+
         ### summarise ----
-        
-        d2 <- d %>% 
-          select(year, reporter_iso, partner_iso, trade_value_usd_exp, trade_value_usd_imp) %>% 
-          group_by(year, reporter_iso, partner_iso) %>% 
+
+        d2 <- d %>%
+          select(year, reporter_iso, partner_iso, trade_value_usd_exp, trade_value_usd_imp) %>%
+          group_by(year, reporter_iso, partner_iso) %>%
           summarise(
             trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T),
             trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)
           )
-        
-        d3 <- d %>% 
-          select(year, reporter_iso, partner_iso, trade_value_usd_exp, mfn) %>% 
-          group_by(year, reporter_iso, partner_iso) %>% 
+
+        d3 <- d %>%
+          select(year, reporter_iso, partner_iso, trade_value_usd_exp, mfn) %>%
+          group_by(year, reporter_iso, partner_iso) %>%
           summarise(
             log_mfn = log(weighted.mean(mfn, trade_value_usd_exp, na.rm = T))
-          ) %>% 
+          ) %>%
           ungroup()
-        
+
         d <- d2 %>% left_join(d3); rm(d2,d3)
       } else {
-        ## 3.2. If no MFN ----
-        
+        ### 4.2. If no MFN ----
+
         ### summarise ----
-        
-        d <- d %>% 
-          select(year, reporter_iso, partner_iso, trade_value_usd_exp, trade_value_usd_imp) %>% 
-          group_by(year, reporter_iso, partner_iso) %>% 
+
+        d <- d %>%
+          select(year, reporter_iso, partner_iso, trade_value_usd_exp, trade_value_usd_imp) %>%
+          group_by(year, reporter_iso, partner_iso) %>%
           summarise(
             trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T),
             trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)
-          ) %>% 
+          ) %>%
           ungroup()
       }
-      
-      ## 4. add geo dist data ----
-      
-      d <- d %>% 
+
+      ## 5. add geo dist data ----
+
+      d <- d %>%
         mutate(
           country1 = pmin(reporter_iso, partner_iso),
           country2 = pmax(reporter_iso, partner_iso)
-        ) %>% 
+        ) %>%
         inner_join(
-          tbl(con, "distances") %>% 
-            select(country1, country2,
-                   c(!!inp_md_dist(), !!inp_md_bin()[!!inp_md_bin() != "rta"])) %>% 
-            collect(),
+          tbl(con, "distances") %>% collect(),
           by = c("country1", "country2")
-        ) %>% 
+        ) %>%
         select(-c(country1,country2))
-      
-      ## 5. add RTA data ----
-      
-      if (any(inp_md_bin() %in% "rta")) {
+
+      ## 6. add RTA data ----
+
+      if (any(rhs_md() %in% "rta")) {
         d <- d %>%
           mutate(
             country1 = pmin(reporter_iso, partner_iso),
             country2 = pmax(reporter_iso, partner_iso)
           ) %>%
           left_join(
-            tbl(con, "rtas") %>% 
-              filter(year %in% !!inp_md_y()) %>% 
+            tbl(con, "rtas") %>%
+              filter(year %in% !!inp_md_y()) %>%
               collect(),
             by = c("year", "country1", "country2")
-          ) %>% 
+          ) %>%
           mutate(
             rta = case_when(
-              is.na(rta) & nchar(country1) == 3 & nchar(country2) == 3 ~ 0L,
+              is.na(rta) ~ 0L,
               TRUE ~ rta
             )
-          ) %>% 
+          ) %>%
           select(-c(country1,country2))
       }
-      
-      ## 6. create remoteness indexes ----
-      
+
+      ## 7. create remoteness indexes ----
+
       if (inp_md_type() == "olsrem") {
-        d <- d %>% 
+        d <- d %>%
           # Replicate total_e
           group_by(reporter_iso, year) %>%
           mutate(total_e = sum(trade_value_usd_exp, na.rm = T)) %>%
@@ -1695,11 +1720,10 @@ shinyServer(
           # Replicate rem_exp
           group_by(reporter_iso, year) %>%
           mutate(
-            remoteness_exp = sum(dist *  total_e / trade_value_usd_exp, na.rm = T),
-            log_remoteness_exp = log(remoteness_exp)
+            remoteness_exp = sum(dist *  total_e / trade_value_usd_exp, na.rm = T)
           )
-        
-        d <- d %>% 
+
+        d <- d %>%
             # Replicate total_y
             group_by(partner_iso, year) %>%
             mutate(total_y = sum(trade_value_usd_imp, na.rm = T)) %>%
@@ -1708,241 +1732,94 @@ shinyServer(
             # Replicate rem_imp
             group_by(partner_iso, year) %>%
             mutate(
-              remoteness_imp = sum(dist / (trade_value_usd_imp / total_y), na.rm = T),
-              log_remoteness_imp = log(remoteness_imp)
+              remoteness_imp = sum(dist / (trade_value_usd_imp / total_y), na.rm = T)
             )
-        
-        d <- d %>% 
-          select(-c(total_e, total_y, remoteness_exp, remoteness_imp))
+
+        d <- d %>%
+          select(-c(total_e, total_y))
       }
-      
-      ## 7. create fixed effects ----
-      
+
+      ## 8. create fixed effects ----
+
       if (inp_md_type() == "olsfe") {
-        d <- d %>% 
+        d <- d %>%
           mutate(
             reporter_yr = paste0(reporter_iso, year),
             partner_yr = paste0(partner_iso, year)
           )
       }
-      
-      ## 8. log variables ----
-      
-      if (inp_md_dist() == "dist") {
-        d <- d %>% 
-          mutate(log_dist = log(dist)) %>% 
-          select(-dist)
-      } else {
-        d <- d %>% 
-          mutate(log_distcap = log(distcap)) %>% 
-          select(-distcap)
-      }
-      
-      if (inp_md_type() != "ppml") {
-        d <- d %>% 
-          mutate(
-            # not needed for PPML!
-            log_trade_value_usd_exp = log(trade_value_usd_exp)
-          ) %>% 
-          select(-trade_value_usd_exp)
-      }
-      
+
       ## 9. create clustering variable ----
-      
+
       if (inp_md_cluster() == "yes") {
-       d <- d %>% 
-         mutate(reporter_piso = paste(reporter_iso, partner_iso, sep = "_"))
+       d <- d %>%
+         mutate(cluster_pairs = paste(reporter_iso, partner_iso, sep = "_"))
       }
-      
+
       ## 10. join with custom data ----
-      
+
       if (nrow(md_custom_data()) > 0) {
-        d <- d %>% 
+        d <- d %>%
           inner_join(md_custom_data())
       }
-      
-      wt_md$inc(2)
-      
+
+      # wt_md$inc(2)
+
       ## 11. convert dollars in time ----
-      
+
       if (inp_md_convert_dollars() != "No conversion") {
         d <- gdp_deflator_adjustment(d, as.integer(inp_md_convert_dollars()))
       }
-      
-      wt_md$inc(1)
-      
+
+      # wt_md$inc(1)
+
       gc()
-      
+
       return(
-        d %>% 
-          select(year, matches("trade"), everything()) %>% 
-          select(-trade_value_usd_imp)
+        # this is not elegant, but works well with polynomials, logs, etc in formulas
+        d[,
+          colnames(d) %in% 
+            c("year", "reporter_iso", "partner_iso",
+              lhs_md(), rhs_md(),
+              regmatches(lhs_md(), gregexpr("(?<=\\().*?(?=\\))", lhs_md(), perl=T))[[1]],
+              regmatches(rhs_md(), gregexpr("(?<=\\().*?(?=\\))", rhs_md(), perl=T))[[1]],
+              "remoteness_exp", "remoteness_imp", "cluster_pairs"
+            )
+        ]
       )
     })
     
-    df_dtl_md_txt <- eventReactive(input$md_go, { 
-      glue("The filtered dataset contains { nrow(df_dtl_md()) } rows and
-           { ncol(df_dtl_md()) } columns. Here's a preview of the table to use to fit regression mds:")
-    })
-    
-    df_dtl_md_preview <- eventReactive(input$md_go, { head(df_dtl_md()) })
-    
-    md_formula <- eventReactive(input$md_go, {
-      custom_variables <- if(nrow(md_custom_data()) > 0) {
-        cols <- colnames(md_custom_data())
-        cols <- cols[cols %in% unlist(strsplit(inp_md_custom_subset(), ";"))]
-        if (length(cols) > 0) cols else "1"
-      } else {
-        "1" # just a trick to avoid complex if else statements
-      }
+    fit_md <- eventReactive(input$md_go, {
+      fml <- as.formula(fml_md())
       
-      if (inp_md_type() == "ols") {
-        if (length(inp_md_bin()) > 0 & length(inp_md_ctn()) > 0) {
-          f <- as.formula(paste("log_trade_value_usd_exp", "~", paste(c(paste0("log_", inp_md_dist()), 
-                                                                        paste0("log_", inp_md_ctn()), 
-                                                                        inp_md_bin(),
-                                                                        custom_variables), 
-                                                                      collapse = " + "))) 
-        }
-        
-        if (length(inp_md_bin()) > 0 & length(inp_md_ctn()) == 0) {
-          f <- as.formula(paste("log_trade_value_usd_exp", "~", paste(c(paste0("log_", inp_md_dist()), 
-                                                                        inp_md_bin(),
-                                                                        custom_variables), 
-                                                                      collapse = " + "))) 
-        }
-        
-        if (length(inp_md_bin()) == 0 & length(inp_md_ctn()) > 0) {
-          f <- as.formula(paste("log_trade_value_usd_exp", "~", paste(c(paste0("log_", inp_md_dist()), 
-                                                                        paste0("log_", inp_md_ctn()),
-                                                                        custom_variables), 
-                                                                      collapse = " + "))) 
-        }
-        
-        if (length(inp_md_bin()) == 0 & length(inp_md_ctn()) == 0) {
-          f <- as.formula(paste("log_trade_value_usd_exp", "~", paste(c(paste0("log_", inp_md_dist()),
-                                                                        custom_variables), 
-                                                                      collapse = " + "))) 
-        }
-      }
-      
-      if (inp_md_type() == "olsrem") {
-        if (length(inp_md_bin()) > 0 & length(inp_md_ctn()) > 0) {
-          f <- as.formula(paste("log_trade_value_usd_exp", "~", paste(c(paste0("log_", inp_md_dist()),
-                                                                        paste0("log_", inp_md_ctn()),
-                                                                        inp_md_bin(),
-                                                                        custom_variables,
-                                                                        "log_remoteness_exp", "log_remoteness_imp"), collapse = " + ")))
-        }
-        
-        if (length(inp_md_bin()) > 0 & length(inp_md_ctn()) == 0) {
-          f <- as.formula(paste("log_trade_value_usd_exp", "~", paste(c(paste0("log_", inp_md_dist()),
-                                                                        inp_md_bin(),
-                                                                        custom_variables,
-                                                                        "log_remoteness_exp", "log_remoteness_imp"), collapse = " + ")))
-        }
-        
-        if (length(inp_md_bin()) == 0 & length(inp_md_ctn()) > 0) {
-          f <- as.formula(paste("log_trade_value_usd_exp", "~", paste(c(paste0("log_", inp_md_dist()),
-                                                                        paste0("log_", inp_md_ctn()),
-                                                                        custom_variables,
-                                                                        "log_remoteness_exp", "log_remoteness_imp"), collapse = " + ")))
-        }
-        
-        if (length(inp_md_bin()) == 0 & length(inp_md_ctn()) == 0) {
-          f <- as.formula(paste("log_trade_value_usd_exp", "~", paste(c(paste0("log_", inp_md_dist()),
-                                                                        custom_variables,
-                                                                        "log_remoteness_exp", "log_remoteness_imp"), collapse = " + ")))
-        }
-      }
-      
-      if (inp_md_type() == "olsfe") {
-        if (length(inp_md_bin()) > 0 & length(inp_md_ctn()) > 0) {
-          f <- as.formula(paste("log_trade_value_usd_exp", "~", paste(paste(c(paste0("log_", inp_md_dist()),
-                                                                              paste0("log_", inp_md_ctn()),
-                                                                              inp_md_bin(),
-                                                                              custom_variables), collapse = " + "), 
-                                                                      "reporter_yr + partner_yr", sep = " | ")))
-        }
-        
-        if (length(inp_md_bin()) > 0 & length(inp_md_ctn()) == 0) {
-          f <- as.formula(paste("log_trade_value_usd_exp", "~", paste(paste(c(paste0("log_", inp_md_dist()),
-                                                                              inp_md_bin(),
-                                                                              custom_variables), collapse = " + "), 
-                                                                      "reporter_yr + partner_yr", sep = " | ")))
-        }
-        
-        if (length(inp_md_bin()) == 0 & length(inp_md_ctn()) > 0) {
-          f <- as.formula(paste("log_trade_value_usd_exp", "~", paste(paste(c(paste0("log_", inp_md_dist()),
-                                                                              paste0("log_", inp_md_ctn()),
-                                                                              custom_variables), collapse = " + "), 
-                                                                      "reporter_yr + partner_yr", sep = " | ")))
-        }
-        
-        if (length(inp_md_bin()) == 0 & length(inp_md_ctn()) == 0) {
-          f <- as.formula(paste("log_trade_value_usd_exp", "~", paste(paste(c(paste0("log_", inp_md_dist()),
-                                                                              custom_variables), collapse = " + "), 
-                                                                      "reporter_yr + partner_yr", sep = " | ")))
-        }
-      }
-      
-      if (inp_md_type() == "ppml") {
-        if (length(inp_md_bin()) > 0 & length(inp_md_ctn()) > 0) {
-          f <- as.formula(paste("trade_value_usd_exp", "~", paste(paste(c(paste0("log_", inp_md_dist()),
-                                                                          paste0("log_", inp_md_ctn()),
-                                                                          inp_md_bin(),
-                                                                          custom_variables), collapse = " + "))))
-        }
-        
-        if (length(inp_md_bin()) > 0 & length(inp_md_ctn()) == 0) {
-          f <- as.formula(paste("trade_value_usd_exp", "~", paste(paste(c(paste0("log_", inp_md_dist()),
-                                                                          inp_md_bin(),
-                                                                          custom_variables), collapse = " + "))))
-        }
-        
-        if (length(inp_md_bin()) == 0 & length(inp_md_ctn()) > 0) {
-          f <- as.formula(paste("trade_value_usd_exp", "~", paste(paste(c(paste0("log_", inp_md_dist()),
-                                                                          paste0("log_", inp_md_ctn()),
-                                                                          custom_variables), collapse = " + "))))
-        }
-        
-        if (length(inp_md_bin()) == 0 & length(inp_md_ctn()) == 0) {
-          f <- as.formula(paste("trade_value_usd_exp", "~", paste(paste(c(paste0("log_",inp_md_dist()),
-                                                                          custom_variables), collapse = " + "))))
-        }
-      }
-      
-      wt_md$inc(2)
-      
-      print(f)
-      return(f)
-    })
-    
-    md_output <- eventReactive(input$md_go, {
       if (any(inp_md_type() %in% c("ols", "olsrem", "olsfe"))) {
         if (inp_md_cluster() == "yes") {
-          m <- feols(md_formula(), df_dtl_md(), cluster = ~reporter_piso)
+          m <- feols(fml, df_dtl_md(), cluster = ~cluster_pairs)
         } else {
-          m <- feols(md_formula(), df_dtl_md())
+          m <- feols(fml, df_dtl_md())
         }
       }
       
       if (inp_md_type() == "ppml") {
         if (inp_md_cluster() == "yes") {
-          m <- feglm(md_formula(), df_dtl_md(),
-                     cluster = ~reporter_piso,
+          m <- feglm(fml, df_dtl_md(),
+                     cluster = ~cluster_pairs,
                      family = quasipoisson(link = "log"))      
         } else {
-          m <- feglm(md_formula(), df_dtl_md(),
+          m <- feglm(fml, df_dtl_md(),
                      family = quasipoisson(link = "log"))
         }
       }
       
-      wt_md$inc(2)
+      # wt_md$inc(2)
       gc()
       
-      wt_md$close() 
+      # wt_md$close() 
       return(m)
+    })
+    
+    df_dtl_pre_md <- eventReactive(input$md_go, {
+      head(df_dtl_md())
     })
     
     # Cite ----
@@ -2085,80 +1962,10 @@ shinyServer(
     
     ## Model ----
     
-    output$md_df_stl <- eventReactive(input$md_go, { "Data preview" })
-    output$df_dtl_md_txt <- renderText(df_dtl_md_txt())
-    output$df_dtl_md_preview <- renderTable(df_dtl_md_preview())
-    
-    output$md_formula_latex <- renderUI({
-      if (inp_md_type() == "ppml") {
-        lhs <- "\\text{trade value}_{ij}^{t}"
-      } else {
-        lhs <- "\\text{log trade value}_{ij}^{t}"
-      }
-      
-      if (inp_md_type() == "ols") {
-        rhs <- paste(
-          paste0("\\beta_", seq_len(length(
-            c(inp_md_dist(), inp_md_ctn(), inp_md_bin())
-          ))),
-          paste0(paste0("\\text{", gsub("_", " ", c(paste("log", inp_md_dist()), 
-                                                    paste("log", inp_md_ctn()), inp_md_bin())), "}"), "_{ij}^{t}"),
-          collapse = " + "
-        )
-        
-        rhs <- paste0("\\beta_0 +", rhs, "+ \\varepsilon_{ij}^{t}")
-      }
-      
-      if (inp_md_type() == "olsrem") {
-        rhs <- paste(
-          paste0("\\beta_", seq_len(length(
-            c(inp_md_dist(), inp_md_bin(), "log_remoteness_exp", "log_remoteness_imp")
-          ))),
-          paste0(paste0("\\text{", gsub("_", " ", c(paste("log", inp_md_dist()), 
-                                                    inp_md_bin(), "log_remoteness_exp", "log_remoteness_imp")), "}"), "_{ij}^{t}"),
-          collapse = " + "
-        )
-        
-        rhs <- paste0("\\beta_0 +", rhs, "+ \\varepsilon_{ij}^{t}")
-      }
-      
-      if (inp_md_type() == "olsfe") {
-        rhs <- paste(
-          paste0("\\beta_", seq_len(length(
-            c(inp_md_dist(), inp_md_bin(), "reporter_yr", "partner_yr")
-          ))),
-          paste0(paste0("\\text{", gsub("_", " ", c(paste("log", inp_md_dist()), 
-                                                    inp_md_bin(), "reporter_yr", "partner_yr")), "}"), "_{ij}^{t}"),
-          collapse = " + "
-        )
-        
-        rhs <- paste0("\\beta_0 +", rhs, "+ \\varepsilon_{ij}^{t}")
-      }
-      
-      if (inp_md_type() == "ppml") {
-        rhs <- paste(
-          paste0("\\beta_", seq_len(length(
-            c(inp_md_dist(), inp_md_bin())
-          ))),
-          paste0(paste0("\\text{", gsub("_", " ", c(paste("log", inp_md_dist()), 
-                                                    inp_md_bin())), "}"), "_{ij}^{t}"),
-          collapse = " + "
-        )
-        
-        rhs <- paste0("\\exp[\\beta_0 +", rhs, "]\\times \\varepsilon_{ij}^{t}")
-      }
-      
-      withMathJax(
-        paste0("\\[", lhs, "=", rhs, "\\]")
-      )
-    })
-    
-    output$md_smr_stl <- eventReactive(input$md_go, { "Model summary" })
-    output$md_smr_txt <- eventReactive(input$md_go, { 
-      "WIP: some selections create errors messages such as 'contrasts can be applied only to factors with 2 or more levels' but Shiny hides those."
-    })
-    output$md_smr_tidy <- renderTable(tidy(md_output()))
-    output$md_smr_glance <- renderTable(glance(md_output()))
+    output$fml_latex_md <- renderText({ fml_md() })
+    output$df_dtl_pre_md <- renderTable({ df_dtl_pre_md() })
+    output$tidy_md <- renderTable(tidy(fit_md()))
+    output$glance_md <- renderTable(glance(fit_md()))
     
     ## Download ----
     
@@ -2213,7 +2020,6 @@ shinyServer(
       req(input$cp_go)
       downloadButton('dwn_cp_dtl_pre', label = 'Detailed data')
     })
-    
     
     ### Compare countries ----
     
@@ -2307,54 +2113,6 @@ shinyServer(
     
     ### Model ----
     
-    dwn_md_stl <- eventReactive(input$md_go, { "Download model data" })
-    
-    dwn_md_txt <- eventReactive(input$md_go, {
-      "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
-    })
-    
-    dwn_md_fmt <- eventReactive(input$md_go, {
-      selectInput(
-        "md_f",
-        "Download data as:",
-        choices = available_formats,
-        selected = NULL,
-        selectize = TRUE
-      )
-    })
-    
-    output$dwn_md_dtl_pre <- downloadHandler(
-      filename = function() {
-        glue("{ inp_md_type() }_{ inp_md_riso() }_{ inp_md_piso() }_{ min(inp_md_y()) }_{ max(inp_md_y()) }.{ inp_md_f() }")
-      },
-      content = function(filename) {
-        rio::export(df_dtl_md(), filename)
-      },
-      contentType = "application/zip"
-    )
-    
-    output$dwn_md_fit_pre <- downloadHandler(
-      filename = function() {
-        glue("{ inp_md_type() }_{ inp_md_riso() }_{ inp_md_piso() }_{ min(inp_md_y()) }_{ max(inp_md_y()) }.rds")
-      },
-      content = function(filename) {
-        saveRDS(md_output(), filename)
-      },
-      contentType = "application/zip"
-    )
-    
-    output$dwn_md_stl <- renderText({dwn_md_stl()})
-    output$dwn_md_txt <- renderText({dwn_md_txt()})
-    output$dwn_md_fmt <- renderUI({dwn_md_fmt()})
-    output$dwn_md_dtl <- renderUI({
-      req(input$md_go)
-      downloadButton('dwn_md_dtl_pre', label = 'Detailed data')
-    })
-    output$dwn_md_fit <- renderUI({
-      req(input$md_go)
-      downloadButton('dwn_md_fit_pre', label = 'Fitted model')
-    })
-    
     ## Cite ----
     
     output$cite_stl <- renderText({"Cite"})
@@ -2386,7 +2144,7 @@ shinyServer(
       # strip shiny related URL parameters
       reactiveValuesToList(input)
       setBookmarkExclude(c(
-        "md_own", "md_f", "cp_f", "cc_f", "go", "sidebarCollapsed", "sidebarItemExpanded"
+        "md_own", "md_f", "cp_f", "cc_f", "sidebarCollapsed", "sidebarItemExpanded"
       ))
       session$doBookmark()
     })
