@@ -485,7 +485,7 @@ shinyUI(
             ),
             
             column(
-              4,
+              6,
               sliderInput(
                 "md_y",
                 "Years:",
@@ -496,7 +496,11 @@ shinyUI(
                 step = 1,
                 ticks = FALSE,
                 width = "100%"
-              ),
+              )
+            ),
+            
+            column(
+              6,
               sliderInput(
                 "md_y_sep",
                 "Separate years by:",
@@ -507,14 +511,6 @@ shinyUI(
                 sep = "",
                 step = 1,
                 ticks = FALSE,
-                width = "100%"
-              ),
-              selectInput(
-                "md_a",
-                "Convert to constant dollars of the year:",
-                choices = c("No conversion", 2000:2019),
-                selected = "",
-                selectize = TRUE,
                 width = "100%"
               )
             ),
@@ -532,7 +528,7 @@ shinyUI(
                 multiple = TRUE
               )
             ),
-
+            
             column(
               4,
               selectInput(
@@ -559,20 +555,31 @@ shinyUI(
             ),
             
             column(
-              4,
-              radioButtons(
-                "md_cl",
-                "Use country pairs for clustering:",
-                choiceNames = list("Yes",
-                                   "No"),
-                choiceValues = list("yes", "no"),
-                selected = c("no"),
-                width = "100%",
+              3,
+              selectInput(
+                "md_a",
+                "Convert to constant dollars of the year:",
+                choices = c("No conversion", 2000:2019),
+                selected = "",
+                selectize = TRUE,
+                width = "100%"
               )
             ),
             
             column(
-              8,
+              3,
+              selectInput(
+                "md_cl",
+                "Use country pairs for clustering:",
+                choices = list("Yes" = "yes", "No" = "no"),
+                selected = c("no"),
+                selectize = TRUE,
+                width = "100%"
+              )
+            ),
+            
+            column(
+              3,
               selectInput(
                 "md_pf",
                 "Product filter (i.e., HS section subset):",
@@ -580,7 +587,7 @@ shinyUI(
                   "All Products" = available_all,
                   "Custom Selections" = available_vaccine,
                   "HS Sections" = available_sections_code
-                  ),
+                ),
                 selected = "All Products",
                 selectize = TRUE,
                 width = "100%",
@@ -588,29 +595,33 @@ shinyUI(
               )
             ),
             
-            column(12,
-                   fileInput('md_own', 'Upload your own data:',
-                             accept = c(
-                               'text/csv',
-                               'text/comma-separated-values',
-                               'text/tab-separated-values',
-                               '.csv',
-                               '.tsv',
-                               '.xlsx',
-                               '.sav',
-                               '.dta'
-                             ),
-                             width = "100%"
-                   )
+            column(
+              3,
+              fileInput(
+                'md_own', 
+                'Upload your own data:',
+                accept = c(
+                  'text/csv',
+                  'text/comma-separated-values',
+                  'text/tab-separated-values',
+                  '.csv',
+                  '.tsv',
+                  '.xlsx',
+                  '.sav',
+                  '.dta'
+                ),
+                width = "100%"
+              )
             ),
+            
+            ## Model results ----
             
             column(
               12,
-              h2("Model formula"),
               textInput(
                 "md_fml",
                 "Model formula (i.e., any valid R formula)",
-                "trade_value_usd_exp ~ log_dist + colony + comlang_off + contig",
+                "trade_value_usd_exp ~ poly(log(dist), 2) + colony + comlang_off + contig",
                 width = "100%",
                 placeholder = "Any valid R formula"
               )
@@ -619,16 +630,33 @@ shinyUI(
             column(
               12,
               align="center",
-              actionButton("md_go", "Give me the results for this model",
-                           class = "btn-primary")
+              actionButton(
+                "md_go", 
+                "Give me the results for this model",
+                class = "btn-primary"
+              )
             ),
             
             column(
               12,
-              verbatimTextOutput("fml_latex_md"),
+              htmlOutput("df_stl_md", container = tags$h2),
               tableOutput("df_dtl_pre_md"),
+              htmlOutput("fit_stl_md", container = tags$h2),
               tableOutput("tidy_md"),
-              tableOutput("glance_md")
+              tableOutput("glance_md"),
+              htmlOutput("fit_res_md", container = tags$h2),
+              verbatimTextOutput("fit_cat_md"),
+            ),
+            
+            ## Download ----
+            
+            column(
+              12,
+              htmlOutput("dwn_md_stl", container = tags$h2),
+              htmlOutput("dwn_md_txt", container = tags$p),
+              uiOutput("dwn_md_fmt"),
+              uiOutput("dwn_md_dtl"),
+              uiOutput("dwn_md_fit")
             )
           ),
           

@@ -106,7 +106,7 @@ names(available_models) <- c("OLS", "OLS (Remoteness Index)", "OLS (Fixed Effect
 
 ## Formats ----
 
-available_formats <- c("csv", "tsv", "json", "xlsx", "sav", "dta")
+available_formats <- c("csv", "tsv", "xlsx", "sav", "dta")
 
 # Buttons -----------------------------------------------------------------
 

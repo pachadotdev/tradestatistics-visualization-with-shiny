@@ -146,6 +146,7 @@ shinyServer(
     inp_md_product_filter <- reactive({ input$md_pf })
     inp_md_type <- reactive({ input$md_t })
     inp_md_fml <- reactive({ input$md_fml })
+    inp_md_f <- reactive({ input$md_f })
 
     # Titles ----
     
@@ -1781,8 +1782,8 @@ shinyServer(
           colnames(d) %in% 
             c("year", "reporter_iso", "partner_iso",
               lhs_md(), rhs_md(),
-              regmatches(lhs_md(), gregexpr("(?<=\\().*?(?=\\))", lhs_md(), perl=T))[[1]],
-              regmatches(rhs_md(), gregexpr("(?<=\\().*?(?=\\))", rhs_md(), perl=T))[[1]],
+              gsub("\\,.*", "", gsub(".*\\(", "", regmatches(lhs_md(), gregexpr("(?<=\\().*?(?=\\))", lhs_md(), perl = T))[[1]])),
+              gsub("\\,.*", "", gsub(".*\\(", "", regmatches(rhs_md(), gregexpr("(?<=\\().*?(?=\\))", rhs_md(), perl = T))[[1]])),
               "remoteness_exp", "remoteness_imp", "cluster_pairs"
             )
         ]
@@ -1962,10 +1963,13 @@ shinyServer(
     
     ## Model ----
     
-    output$fml_latex_md <- renderText({ fml_md() })
+    output$df_stl_md <- eventReactive(input$md_go, { "Data preview" })
     output$df_dtl_pre_md <- renderTable({ df_dtl_pre_md() })
+    output$fit_stl_md <- eventReactive(input$md_go, { "Model summary" })
     output$tidy_md <- renderTable(tidy(fit_md()))
     output$glance_md <- renderTable(glance(fit_md()))
+    output$fit_res_md <- eventReactive(input$md_go, { "Model results" })
+    output$fit_cat_md <- renderPrint({ fit_md() })
     
     ## Download ----
     
@@ -2112,6 +2116,54 @@ shinyServer(
     })
     
     ### Model ----
+    
+    dwn_md_stl <- eventReactive(input$md_go, { "Download model data" })
+    
+    dwn_md_txt <- eventReactive(input$md_go, {
+      "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
+    })
+    
+    dwn_md_fmt <- eventReactive(input$md_go, {
+      selectInput(
+        "md_f",
+        "Download data as:",
+        choices = available_formats,
+        selected = NULL,
+        selectize = TRUE
+      )
+    })
+    
+    output$dwn_md_dtl_pre <- downloadHandler(
+      filename = function() {
+        glue("{ inp_md_type() }_{ inp_md_riso() }_{ inp_md_piso() }_{ min(inp_md_y()) }_{ max(inp_md_y()) }.{ inp_md_f() }")
+      },
+      content = function(filename) {
+        rio::export(df_dtl_md(), filename)
+      },
+      contentType = "application/zip"
+    )
+    
+    output$dwn_md_fit_pre <- downloadHandler(
+      filename = function() {
+        glue("{ inp_md_type() }_{ inp_md_riso() }_{ inp_md_piso() }_{ min(inp_md_y()) }_{ max(inp_md_y()) }.rds")
+      },
+      content = function(filename) {
+        saveRDS(fit_md(), filename)
+      },
+      contentType = "application/zip"
+    )
+    
+    output$dwn_md_stl <- renderText({dwn_md_stl()})
+    output$dwn_md_txt <- renderText({dwn_md_txt()})
+    output$dwn_md_fmt <- renderUI({dwn_md_fmt()})
+    output$dwn_md_dtl <- renderUI({
+      req(input$md_go)
+      downloadButton('dwn_md_dtl_pre', label = 'Detailed data')
+    })
+    output$dwn_md_fit <- renderUI({
+      req(input$md_go)
+      downloadButton('dwn_md_fit_pre', label = 'Fitted model')
+    })
     
     ## Cite ----
     
