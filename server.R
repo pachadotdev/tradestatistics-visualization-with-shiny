@@ -1254,15 +1254,22 @@ shinyServer(
       
       if (inp_pp_section_code() != "all") {
         if (inp_pp_section_code() == "vaccine") {
-          vaccine_codes <- as.character(unlist(read.csv("vaccine_codes.csv")))
           d <- d %>% 
-            filter(commodity_code %in% vaccine_codes)
-        } else if (nchar(inp_pp_section_code()) == 2) {
-          d <- d %>% 
-            filter(section_code == !!inp_pp_section_code()) 
-        } else if (nchar(inp_pp_section_code()) == 4) {
+            left_join(tbl(con, "vaccine_inputs")) %>% 
+            mutate(
+              section_code = case_when(
+                is_vaccine_input == 1L ~ "vaccine",
+                TRUE ~ section_code
+              )
+            )
+        }
+        
+        if (nchar(inp_pp_section_code()) == 4) {
           d <- d %>% 
             filter(substr(commodity_code, 1, 4) == !!inp_pp_section_code()) 
+        } else {
+          d <- d %>% 
+            filter(section_code == !!inp_pp_section_code())
         }
       }
       
@@ -1614,7 +1621,7 @@ shinyServer(
           ) %>% 
           mutate(
             section_code = case_when(
-              is_vaccine_nput == 1L ~ "vaccine",
+              is_vaccine_input == 1L ~ "vaccine",
               TRUE ~ section_code
             )
           )
@@ -1780,7 +1787,7 @@ shinyServer(
             ) %>% 
             mutate(
               section_code = case_when(
-                is_vaccine_nput == 1L ~ "vaccine",
+                is_vaccine_input == 1L ~ "vaccine",
                 TRUE ~ section_code
               )
             )
