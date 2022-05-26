@@ -1601,18 +1601,20 @@ shinyServer(
           )
       }
 
-      d <- d %>% collect()
+      # d <- d %>% collect()
 
       wt_md$inc(1)
 
       ## 4. apply filters ----
 
       if (any(inp_md_product_filter() %in% "vaccine")) {
-        vaccine_codes <- as.character(unlist(read.csv("vaccine_codes.csv")))
-        d <- d %>%
+        d <- d %>% 
+          left_join(
+            tbl(con, "vaccine_inputs")
+          ) %>% 
           mutate(
             section_code = case_when(
-              commodity_code %in% vaccine_codes ~ "vaccine",
+              is_vaccine_nput == 1L ~ "vaccine",
               TRUE ~ section_code
             )
           )
@@ -1625,58 +1627,16 @@ shinyServer(
 
       wt_md$inc(1)
 
-      if (any(rhs_md() %in% "mfn")) {
-        ## 4.1. If MFN ----
-
-        ### read from SQL ----
-
-        d <- d %>%
-          inner_join(
-            tbl(con, "tariffs") %>%
-              filter(
-                years %in% !!inp_md_y(),
-                # here we need the applied tariffs when the product gets to destination
-                reporters %in% inp_md_piso()
-              ) %>%
-              select(year, partner_iso = reporter_iso, commodity_code, mfn = simple_average) %>%
-              collect(),
-            by = c("year", "partner_iso", "commodity_code")
-          )
-
-        ### summarise ----
-
-        d2 <- d %>%
-          select(year, reporter_iso, partner_iso, trade_value_usd_exp, trade_value_usd_imp) %>%
-          group_by(year, reporter_iso, partner_iso) %>%
-          summarise(
-            trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T),
-            trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)
-          )
-
-        d3 <- d %>%
-          select(year, reporter_iso, partner_iso, trade_value_usd_exp, mfn) %>%
-          group_by(year, reporter_iso, partner_iso) %>%
-          summarise(
-            log_mfn = log(weighted.mean(mfn, trade_value_usd_exp, na.rm = T))
-          ) %>%
-          ungroup()
-
-        d <- d2 %>% left_join(d3); rm(d2,d3)
-      } else {
-        ### 4.2. If no MFN ----
-
-        ### summarise ----
-
-        d <- d %>%
-          select(year, reporter_iso, partner_iso, trade_value_usd_exp, trade_value_usd_imp) %>%
-          group_by(year, reporter_iso, partner_iso) %>%
-          summarise(
-            trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T),
-            trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)
-          ) %>%
-          ungroup()
-      }
-
+      d <- d %>%
+        select(year, reporter_iso, partner_iso, trade_value_usd_exp, trade_value_usd_imp) %>%
+        group_by(year, reporter_iso, partner_iso) %>%
+        summarise(
+          trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T),
+          trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)
+        ) %>%
+        ungroup() %>%
+        collect()
+      
       wt_md$inc(1)
       
       ## 5. add geo dist data ----
@@ -1778,19 +1738,94 @@ shinyServer(
       if (inp_md_convert_dollars() != "No conversion") {
         d <- gdp_deflator_adjustment(d, as.integer(inp_md_convert_dollars()))
       }
+      
+      ## 11. add MFN data ----
+      
+      raw_lhs_md <- reactive({
+        gsub(".*\\(", "", regmatches(lhs_md(), gregexpr("(?<=\\().*?(?=\\))", lhs_md(), perl = T)))
+      })
+      
+      raw_rhs_md <- reactive({
+        gsub(".*\\(", "", regmatches(rhs_md(), gregexpr("(?<=\\().*?(?=\\))", rhs_md(), perl = T)))
+      })
+      
+      if (any(raw_rhs_md() %in% "mfn")) {
+        tar <- tbl(con, "tariffs") %>%
+          filter(
+            year %in% !!inp_md_y()
+          )
+        
+        trd <- tbl(con, "yrpc") %>% 
+          filter(
+            year %in% !!inp_md_y() & reporter_iso %in% !!inp_md_riso()
+          )
+        
+        if (any(inp_md_piso() != "all")) {
+          tar <- tar %>%
+            filter(
+              # here we need the applied tariffs when the product gets to destination
+              reporter_iso %in% !!inp_md_piso()
+            )
+          
+          trd <- tbl(con, "yrpc") %>% 
+            filter(
+              partner_iso %in% !!inp_md_riso()
+            )
+        }
+        
+        if (any(inp_md_product_filter() %in% "vaccine")) {
+          trd <- trd %>% 
+            left_join(
+              tbl(con, "vaccine_inputs")
+            ) %>% 
+            mutate(
+              section_code = case_when(
+                is_vaccine_nput == 1L ~ "vaccine",
+                TRUE ~ section_code
+              )
+            )
+        }
+        
+        if (length(inp_md_product_filter()) > 0) {
+          trd <- trd %>%
+            filter(section_code %in% !!inp_md_product_filter())
+        }
+        
+        trd <- trd %>%
+          select(year, reporter_iso, partner_iso, commodity_code, trade_value_usd_exp) %>% 
+          inner_join(
+            tar %>% 
+              select(year, partner_iso = reporter_iso, commodity_code, mfn = simple_average),
+            by = c("year", "partner_iso", "commodity_code")
+          )
+
+        trd <- trd %>%
+          select(year, reporter_iso, partner_iso, trade_value_usd_exp, mfn) %>%
+          collect() %>%
+          group_by(year, reporter_iso, partner_iso) %>%
+          summarise(
+            mfn = weighted.mean(mfn, trade_value_usd_exp, na.rm = T)
+          ) %>%
+          ungroup()
+        
+        rm(tar)
+
+        d <- d %>% inner_join(trd); rm(trade)
+      }
 
       wt_md$inc(1)
 
       gc()
 
+      print(raw_lhs_md())
+      print(raw_rhs_md())
+      
       return(
         # this is not elegant, but works well with polynomials, logs, etc in formulas
         d[,
           colnames(d) %in% 
             c("year", "reporter_iso", "partner_iso",
-              lhs_md(), rhs_md(),
-              gsub("\\,.*", "", gsub(".*\\(", "", regmatches(lhs_md(), gregexpr("(?<=\\().*?(?=\\))", lhs_md(), perl = T))[[1]])),
-              gsub("\\,.*", "", gsub(".*\\(", "", regmatches(rhs_md(), gregexpr("(?<=\\().*?(?=\\))", rhs_md(), perl = T))[[1]])),
+              lhs_md(), rhs_md(), raw_lhs_md(), raw_rhs_md(),
               "remoteness_exp", "remoteness_imp", "cluster_pairs"
             )
         ]
@@ -1806,7 +1841,7 @@ shinyServer(
       # bindEvent(input$md_go)
     
     df_dtl_2_md <- eventReactive(input$md_go, {
-      ## 11. join with custom data ----
+      ## 12. join with custom data ----
       
       if (nrow(md_custom_data()) > 0) {
         d <- df_dtl_md() %>% inner_join(md_custom_data())
@@ -2051,7 +2086,7 @@ shinyServer(
         <li>contig: The two countries are next to each other</li>
         <li>rta: The two countries are in a trade agreement</li>
         <li>smctry: The two countries were or are the same country</li>
-        <li>mfn: (Averaged) Most Favoured Nation tariff</li>
+        <li>mfn: Most Favoured Nation tariff (weighted average by exports)</li>
       </ul>
       "  
     })
