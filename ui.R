@@ -468,12 +468,13 @@ shinyUI(
             
             # Model ----
             
-            # useWaitress(),
+            useWaitress(),
             
             column(
               12,
               HTML("<h1>Gravity Models</h1>"),
-              htmlOutput("title_md_legend", container = tags$p)
+              htmlOutput("title_md_legend", container = tags$p),
+              htmlOutput("variables_desc_md")
             ),
             
             ## Model variables ----

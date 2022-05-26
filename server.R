@@ -1529,7 +1529,7 @@ shinyServer(
     
     # Model ----
   
-    # wt_md <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
+    wt_md <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
     
     ## 1. upload custom data ----
     
@@ -1576,30 +1576,34 @@ shinyServer(
     
     df_dtl_md <- eventReactive(input$md_go, {
       print("Collecting model data...")
-      # wt_md$start()
+      wt_md$start()
 
       ## 3. read from SQL ----
 
       d <- tbl(con, "yrpc")
 
-      if (inp_md_piso() == "all") {
+      d <- d %>%
+        filter(
+          year %in% !!inp_md_y() & reporter_iso %in% !!inp_md_riso()
+        )
+      
+      # if (any(inp_md_riso() != "all")) {
+      #   d <- d %>%
+      #     filter(
+      #       reporter_iso %in% !!inp_md_riso()
+      #     )
+      # } 
+      
+      if (any(inp_md_piso() != "all")) {
         d <- d %>%
           filter(
-            year %in% !!inp_md_y() &
-              reporter_iso == !!inp_md_riso()
-          )
-      } else {
-        d <- d %>%
-          filter(
-            year %in% !!inp_md_y() &
-              reporter_iso == !!inp_md_riso() &
-              partner_iso == !!inp_md_piso()
+            partner_iso %in% !!inp_md_piso()
           )
       }
 
       d <- d %>% collect()
 
-      # wt_md$inc(2)
+      wt_md$inc(1)
 
       ## 4. apply filters ----
 
@@ -1619,7 +1623,7 @@ shinyServer(
           filter(section_code %in% !!inp_md_product_filter())
       }
 
-      # wt_md$inc(1)
+      wt_md$inc(1)
 
       if (any(rhs_md() %in% "mfn")) {
         ## 4.1. If MFN ----
@@ -1632,7 +1636,7 @@ shinyServer(
               filter(
                 years %in% !!inp_md_y(),
                 # here we need the applied tariffs when the product gets to destination
-                reporters = inp_md_piso()
+                reporters %in% inp_md_piso()
               ) %>%
               select(year, partner_iso = reporter_iso, commodity_code, mfn = simple_average) %>%
               collect(),
@@ -1673,6 +1677,8 @@ shinyServer(
           ungroup()
       }
 
+      wt_md$inc(1)
+      
       ## 5. add geo dist data ----
 
       d <- d %>%
@@ -1686,6 +1692,8 @@ shinyServer(
         ) %>%
         select(-c(country1,country2))
 
+      wt_md$inc(1)
+      
       ## 6. add RTA data ----
 
       if (any(rhs_md() %in% "rta")) {
@@ -1709,6 +1717,8 @@ shinyServer(
           select(-c(country1,country2))
       }
 
+      wt_md$inc(1)
+      
       ## 7. create remoteness indexes ----
 
       if (inp_md_type() == "olsrem") {
@@ -1740,6 +1750,8 @@ shinyServer(
           select(-c(total_e, total_y))
       }
 
+      wt_md$inc(1)
+      
       ## 8. create fixed effects ----
 
       if (inp_md_type() == "olsfe") {
@@ -1750,29 +1762,24 @@ shinyServer(
           )
       }
 
+      wt_md$inc(.5)
+      
       ## 9. create clustering variable ----
 
       if (inp_md_cluster() == "yes") {
        d <- d %>%
          mutate(cluster_pairs = paste(reporter_iso, partner_iso, sep = "_"))
       }
+      
+      wt_md$inc(.5)
 
-      ## 10. join with custom data ----
-
-      if (nrow(md_custom_data()) > 0) {
-        d <- d %>%
-          inner_join(md_custom_data())
-      }
-
-      # wt_md$inc(2)
-
-      ## 11. convert dollars in time ----
+      ## 10. convert dollars in time ----
 
       if (inp_md_convert_dollars() != "No conversion") {
         d <- gdp_deflator_adjustment(d, as.integer(inp_md_convert_dollars()))
       }
 
-      # wt_md$inc(1)
+      wt_md$inc(1)
 
       gc()
 
@@ -1789,38 +1796,95 @@ shinyServer(
         ]
       )
     })
+      # bindCache(
+      #   inp_md_y(), inp_md_riso(), inp_md_piso(), inp_md_type(), 
+      #   inp_md_cluster(), inp_md_convert_dollars(),
+      #   inp_md_product_filter(),
+      #   gsub("\\,.*", "", gsub(".*\\(", "", regmatches(lhs_md(), gregexpr("(?<=\\().*?(?=\\))", lhs_md(), perl = T))[[1]])),
+      #   gsub("\\,.*", "", gsub(".*\\(", "", regmatches(rhs_md(), gregexpr("(?<=\\().*?(?=\\))", rhs_md(), perl = T))[[1]]))
+      # ) %>% 
+      # bindEvent(input$md_go)
+    
+    df_dtl_2_md <- eventReactive(input$md_go, {
+      ## 11. join with custom data ----
+      
+      if (nrow(md_custom_data()) > 0) {
+        d <- df_dtl_md() %>% inner_join(md_custom_data())
+      } else {
+        d <- df_dtl_md()
+      }
+      
+      return(d)
+    })
     
     fit_md <- eventReactive(input$md_go, {
       fml <- as.formula(fml_md())
       
       if (any(inp_md_type() %in% c("ols", "olsrem", "olsfe"))) {
         if (inp_md_cluster() == "yes") {
-          m <- feols(fml, df_dtl_md(), cluster = ~cluster_pairs)
+          m <- tryCatch(
+            feols(fml, df_dtl_2_md(), cluster = ~cluster_pairs),
+            error = function(e) {
+              feols(COLLINEAR_ESTIMATION ~ COLLINEAR + ESTIMATION, 
+                    data = data.frame(
+                      COLLINEAR_ESTIMATION = c(1,0,0), 
+                      COLLINEAR = c(0,1,0), 
+                      ESTIMATION = c(0,0,1)
+                    )
+              )
+            }
+          )
         } else {
-          m <- feols(fml, df_dtl_md())
+          m <- tryCatch(
+            feols(fml, df_dtl_2_md()),
+            error = function(e) {
+              feols(COLLINEAR_ESTIMATION ~ COLLINEAR + ESTIMATION, 
+                    data = data.frame(
+                      COLLINEAR_ESTIMATION = c(1,0,0), 
+                      COLLINEAR = c(0,1,0), 
+                      ESTIMATION = c(0,0,1)
+                    )
+              )
+            }
+          )
         }
       }
       
       if (inp_md_type() == "ppml") {
         if (inp_md_cluster() == "yes") {
-          m <- feglm(fml, df_dtl_md(),
-                     cluster = ~cluster_pairs,
-                     family = quasipoisson(link = "log"))      
+          m <- tryCatch(
+            feglm(fml, df_dtl_2_md(), cluster = ~cluster_pairs, family = quasipoisson(link = "log")),
+            error = function(e) {
+              feols(COLLINEAR_ESTIMATION ~ COLLINEAR + ESTIMATION, 
+                    data = data.frame(
+                      COLLINEAR_ESTIMATION = c(1,0,0), 
+                      COLLINEAR = c(0,1,0), 
+                      ESTIMATION = c(0,0,1)
+                    )
+              )
+            }
+          )
         } else {
-          m <- feglm(fml, df_dtl_md(),
-                     family = quasipoisson(link = "log"))
+          m <- tryCatch(
+            feglm(fml, df_dtl_2_md(), family = quasipoisson(link = "log")),
+            error = function(e) {
+              feols(COLLINEAR_ESTIMATION ~ COLLINEAR + ESTIMATION, 
+                    data = data.frame(
+                      COLLINEAR_ESTIMATION = c(1,0,0), 
+                      COLLINEAR = c(0,1,0), 
+                      ESTIMATION = c(0,0,1)
+                    )
+              )
+            }
+          )
         }
       }
       
-      # wt_md$inc(2)
+      wt_md$inc(2)
       gc()
       
-      # wt_md$close() 
+      wt_md$close() 
       return(m)
-    })
-    
-    df_dtl_pre_md <- eventReactive(input$md_go, {
-      head(df_dtl_md())
     })
     
     # Cite ----
@@ -1963,8 +2027,36 @@ shinyServer(
     
     ## Model ----
     
+    output$variables_desc_md <- renderText({
+      "
+      <h2>Gravity variables</h2>
+      
+      <h3>Exports and Imports (LHS)</h3>
+      <ul>
+       <li>trade_value_usd_exp: Exports in USD of each year</li>
+       <li>trade_value_usd_imp: Imports in USD of each year</li>
+      </ul>
+      
+      <h3>Distance for modelling (RHS)</h3>
+      <ul>
+       <li>dist: Simple distance between most populated cities in km</li>
+       <li>distcap: Simple distance between capitals in km</li>
+      </ul>
+      
+      <h3>Additional variables for modelling</h3>
+      <ul>
+        <li>colony: The two countries are/were in a colonial relation</li>
+        <li>comlang Ethno: The two countries have at least 9% of their population speaking the same language</li>
+        <li>comlang_off: The two countries share the same official language</li>
+        <li>contig: The two countries are next to each other</li>
+        <li>rta: The two countries are in a trade agreement</li>
+        <li>smctry: The two countries were or are the same country</li>
+        <li>mfn: (Averaged) Most Favoured Nation tariff</li>
+      </ul>
+      "  
+    })
     output$df_stl_md <- eventReactive(input$md_go, { "Data preview" })
-    output$df_dtl_pre_md <- renderTable({ df_dtl_pre_md() })
+    output$df_dtl_pre_md <- renderTable({ head(df_dtl_2_md()) })
     output$fit_stl_md <- eventReactive(input$md_go, { "Model summary" })
     output$tidy_md <- renderTable(tidy(fit_md()))
     output$glance_md <- renderTable(glance(fit_md()))
