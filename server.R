@@ -4,6 +4,8 @@ shinyServer(
   function(input, output, session) {
     # User inputs ----
     
+    observe_helpers()
+    
     ## Country profile ----
     
     inp_cp_y <- reactive({
@@ -48,7 +50,7 @@ shinyServer(
     inp_cc_r1 <- reactive({ input$cc_r1 })
     inp_cc_r2 <- reactive({ input$cc_r2 })
     inp_cc_p <- reactive({ input$cc_p })
-
+    
     inp_cc_f <- reactive({ input$cc_f })
     
     inp_cc_convert_dollars <- reactive({ input$cc_a })
@@ -74,7 +76,7 @@ shinyServer(
         select(available_reporters_names) %>%
         as.character()
     })
-
+    
     pname_cc <- eventReactive(input$cc_go, {
       reporters_to_display %>%
         filter(available_reporters_iso == inp_cc_p()) %>%
@@ -87,7 +89,7 @@ shinyServer(
     updateSelectizeInput(
       session,
       inputId = "pp_s",
-      label = "Section:",
+      label = "Section/Commodity:",
       choices = list(
         c(available_all, available_vaccine),
         "HS Sections" = available_sections_code,
@@ -145,9 +147,10 @@ shinyServer(
     
     inp_md_product_filter <- reactive({ input$md_pf })
     inp_md_type <- reactive({ input$md_t })
+    inp_md_zero <- reactive({ input$md_zero })
     inp_md_fml <- reactive({ input$md_fml })
     inp_md_f <- reactive({ input$md_f })
-
+    
     # Titles ----
     
     r_add_the <- eventReactive(input$cp_go, {
@@ -287,7 +290,7 @@ shinyServer(
       }
       
       d <- d %>% collect()
-
+      
       if (inp_cp_convert_dollars() != "No conversion") {
         d <- gdp_deflator_adjustment(d, as.integer(inp_cp_convert_dollars()))
       }
@@ -301,7 +304,7 @@ shinyServer(
     
     df_dtl_cp <- reactive({
       d <- tbl(con, tbl_dtl_cp())
-          
+      
       if (inp_cp_p() == "all") {
         d <- d %>% 
           filter(
@@ -316,7 +319,7 @@ shinyServer(
               partner_iso == !!inp_cp_p()
           )
       }
-          
+      
       d <- d %>% collect()
       
       if (inp_cp_convert_dollars() != "No conversion") {
@@ -580,7 +583,7 @@ shinyServer(
                           of its imports).")
       )
     })
-
+    
     trd_exc_lines_title_cp <- eventReactive(input$cp_go, {
       switch(tbl_agg_cp(),
              "yr" = glue("{ r_add_upp_the() } { rname_cp() } multilateral trade between { min(inp_cp_y()) } and { max(inp_cp_y()) }"),
@@ -604,15 +607,15 @@ shinyServer(
           )
         ) %>% 
         mutate(year = as.character(year))
-
+      
       wt_cp$inc(1)
       
       hchart(d, 
-        "line", 
-        hcaes(x = year, y = trade, group = flow),
-        tooltip = list(
-          pointFormatter = custom_tooltip_short()
-        )) %>% 
+             "line", 
+             hcaes(x = year, y = trade, group = flow),
+             tooltip = list(
+               pointFormatter = custom_tooltip_short()
+             )) %>% 
         hc_xAxis(title = list(text = "Year")) %>%
         hc_yAxis(title = list(text = "USD billion"),
                  labels = list(formatter = JS("function() { return this.value / 1000000000 }"))) %>% 
@@ -707,7 +710,7 @@ shinyServer(
       d2 <- pd_colors(d)
       
       wt_cp$inc(2)
-    
+      
       out <- pd_to_highcharts(d, d2)
       
       wt_cp$close()
@@ -724,9 +727,9 @@ shinyServer(
     
     df_agg_r1_cc <- reactive({
       wt_cc$start()
-
+      
       d <- tbl(con, tbl_agg_cc())
-
+      
       if (inp_cc_p() == "all") {
         d <- d %>%
           filter(
@@ -741,15 +744,15 @@ shinyServer(
               partner_iso == !!inp_cc_p()
           )
       }
-
+      
       d <- d %>% collect()
-
+      
       if (inp_cc_convert_dollars() != "No conversion") {
         d <- gdp_deflator_adjustment(d, as.integer(inp_cc_convert_dollars()))
       }
-
+      
       wt_cc$inc(1)
-
+      
       return(d)
     }) %>%
       bindCache(inp_cc_y(), inp_cc_r1(), inp_cc_p(), inp_cc_convert_dollars()) %>%
@@ -757,7 +760,7 @@ shinyServer(
     
     df_dtl_r1_cc <- reactive({
       d <- tbl(con, tbl_dtl_cc())
-
+      
       if (inp_cc_p() == "all") {
         d <- d %>%
           filter(
@@ -772,15 +775,15 @@ shinyServer(
               partner_iso == !!inp_cc_p()
           )
       }
-
+      
       d <- d %>% collect()
-
+      
       if (inp_cc_convert_dollars() != "No conversion") {
         d <- gdp_deflator_adjustment(d, as.integer(inp_cc_convert_dollars()))
       }
-
+      
       wt_cc$inc(1)
-
+      
       return(d)
     }) %>%
       bindCache(inp_cc_y(), inp_cc_r1(), inp_cc_p(), inp_cc_convert_dollars(),
@@ -863,47 +866,47 @@ shinyServer(
       df_agg_r2_cc() %>%
         select(year, trade_value_usd_exp, trade_value_usd_imp)
     })
-
+    
     exp_val_yr_r1_cc <- eventReactive(input$cc_go, {
       tr_tbl_agg_r1_cc() %>%
         select(trade_value_usd_exp) %>%
         as.numeric()
     })
-
+    
     exp_val_yr_r2_cc <- eventReactive(input$cc_go, {
       tr_tbl_agg_r2_cc() %>%
         select(trade_value_usd_exp) %>%
         as.numeric()
     })
-
+    
     imp_val_yr_r1_cc <- eventReactive(input$cc_go, {
       tr_tbl_agg_r1_cc() %>%
         select(trade_value_usd_imp) %>%
         as.numeric()
     })
-
+    
     imp_val_yr_r2_cc <- eventReactive(input$cc_go, {
       tr_tbl_agg_r2_cc() %>%
         select(trade_value_usd_imp) %>%
         as.numeric()
     })
-
+    
     exp_val_yr_2_r1_cc <- eventReactive(input$cc_go, {
       show_dollars(exp_val_yr_r1_cc())
     })
-
+    
     exp_val_yr_2_r2_cc <- eventReactive(input$cc_go, {
       show_dollars(exp_val_yr_r2_cc())
     })
-
+    
     imp_val_yr_2_r1_cc <- eventReactive(input$cc_go, {
       show_dollars(imp_val_yr_r1_cc())
     })
-
+    
     imp_val_yr_2_r2_cc <- eventReactive(input$cc_go, {
       show_dollars(imp_val_yr_r2_cc())
     })
-
+    
     trd_rankings_r1_cc <- eventReactive(input$cc_go, {
       d <- tbl(con, "yrp") %>%
         filter(
@@ -911,11 +914,11 @@ shinyServer(
             reporter_iso == !!inp_cc_r1()
         ) %>%
         collect()
-
+      
       if (inp_cc_convert_dollars() != "No conversion") {
         d <- gdp_deflator_adjustment(d, as.integer(inp_cc_convert_dollars()))
       }
-
+      
       d <- d %>%
         # filter(partner_iso != "0-unspecified") %>%
         mutate(
@@ -930,7 +933,7 @@ shinyServer(
       
       return(d)
     })
-
+    
     trd_rankings_no_yr_r1_cc <- eventReactive(input$cc_go, {
       trd_rankings_r1_cc() %>%
         ungroup() %>%
@@ -941,7 +944,7 @@ shinyServer(
         select(bal_rank) %>%
         as.character()
     })
-     
+    
     trd_rankings_exp_share_yr_r1_cc <- eventReactive(input$cc_go, {
       trd_rankings_r1_cc() %>%
         ungroup() %>%
@@ -956,7 +959,7 @@ shinyServer(
     trd_rankings_exp_share_yr_2_r1_cc <- eventReactive(input$cc_go, {
       show_percentage(trd_rankings_exp_share_yr_r1_cc())
     })
-
+    
     trd_rankings_imp_share_yr_r1_cc <- eventReactive(input$cc_go, {
       trd_rankings_r1_cc() %>%
         ungroup() %>%
@@ -968,7 +971,7 @@ shinyServer(
         select(imp_share) %>%
         as.numeric()
     })
-
+    
     trd_rankings_imp_share_yr_2_r1_cc <- eventReactive(input$cc_go, {
       show_percentage(trd_rankings_imp_share_yr_r1_cc())
     })
@@ -1047,23 +1050,23 @@ shinyServer(
     trd_smr_txt_exp_r1_cc <- eventReactive(input$cc_go, {
       switch(tbl_agg_cc(),
              "yr" = glue("The exports of { r1name_cc() } to the World were { exp_val_yr_2_r1_cc() } in { inp_cc_y() }."),
-
+             
              "yrp" = glue("The exports of { r1name_cc() } to { pname_cc() } were { exp_val_yr_2_r1_cc() } in { inp_cc_y() }.
                           { p2_add_upp_the() } { pname_cc() } was the No. { trd_rankings_no_yr_r1_cc() } trading partner of
                           { r1name_cc() } in { inp_cc_y() } (represented { trd_rankings_exp_share_yr_2_r1_cc() } of its exports).")
       )
     })
-
+    
     trd_smr_txt_imp_r1_cc <- eventReactive(input$cc_go, {
       switch(tbl_agg_cc(),
              "yr" = glue("The imports of { r1name_cc() } to the World were { imp_val_yr_2_r1_cc() } in { inp_cc_y() }."),
-
+             
              "yrp" = glue("The imports of { r1name_cc() } to { pname_cc() } were { imp_val_yr_2_r1_cc() } in { inp_cc_y() }.
                           { p2_add_upp_the() } { pname_cc() } was the No. { trd_rankings_no_yr_r1_cc() } trading partner of
                           { r1name_cc() } in { inp_cc_y() } (represented { trd_rankings_imp_share_yr_2_r1_cc() } of its imports).")
       )
     })
-
+    
     trd_smr_txt_exp_r2_cc <- eventReactive(input$cc_go, {
       switch(tbl_agg_cc(),
              "yr" = glue("The exports of { r2name_cc() } to the World were { exp_val_yr_2_r2_cc() } in { inp_cc_y() }."),
@@ -1176,13 +1179,13 @@ shinyServer(
     ### Visual elements ----
     
     exp_tt_yr_r1_cc <- eventReactive(input$cc_go, { r1name_cc() })
-
+    
     exp_tm_dtl_yr_r1_cc <- reactive({
       d <- df_dtl_r1_cc() %>%
         pd_fix_section_and_aggregate(col = "trade_value_usd_exp")
-
+      
       d2 <- pd_colors(d)
-
+      
       wt_cc$inc(1)
       pd_to_highcharts(d, d2)
     }) %>%
@@ -1535,7 +1538,7 @@ shinyServer(
       bindEvent(input$pp_go)
     
     # Model ----
-  
+    
     wt_md <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
     
     ## 1. upload custom data ----
@@ -1556,17 +1559,26 @@ shinyServer(
     ## 2. define model formula ----
     
     lhs_md <- eventReactive(input$md_go, {
-      print(inp_md_fml())
       lhs <- gsub("\\s+", "", gsub("~.*", "", inp_md_fml()))
-      print(lhs)
       return(lhs)
     })
     
     rhs_md <- eventReactive(input$md_go, {
       rhs <- unlist(strsplit(gsub("\\s+", "", gsub(".*~", "", inp_md_fml())), "\\+"))
-      rhs <- rhs[rhs != "+"]
-      print(rhs)
+      rhs <- sort(rhs[rhs != "+"])
       return(rhs)
+    })
+    
+    raw_lhs_md <- reactive({
+      x <- unlist(regmatches(lhs_md(), gregexpr("(?<=\\().*?(?=\\))", lhs_md(), perl = T)))
+      x <- x[x != ""]
+      return(x)
+    })
+    
+    raw_rhs_md <- reactive({
+      x <- unlist(regmatches(rhs_md(), gregexpr("(?<=\\().*?(?=\\))", rhs_md(), perl = T)))
+      x <- x[x != ""]
+      return(x)
     })
     
     fml_md <- eventReactive(input$md_go, {
@@ -1581,25 +1593,34 @@ shinyServer(
       return(fml)
     })
     
-    df_dtl_md <- eventReactive(input$md_go, {
+    ## 3. read from SQL ----
+    
+    df_dtl_md <- reactive({
       print("Collecting model data...")
       wt_md$start()
-
-      ## 3. read from SQL ----
-
-      d <- tbl(con, "yrpc")
-
+      
+      ### 3.1. apply filters ----
+      
+      tbl_sql <- if (any(inp_md_product_filter() != "all")) {
+        "yrpc"
+      } else {
+        "yrp"
+      }
+                 
+      d <- tbl(con, tbl_sql)
+      
       d <- d %>%
         filter(
-          year %in% !!inp_md_y() & reporter_iso %in% !!inp_md_riso()
+          # year %in% !!inp_md_y() & reporter_iso %in% !!inp_md_riso()
+          year %in% !!inp_md_y()
         )
       
-      # if (any(inp_md_riso() != "all")) {
-      #   d <- d %>%
-      #     filter(
-      #       reporter_iso %in% !!inp_md_riso()
-      #     )
-      # } 
+      if (any(inp_md_riso() != "all")) {
+        d <- d %>%
+          filter(
+            reporter_iso %in% !!inp_md_riso()
+          )
+      }
       
       if (any(inp_md_piso() != "all")) {
         d <- d %>%
@@ -1607,13 +1628,11 @@ shinyServer(
             partner_iso %in% !!inp_md_piso()
           )
       }
-
+      
       # d <- d %>% collect()
-
+      
       wt_md$inc(1)
-
-      ## 4. apply filters ----
-
+      
       if (any(inp_md_product_filter() %in% "vaccine")) {
         d <- d %>% 
           left_join(
@@ -1626,14 +1645,16 @@ shinyServer(
             )
           )
       }
-
-      if (length(inp_md_product_filter()) > 0) {
+      
+      if (any(inp_md_product_filter() != "all")) {
         d <- d %>%
           filter(section_code %in% !!inp_md_product_filter())
       }
-
+      
       wt_md$inc(1)
-
+      
+      #### collect data ----
+      
       d <- d %>%
         select(year, reporter_iso, partner_iso, trade_value_usd_exp, trade_value_usd_imp) %>%
         group_by(year, reporter_iso, partner_iso) %>%
@@ -1641,13 +1662,26 @@ shinyServer(
           trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T),
           trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)
         ) %>%
-        ungroup() %>%
-        collect()
+        ungroup()
+      
+      if (inp_md_zero() == "yes" & grepl("trade_value_usd_exp", lhs_md())) {
+        d <- d %>% 
+          filter(trade_value_usd_exp > 0)
+      }
+      
+      if (inp_md_zero() == "yes" & grepl("trade_value_usd_imp", lhs_md())) {
+        d <- d %>% 
+          filter(trade_value_usd_imp > 0)
+      }
+      
+      d <- d %>% 
+        collect() %>% 
+        arrange(year, reporter_iso, partner_iso)
       
       wt_md$inc(1)
       
-      ## 5. add geo dist data ----
-
+      ### 3.2. add geo dist data ----
+      
       d <- d %>%
         mutate(
           country1 = pmin(reporter_iso, partner_iso),
@@ -1658,11 +1692,11 @@ shinyServer(
           by = c("country1", "country2")
         ) %>%
         select(-c(country1,country2))
-
+      
       wt_md$inc(1)
       
-      ## 6. add RTA data ----
-
+      ### 3.3. add RTA data ----
+      
       if (any(rhs_md() %in% "rta")) {
         d <- d %>%
           mutate(
@@ -1683,11 +1717,11 @@ shinyServer(
           ) %>%
           select(-c(country1,country2))
       }
-
+      
       wt_md$inc(1)
       
-      ## 7. create remoteness indexes ----
-
+      ### 3.4. create remoteness indexes ----
+      
       if (inp_md_type() == "olsrem") {
         d <- d %>%
           # Replicate total_e
@@ -1700,27 +1734,27 @@ shinyServer(
           mutate(
             remoteness_exp = sum(dist *  total_e / trade_value_usd_exp, na.rm = T)
           )
-
+        
         d <- d %>%
-            # Replicate total_y
-            group_by(partner_iso, year) %>%
-            mutate(total_y = sum(trade_value_usd_imp, na.rm = T)) %>%
-            group_by(year) %>%
-            mutate(total_y = max(total_y, na.rm = T)) %>%
-            # Replicate rem_imp
-            group_by(partner_iso, year) %>%
-            mutate(
-              remoteness_imp = sum(dist / (trade_value_usd_imp / total_y), na.rm = T)
-            )
-
+          # Replicate total_y
+          group_by(partner_iso, year) %>%
+          mutate(total_y = sum(trade_value_usd_imp, na.rm = T)) %>%
+          group_by(year) %>%
+          mutate(total_y = max(total_y, na.rm = T)) %>%
+          # Replicate rem_imp
+          group_by(partner_iso, year) %>%
+          mutate(
+            remoteness_imp = sum(dist / (trade_value_usd_imp / total_y), na.rm = T)
+          )
+        
         d <- d %>%
           select(-c(total_e, total_y))
       }
-
+      
       wt_md$inc(1)
       
-      ## 8. create fixed effects ----
-
+      ### 3.5. create fixed effects ----
+      
       if (inp_md_type() == "olsfe") {
         d <- d %>%
           mutate(
@@ -1728,33 +1762,25 @@ shinyServer(
             partner_yr = paste0(partner_iso, year)
           )
       }
-
+      
       wt_md$inc(.5)
       
-      ## 9. create clustering variable ----
-
+      ### 3.5. create clustering variable ----
+      
       if (inp_md_cluster() == "yes") {
-       d <- d %>%
-         mutate(cluster_pairs = paste(reporter_iso, partner_iso, sep = "_"))
+        d <- d %>%
+          mutate(cluster_pairs = paste(reporter_iso, partner_iso, sep = "_"))
       }
       
       wt_md$inc(.5)
-
-      ## 10. convert dollars in time ----
-
+      
+      ### 3.6. convert dollars in time ----
+      
       if (inp_md_convert_dollars() != "No conversion") {
         d <- gdp_deflator_adjustment(d, as.integer(inp_md_convert_dollars()))
       }
       
-      ## 11. add MFN data ----
-      
-      raw_lhs_md <- reactive({
-        gsub(".*\\(", "", regmatches(lhs_md(), gregexpr("(?<=\\().*?(?=\\))", lhs_md(), perl = T)))
-      })
-      
-      raw_rhs_md <- reactive({
-        gsub(".*\\(", "", regmatches(rhs_md(), gregexpr("(?<=\\().*?(?=\\))", rhs_md(), perl = T)))
-      })
+      ### 3.7. add MFN data ----
       
       if (any(raw_rhs_md() %in% "mfn")) {
         tar <- tbl(con, "tariffs") %>%
@@ -1805,7 +1831,7 @@ shinyServer(
               select(year, partner_iso = reporter_iso, commodity_code, mfn = simple_average),
             by = c("year", "partner_iso", "commodity_code")
           )
-
+        
         trd <- trd %>%
           select(year, reporter_iso, partner_iso, trade_value_usd_exp, mfn) %>%
           collect() %>%
@@ -1816,16 +1842,15 @@ shinyServer(
           ungroup()
         
         rm(tar)
-
+        
         d <- d %>% inner_join(trd); rm(trade)
       }
-
+      
       wt_md$inc(1)
-
+      
       gc()
-
-      print(raw_lhs_md())
-      print(raw_rhs_md())
+      
+      print(c(raw_lhs_md(), raw_rhs_md()))
       
       return(
         # this is not elegant, but works well with polynomials, logs, etc in formulas
@@ -1837,18 +1862,16 @@ shinyServer(
             )
         ]
       )
-    })
-      # bindCache(
-      #   inp_md_y(), inp_md_riso(), inp_md_piso(), inp_md_type(), 
-      #   inp_md_cluster(), inp_md_convert_dollars(),
-      #   inp_md_product_filter(),
-      #   gsub("\\,.*", "", gsub(".*\\(", "", regmatches(lhs_md(), gregexpr("(?<=\\().*?(?=\\))", lhs_md(), perl = T))[[1]])),
-      #   gsub("\\,.*", "", gsub(".*\\(", "", regmatches(rhs_md(), gregexpr("(?<=\\().*?(?=\\))", rhs_md(), perl = T))[[1]]))
-      # ) %>% 
-      # bindEvent(input$md_go)
+    }) %>% 
+      bindCache(
+        inp_md_y(), inp_md_riso(), inp_md_piso(), inp_md_type(), inp_md_zero(),
+        inp_md_convert_dollars(), inp_md_cluster(), inp_md_product_filter(),
+        fml_md(), lhs_md(), rhs_md(), raw_lhs_md(), raw_rhs_md()
+      ) %>%
+      bindEvent(input$md_go)
     
     df_dtl_2_md <- eventReactive(input$md_go, {
-      ## 12. join with custom data ----
+      ### 3.8. join with custom data ----
       
       if (nrow(md_custom_data()) > 0) {
         d <- df_dtl_md() %>% inner_join(md_custom_data())
@@ -1859,35 +1882,23 @@ shinyServer(
       return(d)
     })
     
+    ## 4. Fit model ----
+    
     fit_md <- eventReactive(input$md_go, {
+      print("Fitting model...")
+      
       fml <- as.formula(fml_md())
       
       if (any(inp_md_type() %in% c("ols", "olsrem", "olsfe"))) {
         if (inp_md_cluster() == "yes") {
           m <- tryCatch(
             feols(fml, df_dtl_2_md(), cluster = ~cluster_pairs),
-            error = function(e) {
-              feols(COLLINEAR_ESTIMATION ~ COLLINEAR + ESTIMATION, 
-                    data = data.frame(
-                      COLLINEAR_ESTIMATION = c(1,0,0), 
-                      COLLINEAR = c(0,1,0), 
-                      ESTIMATION = c(0,0,1)
-                    )
-              )
-            }
+            error = function(e) { custom_regression_error() }
           )
         } else {
           m <- tryCatch(
             feols(fml, df_dtl_2_md()),
-            error = function(e) {
-              feols(COLLINEAR_ESTIMATION ~ COLLINEAR + ESTIMATION, 
-                    data = data.frame(
-                      COLLINEAR_ESTIMATION = c(1,0,0), 
-                      COLLINEAR = c(0,1,0), 
-                      ESTIMATION = c(0,0,1)
-                    )
-              )
-            }
+            error = function(e) { custom_regression_error() }
           )
         }
       }
@@ -1896,28 +1907,12 @@ shinyServer(
         if (inp_md_cluster() == "yes") {
           m <- tryCatch(
             feglm(fml, df_dtl_2_md(), cluster = ~cluster_pairs, family = quasipoisson(link = "log")),
-            error = function(e) {
-              feols(COLLINEAR_ESTIMATION ~ COLLINEAR + ESTIMATION, 
-                    data = data.frame(
-                      COLLINEAR_ESTIMATION = c(1,0,0), 
-                      COLLINEAR = c(0,1,0), 
-                      ESTIMATION = c(0,0,1)
-                    )
-              )
-            }
+            error = function(e) { custom_regression_error() }
           )
         } else {
           m <- tryCatch(
             feglm(fml, df_dtl_2_md(), family = quasipoisson(link = "log")),
-            error = function(e) {
-              feols(COLLINEAR_ESTIMATION ~ COLLINEAR + ESTIMATION, 
-                    data = data.frame(
-                      COLLINEAR_ESTIMATION = c(1,0,0), 
-                      COLLINEAR = c(0,1,0), 
-                      ESTIMATION = c(0,0,1)
-                    )
-              )
-            }
+            error = function(e) { custom_regression_error() }
           )
         }
       }
@@ -1937,7 +1932,7 @@ shinyServer(
         Accessed {months(Sys.Date()) } { lubridate::day(Sys.Date()) }, { lubridate::year(Sys.Date()) }. { site_url }/"
       )
     })
-
+    
     cite_bibtex <- reactive({
       glue("@misc{{open_trd_statistics_{lubridate::year(Sys.Date())},
       title = {{Open Trade Statistics Beta Dashboard}},
@@ -2069,34 +2064,6 @@ shinyServer(
     
     ## Model ----
     
-    output$variables_desc_md <- renderText({
-      "
-      <h2>Gravity variables</h2>
-      
-      <h3>Exports and Imports (LHS)</h3>
-      <ul>
-       <li>trade_value_usd_exp: Exports in USD of each year</li>
-       <li>trade_value_usd_imp: Imports in USD of each year</li>
-      </ul>
-      
-      <h3>Distance for modelling (RHS)</h3>
-      <ul>
-       <li>dist: Simple distance between most populated cities in km</li>
-       <li>distcap: Simple distance between capitals in km</li>
-      </ul>
-      
-      <h3>Additional variables for modelling</h3>
-      <ul>
-        <li>colony: The two countries are/were in a colonial relation</li>
-        <li>comlang Ethno: The two countries have at least 9% of their population speaking the same language</li>
-        <li>comlang_off: The two countries share the same official language</li>
-        <li>contig: The two countries are next to each other</li>
-        <li>rta: The two countries are in a trade agreement</li>
-        <li>smctry: The two countries were or are the same country</li>
-        <li>mfn: Most Favoured Nation tariff (weighted average by exports)</li>
-      </ul>
-      "  
-    })
     output$df_stl_md <- eventReactive(input$md_go, { "Data preview" })
     output$df_dtl_pre_md <- renderTable({ head(df_dtl_2_md()) })
     output$fit_stl_md <- eventReactive(input$md_go, { "Model summary" })
@@ -2128,14 +2095,14 @@ shinyServer(
     })
     
     output$dwn_cp_agg_pre <- downloadHandler(
-        filename = function() {
-          glue("{ tbl_agg_cp() }_{ inp_cp_r() }_{ inp_cp_p() }_{ min(inp_cp_y()) }_{ max(inp_cp_y()) }.{ inp_cp_f() }")
-        },
-        content = function(filename) {
-          rio::export(df_agg_cp(), filename)
-        },
-        contentType = "application/zip"
-      )
+      filename = function() {
+        glue("{ tbl_agg_cp() }_{ inp_cp_r() }_{ inp_cp_p() }_{ min(inp_cp_y()) }_{ max(inp_cp_y()) }.{ inp_cp_f() }")
+      },
+      content = function(filename) {
+        rio::export(df_agg_cp(), filename)
+      },
+      contentType = "application/zip"
+    )
     
     output$dwn_cp_dtl_pre <- downloadHandler(
       filename = function() {
