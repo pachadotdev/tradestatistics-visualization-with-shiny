@@ -574,7 +574,7 @@ shinyUI(
               3,
               selectInput(
                 "md_r",
-                "Reporter",
+                "Importer",
                 choices = available_reporters_iso,
                 # choices = available_reporters_iso[available_reporters_iso != "all"],
                 selected = "can",
@@ -584,8 +584,8 @@ shinyUI(
               ) %>% 
                 helper(
                   type = "inline",
-                  title = "Select reporters",
-                  content = "You can select more than one reporter. For example, to estimate effects for NAFTA, choose the US, Canada and Mexico.",
+                  title = "Select importers",
+                  content = "You can select more than one importer. For example, to estimate effects for NAFTA, choose the US, Canada and Mexico.",
                   buttonLabel = "Got it!",
                   easyClose = FALSE,
                   fade = TRUE,
@@ -597,7 +597,7 @@ shinyUI(
               3,
               selectInput(
                 "md_p",
-                "Partner",
+                "Exporter",
                 choices = available_reporters_iso,
                 selected = "all",
                 selectize = TRUE,
@@ -606,8 +606,8 @@ shinyUI(
               ) %>% 
                 helper(
                   type = "inline",
-                  title = "Select partners",
-                  content = "You can select more than one partner.",
+                  title = "Select exporters",
+                  content = "You can select more than one exporter.",
                   buttonLabel = "Got it!",
                   easyClose = FALSE,
                   fade = TRUE,
@@ -776,7 +776,7 @@ shinyUI(
               textInput(
                 "md_fml",
                 "Model formula",
-                "trade_value_usd_exp ~ log(dist) + colony + comlang_off + contig",
+                "trade ~ log(dist) + colony + comlang_off + contig",
                 width = "100%",
                 placeholder = "Any valid R formula"
               ) %>% 
@@ -788,8 +788,7 @@ shinyUI(
                               "<h4>Gravity variables in our database</h4>",
                               "<b>Exports and Imports (LHS)</b>
                               <ul>
-                               <li>trade_value_usd_exp: Exports in USD of each year</li>
-                               <li>trade_value_usd_imp: Imports in USD of each year</li>
+                               <li>trade: Bilateral trade (exports, reported at destination) in USD of each year</li>
                               </ul>",
                               "<b>Distance for modelling (RHS)</b>
                               <ul>

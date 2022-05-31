@@ -1653,30 +1653,25 @@ shinyServer(
       
       wt_md$inc(1)
       
-      #### collect data ----
+      #### aggregate data ----
       
       d <- d %>%
-        select(year, reporter_iso, partner_iso, trade_value_usd_exp, trade_value_usd_imp) %>%
-        group_by(year, reporter_iso, partner_iso) %>%
-        summarise(
-          trade_value_usd_exp = sum(trade_value_usd_exp, na.rm = T),
-          trade_value_usd_imp = sum(trade_value_usd_imp, na.rm = T)
-        ) %>%
+        select(year, importer = reporter_iso, exporter = partner_iso, 
+               trade = trade_value_usd_imp) %>%
+        group_by(year, importer, exporter) %>%
+        summarise(trade = sum(trade, na.rm = T)) %>%
         ungroup()
       
-      if (inp_md_zero() == "yes" & grepl("trade_value_usd_exp", lhs_md())) {
+      if (inp_md_zero() == "yes") {
         d <- d %>% 
-          filter(trade_value_usd_exp > 0)
+          filter(trade > 0)
       }
       
-      if (inp_md_zero() == "yes" & grepl("trade_value_usd_imp", lhs_md())) {
-        d <- d %>% 
-          filter(trade_value_usd_imp > 0)
-      }
+      #### collect data ----
       
       d <- d %>% 
         collect() %>% 
-        arrange(year, reporter_iso, partner_iso)
+        arrange(year, importer, exporter)
       
       wt_md$inc(1)
       
@@ -1684,8 +1679,8 @@ shinyServer(
       
       d <- d %>%
         mutate(
-          country1 = pmin(reporter_iso, partner_iso),
-          country2 = pmax(reporter_iso, partner_iso)
+          country1 = pmin(importer, exporter),
+          country2 = pmax(importer, exporter)
         ) %>%
         inner_join(
           tbl(con, "distances") %>% collect(),
@@ -1700,8 +1695,8 @@ shinyServer(
       if (any(rhs_md() %in% "rta")) {
         d <- d %>%
           mutate(
-            country1 = pmin(reporter_iso, partner_iso),
-            country2 = pmax(reporter_iso, partner_iso)
+            country1 = pmin(importer, exporter),
+            country2 = pmax(importer, exporter)
           ) %>%
           left_join(
             tbl(con, "rtas") %>%
@@ -1724,31 +1719,41 @@ shinyServer(
       
       if (inp_md_type() == "olsrem") {
         d <- d %>%
-          # Replicate total_e
-          group_by(reporter_iso, year) %>%
-          mutate(total_e = sum(trade_value_usd_exp, na.rm = T)) %>%
-          group_by(year) %>%
-          mutate(total_e = max(total_e, na.rm = T)) %>%
-          # Replicate rem_exp
-          group_by(reporter_iso, year) %>%
+          # Create Yit en Eit
+          group_by(importer, year) %>%
           mutate(
-            remoteness_exp = sum(dist *  total_e / trade_value_usd_exp, na.rm = T)
+            y = sum(trade),
+            total_y = sum(y, na.rm = T)
+          ) %>%
+          
+          group_by(exporter, year) %>%
+          mutate(
+            e = sum(trade),
+            total_e = sum(e, na.rm = T)
+          ) %>% 
+          
+          group_by(year) %>%
+          mutate(
+            total_y = max(total_y, na.rm = T),
+            total_e = max(total_e, na.rm = T)
           )
         
         d <- d %>%
-          # Replicate total_y
-          group_by(partner_iso, year) %>%
-          mutate(total_y = sum(trade_value_usd_imp, na.rm = T)) %>%
-          group_by(year) %>%
-          mutate(total_y = max(total_y, na.rm = T)) %>%
           # Replicate rem_imp
-          group_by(partner_iso, year) %>%
+          group_by(importer, year) %>%
           mutate(
-            remoteness_imp = sum(dist / (trade_value_usd_imp / total_y), na.rm = T)
+            remoteness_imp = sum(dist / (y / total_y), na.rm = T)
+          )
+        
+        d <- d %>% 
+          # Replicate rem_exp
+          group_by(exporter, year) %>%
+          mutate(
+            remoteness_exp = sum(dist *  total_e / e, na.rm = T)
           )
         
         d <- d %>%
-          select(-c(total_e, total_y))
+          select(-c(total_y, total_e))
       }
       
       wt_md$inc(1)
@@ -1758,8 +1763,8 @@ shinyServer(
       if (inp_md_type() == "olsfe") {
         d <- d %>%
           mutate(
-            reporter_yr = paste0(reporter_iso, year),
-            partner_yr = paste0(partner_iso, year)
+            importer_yr = paste0(importer, year),
+            exporter_yr = paste0(exporter, year)
           )
       }
       
@@ -1769,7 +1774,7 @@ shinyServer(
       
       if (inp_md_cluster() == "yes") {
         d <- d %>%
-          mutate(cluster_pairs = paste(reporter_iso, partner_iso, sep = "_"))
+          mutate(importer_exporter = paste(importer, exporter, sep = "_"))
       }
       
       wt_md$inc(.5)
@@ -1833,11 +1838,12 @@ shinyServer(
           )
         
         trd <- trd %>%
-          select(year, reporter_iso, partner_iso, trade_value_usd_exp, mfn) %>%
+          select(year, importer = reporter_iso, exporter = partner_iso,
+                 trade = trade_value_usd_imp, mfn) %>%
           collect() %>%
-          group_by(year, reporter_iso, partner_iso) %>%
+          group_by(year, importer, exporter) %>%
           summarise(
-            mfn = weighted.mean(mfn, trade_value_usd_exp, na.rm = T)
+            mfn = weighted.mean(mfn, trade, na.rm = T)
           ) %>%
           ungroup()
         
@@ -1856,9 +1862,9 @@ shinyServer(
         # this is not elegant, but works well with polynomials, logs, etc in formulas
         d[,
           colnames(d) %in% 
-            c("year", "reporter_iso", "partner_iso",
+            c("year", "importer", "exporter",
               lhs_md(), rhs_md(), raw_lhs_md(), raw_rhs_md(),
-              "remoteness_exp", "remoteness_imp", "cluster_pairs"
+              "remoteness_exp", "remoteness_imp", "importer_exporter"
             )
         ]
       )
@@ -1892,7 +1898,7 @@ shinyServer(
       if (any(inp_md_type() %in% c("ols", "olsrem", "olsfe"))) {
         if (inp_md_cluster() == "yes") {
           m <- tryCatch(
-            feols(fml, df_dtl_2_md(), cluster = ~cluster_pairs),
+            feols(fml, df_dtl_2_md(), cluster = ~importer_exporter),
             error = function(e) { custom_regression_error() }
           )
         } else {
@@ -1906,7 +1912,8 @@ shinyServer(
       if (inp_md_type() == "ppml") {
         if (inp_md_cluster() == "yes") {
           m <- tryCatch(
-            feglm(fml, df_dtl_2_md(), cluster = ~cluster_pairs, family = quasipoisson(link = "log")),
+            feglm(fml, df_dtl_2_md(), cluster = ~importer_exporter,
+                  family = quasipoisson(link = "log")),
             error = function(e) { custom_regression_error() }
           )
         } else {

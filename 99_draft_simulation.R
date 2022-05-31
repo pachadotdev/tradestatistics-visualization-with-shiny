@@ -103,7 +103,9 @@ df_dtl_sim <- reactive({
   
   #### collect data ----
   
-  d <- d %>% collect()
+  d <- d %>% 
+    collect() %>% 
+    arrange(year, importer, exporter)
   
   wt_sim$inc(1)
   
