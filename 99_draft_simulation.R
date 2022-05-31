@@ -117,97 +117,40 @@ df_dtl_sim <- reactive({
       country2 = pmax(reporter_iso, partner_iso)
     ) %>%
     inner_join(
-      tbl(con, "distances") %>% collect(),
+      tbl(con, "distances") %>% 
+        select(country1, country2, dist, contig, comlang_off, colony) %>% 
+        collect(),
       by = c("country1", "country2")
-    ) %>%
-    select(-c(country1,country2))
+    )
   
   wt_sim$inc(1)
   
   ### 3.3. add RTA data ----
   
-  if (any(rhs_sim() %in% "rta")) {
-    d <- d %>%
-      mutate(
-        country1 = pmin(reporter_iso, partner_iso),
-        country2 = pmax(reporter_iso, partner_iso)
-      ) %>%
-      left_join(
-        tbl(con, "rtas") %>%
-          filter(year %in% !!inp_sim_y()) %>%
-          collect(),
-        by = c("year", "country1", "country2")
-      ) %>%
-      mutate(
-        rta = case_when(
-          is.na(rta) ~ 0L,
-          TRUE ~ rta
-        )
-      ) %>%
-      select(-c(country1,country2))
-  }
-  
-  wt_sim$inc(1)
-  
-  ### 3.4. create remoteness indexes ----
-  
-  if (inp_sim_type() == "olsrem") {
-    d <- d %>%
-      # Replicate total_e
-      group_by(reporter_iso, year) %>%
-      mutate(total_e = sum(trade_value_usd_exp, na.rm = T)) %>%
-      group_by(year) %>%
-      mutate(total_e = max(total_e, na.rm = T)) %>%
-      # Replicate rem_exp
-      group_by(reporter_iso, year) %>%
-      mutate(
-        remoteness_exp = sum(dist *  total_e / trade_value_usd_exp, na.rm = T)
+  d <- d %>%
+    left_join(
+      tbl(con, "rtas") %>%
+        filter(year %in% !!inp_sim_y()) %>%
+        collect(),
+      by = c("year", "country1", "country2")
+    ) %>%
+    mutate(
+      rta = case_when(
+        is.na(rta) ~ 0L,
+        TRUE ~ rta
       )
-    
-    d <- d %>%
-      # Replicate total_y
-      group_by(partner_iso, year) %>%
-      mutate(total_y = sum(trade_value_usd_imp, na.rm = T)) %>%
-      group_by(year) %>%
-      mutate(total_y = max(total_y, na.rm = T)) %>%
-      # Replicate rem_imp
-      group_by(partner_iso, year) %>%
-      mutate(
-        remoteness_imp = sum(dist / (trade_value_usd_imp / total_y), na.rm = T)
-      )
-    
-    d <- d %>%
-      select(-c(total_e, total_y))
-  }
+    ) %>%
+    select(-c(country1,country2))
   
-  wt_sim$inc(1)
-  
-  ### 3.5. create fixed effects ----
-  
-  if (inp_sim_type() == "olsfe") {
-    d <- d %>%
-      mutate(
-        reporter_yr = paste0(reporter_iso, year),
-        partner_yr = paste0(partner_iso, year)
-      )
-  }
-  
-  wt_sim$inc(.5)
-  
-  ### 3.5. create clustering variable ----
-  
-  if (inp_sim_cluster() == "yes") {
-    d <- d %>%
-      mutate(cluster_pairs = paste(reporter_iso, partner_iso, sep = "_"))
-  }
-  
-  wt_sim$inc(.5)
-  
-  ### 3.6. convert dollars in time ----
+  wt_sim$inc(2)
+
+  ### 3.4. convert dollars in time ----
   
   if (inp_sim_convert_dollars() != "No conversion") {
     d <- gdp_deflator_adjustment(d, as.integer(inp_sim_convert_dollars()))
   }
+  
+  # OK HASTA ACA
   
   ### 3.7. add MFN data ----
   
