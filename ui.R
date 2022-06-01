@@ -16,12 +16,13 @@ shinyUI(
 
           menuItem("Country profile", tabName = "cp"),
           
-          menuItem("Compare countries", tabName = "cc", badgeLabel = "new", badgeColor = "green"),
+          menuItem("Compare countries", tabName = "cc"),
           
-          menuItem("Product profile", tabName = "pp", badgeLabel = "new", badgeColor = "green"),
+          menuItem("Product profile", tabName = "pp"),
           
-          # THIS IS NOT READY
           menuItem("Model", tabName = "md", badgeLabel = "new", badgeColor = "green"),
+          
+          # menuItem("Simulate", tabName = "si", badgeLabel = "new", badgeColor = "green"),
       
           menuItem("Cite", tabName = "cite")
         )
@@ -90,7 +91,7 @@ shinyUI(
               4,
               selectInput(
                 "cp_a",
-                "Convert to dollars of the same year",
+                "Convert to dollars of the year",
                 choices = c("No conversion", 2000:2019),
                 selected = "",
                 selectize = TRUE,
@@ -98,7 +99,7 @@ shinyUI(
               ) %>% 
                 helper(
                   type = "inline",
-                  title = "Convert to dollars of the same year",
+                  title = "Convert to dollars of the year",
                   content = c("Uses present value and/or future value equations to adjust money value 
                               by yearly changes in GDP deflator. The source for the GDP deflator data is The World Bank."),
                   buttonLabel = "Got it!",
@@ -261,7 +262,7 @@ shinyUI(
               3,
               selectInput(
                 "cc_a",
-                "Convert to dollars of the same year",
+                "Convert to dollars of the year",
                 choices = c("No conversion", 2000:2019),
                 selected = "",
                 selectize = TRUE,
@@ -269,7 +270,7 @@ shinyUI(
               ) %>% 
                 helper(
                   type = "inline",
-                  title = "Convert to dollars of the same year",
+                  title = "Convert to dollars of the year",
                   content = c("Uses present value and/or future value equations to adjust money value 
                               by yearly changes in GDP deflator. The source for the GDP deflator data is The World Bank."),
                   buttonLabel = "Got it!",
@@ -420,7 +421,7 @@ shinyUI(
               6,
               selectInput(
                 "pp_a",
-                "Convert to dollars of the same year",
+                "Convert to dollars of the year",
                 choices = c("No conversion", 2000:2019),
                 selected = "",
                 selectize = TRUE,
@@ -428,7 +429,7 @@ shinyUI(
               ) %>% 
                 helper(
                   type = "inline",
-                  title = "Convert to dollars of the same year",
+                  title = "Convert to dollars of the year",
                   content = c("Uses present value and/or future value equations to adjust money value 
                               by yearly changes in GDP deflator. The source for the GDP deflator data is The World Bank."),
                   buttonLabel = "Got it!",
@@ -664,7 +665,7 @@ shinyUI(
               3,
               selectInput(
                 "md_a",
-                "Convert to dollars of the same year",
+                "Convert to dollars of the year",
                 choices = c("No conversion", 2000:2019),
                 selected = "",
                 selectize = TRUE,
@@ -672,7 +673,7 @@ shinyUI(
               ) %>% 
                 helper(
                   type = "inline",
-                  title = "Convert to dollars of the same year",
+                  title = "Convert to dollars of the year",
                   content = c("Uses present value and/or future value equations to adjust money value 
                               by yearly changes in GDP deflator. The source for the GDP deflator data is The World Bank."),
                   buttonLabel = "Got it!",
@@ -844,6 +845,212 @@ shinyUI(
               uiOutput("dwn_md_fmt"),
               uiOutput("dwn_md_dtl"),
               uiOutput("dwn_md_fit")
+            )
+          ),
+          
+          tabItem(
+            tabName = "si",
+            
+            # Simulate ----
+            
+            # useWaitress(),
+            
+            column(
+              12,
+              HTML("<h1>Effects of RTAs</h1>"),
+              htmlOutput("title_si_legend", container = tags$p)
+            ),
+            
+            ## Simulation variables ----
+            
+            column(
+              12,
+              hr(),
+              h2("Filter")
+            ),
+            
+            column(
+              4,
+              sliderInput(
+                "si_y",
+                "Years",
+                min = available_yrs_min,
+                max = available_yrs_max,
+                value = c(2002, 2018),
+                sep = "",
+                step = 1,
+                ticks = FALSE,
+                width = "100%"
+              )
+            ),
+            
+            column(
+              4,
+              sliderInput(
+                "si_y_sep",
+                "Interval of years",
+                # min = available_yrs_min,
+                min = 1,
+                max = 5,
+                value = 4,
+                sep = "",
+                step = 1,
+                ticks = FALSE,
+                width = "100%"
+              ) %>% 
+                helper(
+                  type = "inline",
+                  title = "Interval of years",
+                  content = c("Yotov et al. (2016) suggest to use intervals of four years in gravity estimation.",
+                              "",
+                              "<b>References</b>",
+                              "Yotov, Y. V., Piermartini, R., and Larch, M. <i><a href='https://www.wto.org/english/res_e/publications_e/advancedguide2016_e.htm'>An Advanced Guide to Trade Policy Analysis: The Structural Gravity Model</a></i>. WTO iLibrary, 2016."),
+                  buttonLabel = "Got it!",
+                  easyClose = FALSE,
+                  fade = TRUE,
+                  size = "s"
+                )
+            ),
+            
+            column(
+              4,
+              sliderInput(
+                "si_y2",
+                "RTA enaction",
+                min = available_yrs_min,
+                max = available_yrs_max,
+                value = 2006,
+                sep = "",
+                step = 1,
+                ticks = FALSE,
+                width = "100%"
+              ) %>% 
+                helper(
+                  type = "inline",
+                  title = "RTA enaction",
+                  content = c("Re-defines the RTA dummy variable, as if the RTA were not in place.",
+                              "",
+                              "<b>References</b>",
+                              "Yotov, Y. V., Piermartini, R., and Larch, M. <i><a href='https://www.wto.org/english/res_e/publications_e/advancedguide2016_e.htm'>An Advanced Guide to Trade Policy Analysis: The Structural Gravity Model</a></i>. WTO iLibrary, 2016."),
+                  buttonLabel = "Got it!",
+                  easyClose = FALSE,
+                  fade = TRUE,
+                  size = "s"
+                )
+            ),
+            
+            column(
+              3,
+              selectInput(
+                "si_c",
+                "Countries",
+                choices = available_reporters_iso,
+                selected = c("chl","chn"),
+                selectize = TRUE,
+                width = "100%",
+                multiple = TRUE
+              ) %>% 
+                helper(
+                  type = "inline",
+                  title = "Select countries",
+                  content = "You can select more than one country. For example, to estimate effects for NAFTA, choose the US, Canada and Mexico.",
+                  buttonLabel = "Got it!",
+                  easyClose = FALSE,
+                  fade = TRUE,
+                  size = "s"
+                )
+            ),
+            
+            column(
+              3,
+              selectInput(
+                "si_r",
+                "Reference country",
+                choices = available_reporters_iso,
+                selected = "deu",
+                selectize = TRUE,
+                width = "100%",
+                multiple = TRUE
+              ) %>% 
+                helper(
+                  type = "inline",
+                  title = "Select reference country",
+                  content = c("Yotov et al. (2016) use Germany as the country of reference for the fixed effects estimation.",
+                              "",
+                              "<b>References</b>",
+                              "Yotov, Y. V., Piermartini, R., and Larch, M. <i><a href='https://www.wto.org/english/res_e/publications_e/advancedguide2016_e.htm'>An Advanced Guide to Trade Policy Analysis: The Structural Gravity Model</a></i>. WTO iLibrary, 2016."),
+                  buttonLabel = "Got it!",
+                  easyClose = FALSE,
+                  fade = TRUE,
+                  size = "s"
+                )
+            ),
+            
+            column(
+              3,
+              selectInput(
+                "si_a",
+                "Convert to dollars of the year",
+                choices = c("No conversion", 2000:2019),
+                selected = "",
+                selectize = TRUE,
+                width = "100%"
+              ) %>% 
+                helper(
+                  type = "inline",
+                  title = "Convert to dollars of the year",
+                  content = c("Uses present value and/or future value equations to adjust money value 
+                              by yearly changes in GDP deflator. The source for the GDP deflator data is The World Bank."),
+                  buttonLabel = "Got it!",
+                  easyClose = FALSE,
+                  fade = TRUE,
+                  size = "s"
+                )
+            ),
+            
+            column(
+              3,
+              sliderInput(
+                "si_s",
+                "Elasticity of substitution",
+                min = 1,
+                max = 20,
+                value = 7,
+                sep = "",
+                step = 1,
+                ticks = FALSE,
+                width = "100%"
+              ) %>% 
+                helper(
+                  type = "inline",
+                  title = "Elasticity of substitution",
+                  content = c("Yotov et al. (2016) suggest to use a value of seven.",
+                              "",
+                              "<b>References</b>",
+                              "Yotov, Y. V., Piermartini, R., and Larch, M. <i><a href='https://www.wto.org/english/res_e/publications_e/advancedguide2016_e.htm'>An Advanced Guide to Trade Policy Analysis: The Structural Gravity Model</a></i>. WTO iLibrary, 2016."),
+                  buttonLabel = "Got it!",
+                  easyClose = FALSE,
+                  fade = TRUE,
+                  size = "s"
+                )
+            ),
+            
+            ## Simulation results ----
+            
+            column(
+              12,
+              align="center",
+              actionButton(
+                "si_go", 
+                "Give me the results for this simulation",
+                class = "btn-primary"
+              )
+            ),
+            
+            column(
+              12,
+              htmlOutput("df_stl_si", container = tags$h2),
+              tableOutput("df_fit_si")
             )
           ),
           
