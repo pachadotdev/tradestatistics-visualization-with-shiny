@@ -1947,53 +1947,63 @@ shinyServer(
     
     # Simulate ----
     
-    # wt_si <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
+    wt_si <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
     
     ## 1. read from SQL ----
     
     df_dtl_si <- reactive({
       print("Collecting simulation data...")
-      # wt_si$start()
+      wt_si$start()
       
       ### 3.1. apply filters ----
       
-      d <- tbl(con, "yrp") %>%
-        filter(year %in% !!inp_si_y())
+      # d <- tbl(con, "yrp") %>%
+      #   filter(year %in% !!inp_si_y())
+      
+      print(inp_si_y())
+      print(inp_si_y2())
+      
+      d <- tradepolicy::agtpa_applications %>% 
+        filter(year %in% !!inp_si_y()) %>% 
+        mutate(
+          exporter = tolower(exporter),
+          importer = tolower(importer)
+        )
       
       ### 3.2. aggregate and transform data ----
       
-      d <- d %>%
-        select(year, importer = reporter_iso, exporter = partner_iso, 
-               trade = trade_value_usd_imp)
+      # d <- d %>%
+      #   select(year, importer = reporter_iso, exporter = partner_iso, 
+      #          trade = trade_value_usd_imp)
 
       # add GRAVITY variables
       
-      d <- d %>%
-        mutate(
-          country1 = pmin(importer, exporter, na.rm = T),
-          country2 = pmax(importer, exporter, na.rm = T)
-        ) %>%
-        inner_join(
-          tbl(con, "distances") %>% 
-            select(country1, country2, dist, contig, comlang_off, colony),
-          by = c("country1", "country2")
-        )
+      # d <- d %>%
+      #   mutate(
+      #     country1 = pmin(importer, exporter, na.rm = T),
+      #     country2 = pmax(importer, exporter, na.rm = T)
+      #   ) %>%
+      #   inner_join(
+      #     tbl(con, "distances") %>% 
+      #       select(country1, country2, dist, contig, comlang_off, colony),
+      #     by = c("country1", "country2")
+      #   )
       
       # add RTA data
       
-      d <- d %>%
-        left_join(
-          tbl(con, "rtas") %>%
-            filter(year %in% !!inp_si_y()),
-          by = c("year", "country1", "country2")
-        ) %>%
-        mutate(
-          rta = case_when(
-            is.na(rta) ~ 0L,
-            TRUE ~ rta
-          )
-        ) %>%
-        select(-c(country1,country2))
+      # d <- d %>%
+      #   left_join(
+      #     tbl(con, "rtas") %>%
+      #       filter(year %in% !!inp_si_y()),
+      #     by = c("year", "country1", "country2")
+      #   ) %>%
+      #   mutate(
+      #     rta = case_when(
+      #       is.na(rta) ~ 0L,
+      #       TRUE ~ rta
+      #     )
+      #   ) %>%
+      #   select(-c(country1,country2))
       
       # transform factors
       
@@ -2049,21 +2059,23 @@ shinyServer(
       
       ### 3.3 collect data ----
       
-      d <- d %>% 
-        collect() %>% 
-        arrange(year, importer, exporter)
+      # d <- d %>% 
+      #   collect() %>% 
+      #   arrange(year, importer, exporter)
       
-      # wt_si$inc(1)
+      wt_si$inc(1)
       
       ### 3.4. convert dollars in time ----
       
-      if (inp_si_convert_dollars() != "No conversion") {
-        d <- gdp_deflator_adjustment(d, as.integer(inp_si_convert_dollars()))
-      }
+      # if (inp_si_convert_dollars() != "No conversion") {
+      #   d <- gdp_deflator_adjustment(d, as.integer(inp_si_convert_dollars()))
+      # }
       
-      # wt_si$inc(1)
+      wt_si$inc(1)
       
       gc()
+      
+      print(d)
       
       return(d)
     })
@@ -2082,8 +2094,10 @@ shinyServer(
       fit_baseline <- fepois(
         trade ~ rta | exp_year + imp_year + imp_exp_2,
         data = filter(d, sum_trade > 0),
-        glm.iter = 500
+        glm.iter = 100
       )
+      
+      wt_si$inc(1)
       
       d <- d %>%
         mutate(
@@ -2104,10 +2118,13 @@ shinyServer(
       #### Fit costs ----
       
       fit_costs <- fepois(
-        tij_bar ~ log(dist) + contig + comlang_off + colony | exporter + importer,
+        # tij_bar ~ log(dist) + contig + comlang_off + colony | exporter + importer,
+        tij_bar ~ log(dist) + cntg + lang + clny | exporter + importer,
         data = d_slice,
-        glm.iter = 500
+        glm.iter = 100
       )
+      
+      wt_si$inc(1)
       
       d_slice <- d_slice %>%
         mutate(tij_no_rta = predict(fit_costs, d_slice)) %>%
@@ -2137,6 +2154,8 @@ shinyServer(
         glm.iter = 100
       )
       
+      wt_si$inc(1)
+      
       d <- d %>%
         mutate(tradehat_bln = predict(fit_constrained, d)) %>%
         group_by(exporter) %>%
@@ -2160,8 +2179,8 @@ shinyServer(
       d <- d %>%
         mutate(
           no_rta = ifelse(
-            exporter %in% !!imp_si_countries() & 
-              importer %in% !!imp_si_countries() &
+            exporter %in% !!inp_si_countries() & 
+              importer %in% !!inp_si_countries() &
               year >= !!inp_si_y2(), 0, rta
           ),
           tij_cfl = tij_bar * exp(fit_baseline$coefficients["rta"] * no_rta)
@@ -2175,6 +2194,8 @@ shinyServer(
         offset = ~log(tij_cfl),
         glm.iter = 100
       )
+      
+      wt_si$inc(1)
       
       d <- d %>%
         mutate(
@@ -2194,7 +2215,7 @@ shinyServer(
         mutate(xi_cfl = sum(tradehat_cfl * (exporter != importer))) %>%
         ungroup()
       
-      sigma <- imp_si_sigma()
+      sigma <- inp_si_sigma()
       
       d <- d %>%
         mutate(
@@ -2252,6 +2273,8 @@ shinyServer(
           offset = ~log(tij_cfl),
           glm.iter = 100
         )
+        
+        wt_si$inc(.5)
         
         d <- d %>%
           mutate(
@@ -2359,8 +2382,48 @@ shinyServer(
         mutate(xi_full = sum(x_full * (importer != exporter))) %>%
         ungroup()
       
-      # wt_si$close() 
-      return(d)
+      exporter_indexes <- d %>%
+        select(
+          exporter, starts_with("omr_"), change_p_i_full,
+          starts_with("xi_"), y, y_full
+        ) %>%
+        distinct() %>%
+        # mutate(exporter = ifelse(exporter == "0-DEU", "DEU", exporter)) %>%
+        arrange(exporter) %>%
+        mutate(
+          change_p_i_full = (1 - change_p_i_full) * 100,
+          change_omr_cfl = ((omr_bln / omr_cfl)^(1 / (1-sigma)) - 1) * 100,
+          change_omr_full = ((omr_bln / omr_full)^(1 / (1-sigma)) - 1) * 100,
+          change_xi_cfl = (xi_bln / xi_cfl - 1) * 100,
+          change_xi_full = (xi_bln / xi_full - 1) * 100
+        ) %>%
+        select(exporter, starts_with("change"), starts_with("y"))
+      
+      importer_indexes <- d %>%
+        select(importer, imr_bln, imr_cfl, imr_full) %>%
+        distinct() %>%
+        # mutate(importer = ifelse(importer == "0-DEU", "DEU", importer)) %>%
+        arrange(importer) %>%
+        mutate(
+          change_imr_cfl = ((imr_bln / imr_cfl)^(1 / (1 - sigma)) - 1) * 100,
+          change_imr_full = ((imr_bln / imr_full)^(1 / (1 - sigma)) - 1) * 100
+        )
+      
+      indexes_final <- exporter_indexes %>%
+        left_join(importer_indexes, by = c("exporter" = "importer")) %>%
+        mutate(
+          rgdp_bln = y / (imr_bln^(1 / (1 - sigma))),
+          rgdp_full = y_full / (imr_full^(1 / (1 - sigma))),
+          change_rgdp_full = (rgdp_bln / rgdp_full - 1) * 100
+        ) %>%
+        select(exporter, change_xi_cfl, change_xi_full,
+               change_rgdp_full, change_imr_full, change_omr_full, change_p_i_full)
+      
+      indexes_final <- indexes_final %>%
+        mutate_if(is.numeric, function(x) round(x, 2))
+      
+      wt_si$close()
+      return(indexes_final)
     })
     
     # Cite ----
@@ -2515,7 +2578,7 @@ shinyServer(
     ## Simulate ----
     
     output$df_stl_si <- eventReactive(input$sim_go, { "Data preview" })
-    output$df_fit_si <- renderTable({ df_fit_si() })
+    output$df_fit_si <- renderDataTable({ df_fit_si() })
     
     ## Download ----
     

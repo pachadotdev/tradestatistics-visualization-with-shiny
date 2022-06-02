@@ -22,7 +22,7 @@ shinyUI(
           
           menuItem("Model", tabName = "md", badgeLabel = "new", badgeColor = "green"),
           
-          # menuItem("Simulate", tabName = "si", badgeLabel = "new", badgeColor = "green"),
+          menuItem("Simulate", tabName = "si", badgeLabel = "SKETCH", badgeColor = "red"),
       
           menuItem("Cite", tabName = "cite")
         )
@@ -853,11 +853,11 @@ shinyUI(
             
             # Simulate ----
             
-            # useWaitress(),
+            useWaitress(),
             
             column(
               12,
-              HTML("<h1>Effects of RTAs</h1>"),
+              HTML("<h1>SKETCH USING AGTPA BOOK'S DATA - Effects of RTAs</h1>"),
               htmlOutput("title_si_legend", container = tags$p)
             ),
             
@@ -874,9 +874,12 @@ shinyUI(
               sliderInput(
                 "si_y",
                 "Years",
-                min = available_yrs_min,
-                max = available_yrs_max,
-                value = c(2002, 2018),
+                # min = available_yrs_min,
+                min = 1986,
+                # max = available_yrs_max,
+                max = 2006,
+                # value = c(2002, 2018),
+                value = c(1986,2006),
                 sep = "",
                 step = 1,
                 ticks = FALSE,
@@ -916,10 +919,13 @@ shinyUI(
               4,
               sliderInput(
                 "si_y2",
-                "RTA enaction",
-                min = available_yrs_min,
-                max = available_yrs_max,
-                value = 2006,
+                "RTA withdrawal",
+                # min = available_yrs_min,
+                # max = available_yrs_max,
+                # value = 2006,
+                min = 1986,
+                max = 2006,
+                value = 1994,
                 sep = "",
                 step = 1,
                 ticks = FALSE,
@@ -944,8 +950,8 @@ shinyUI(
               selectInput(
                 "si_c",
                 "Countries",
-                choices = available_reporters_iso,
-                selected = c("chl","chn"),
+                choices = available_reporters_iso[available_reporters_iso != "all"],
+                selected = c("can","usa","mex"),
                 selectize = TRUE,
                 width = "100%",
                 multiple = TRUE
@@ -1050,7 +1056,7 @@ shinyUI(
             column(
               12,
               htmlOutput("df_stl_si", container = tags$h2),
-              tableOutput("df_fit_si")
+              dataTableOutput("df_fit_si")
             )
           ),
           
