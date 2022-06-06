@@ -777,7 +777,7 @@ shinyUI(
               textInput(
                 "md_fml",
                 "Model formula",
-                "trade ~ log(dist) + colony + comlang_off + contig",
+                "trade ~ log(dist) + log(gdp_exporter) + colony + comlang_off + contig",
                 width = "100%",
                 placeholder = "Any valid R formula"
               ) %>% 
@@ -798,6 +798,10 @@ shinyUI(
                               </ul>",
                               "<b>Additional variables for modelling</b>
                               <ul>
+                                <li>gdp_exporter: GDP (in current USD) for the exporters</li>
+                                <li>gdp_importer: GDP (in current USD) for the importers</li>
+                                <li>gdp_percap_exporter: GDP per capita (in current USD) for the exporters</li>
+                                <li>gdp_percap_importer: GDP per capita (in current USD) for the importers</li>
                                 <li>colony: The two countries are/were in a colonial relation</li>
                                 <li>comlang_ethno: The two countries have at least 9% of their population speaking the same language</li>
                                 <li>comlang_off: The two countries share the same official language</li>

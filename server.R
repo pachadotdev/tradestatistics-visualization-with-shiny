@@ -1603,7 +1603,7 @@ shinyServer(
       if (inp_md_type() == "olsfe") {
         fml <- paste(fml, "| reporter_yr + partner_yr")
       }
-      print(fml)
+      # print(fml)
       return(fml)
     })
     
@@ -1793,15 +1793,38 @@ shinyServer(
       
       wt_md$inc(.5)
       
-      ### 3.6. convert dollars in time ----
+      ### 3.6. add GDP / GDP percap ----
+      
+      if (any(c(raw_rhs_md(), rhs_md()) %in% 
+              c("gdp_importer", "gdp_percap_importer", "gdp_exporter", "gdp_percap_exporter"))) {
+        d <- d %>% 
+          inner_join(
+            tbl(con, "gdp") %>% 
+              filter(year %in% !!inp_md_y()) %>% 
+              select(country_iso, year, gdp_importer = gdp, gdp_percap_importer = gdp_percap) %>% 
+              collect(),
+            by = c("importer" = "country_iso")
+          )
+        
+        d <- d %>% 
+          inner_join(
+            tbl(con, "gdp") %>% 
+              filter(year %in% !!inp_md_y()) %>% 
+              select(country_iso, year, gdp_exporter = gdp, gdp_percap_exporter = gdp_percap) %>% 
+              collect(),
+            by = c("exporter" = "country_iso")
+          )
+      }
+      
+      ### 3.7. convert dollars in time ----
       
       if (inp_md_convert_dollars() != "No conversion") {
         d <- gdp_deflator_adjustment(d, as.integer(inp_md_convert_dollars()))
       }
       
-      ### 3.7. add MFN data ----
+      ### 3.8. add MFN data ----
       
-      if (any(raw_rhs_md() %in% "mfn")) {
+      if (any(c(raw_rhs_md(), rhs_md()) %in% "mfn")) {
         tar <- tbl(con, "tariffs") %>%
           filter(
             year %in% !!inp_md_y()
@@ -1870,7 +1893,8 @@ shinyServer(
       
       gc()
       
-      print(c(raw_lhs_md(), raw_rhs_md()))
+      # print(c(raw_lhs_md(), raw_rhs_md()))
+      print(colnames(d))
       
       return(
         # this is not elegant, but works well with polynomials, logs, etc in formulas
@@ -1960,8 +1984,8 @@ shinyServer(
       # d <- tbl(con, "yrp") %>%
       #   filter(year %in% !!inp_si_y())
       
-      print(inp_si_y())
-      print(inp_si_y2())
+      # print(inp_si_y())
+      # print(inp_si_y2())
       
       d <- tradepolicy::agtpa_applications %>% 
         filter(year %in% !!inp_si_y()) %>% 
@@ -2075,7 +2099,7 @@ shinyServer(
       
       gc()
       
-      print(d)
+      # print(d)
       
       return(d)
     })

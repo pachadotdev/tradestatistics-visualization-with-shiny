@@ -33,6 +33,14 @@ gdp_deflator_adjustment <- function(d, reference_year) {
       trade_value_usd_imp = round(trade_value_usd_imp * gdp_deflator, 0),
       trade_value_usd_exp = round(trade_value_usd_exp * gdp_deflator, 0)
     )
+  
+  if (any(colnames(d) %in% c("gdp", "gdp_percap"))) {
+    d <- d %>% 
+      mutate(
+        gdp = round(gdp * gdp_deflator, 0),
+        gdp_percap = round(gdp_percap * gdp_deflator, 0)
+      )
+  }
 
   return(d)
 }
