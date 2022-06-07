@@ -2138,6 +2138,9 @@ shinyServer(
       d_slice <- d %>%
         filter(year == !!inp_si_y2(), exporter != importer)
       
+      print(d)
+      print(d_slice)
+      
       #### Fit costs ----
       
       fit_costs <- fepois(
