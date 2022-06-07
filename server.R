@@ -1625,8 +1625,7 @@ shinyServer(
       
       d <- d %>%
         filter(
-          # year %in% !!inp_md_y() & reporter_iso %in% !!inp_md_riso()
-          year %in% !!inp_md_y()
+          year %in% !!inp_md_y() & reporter_iso != partner_iso
         )
       
       if (any(inp_md_riso() != "all")) {
@@ -1981,53 +1980,53 @@ shinyServer(
       
       ### 3.1. apply filters ----
       
-      # d <- tbl(con, "yrp") %>%
-      #   filter(year %in% !!inp_si_y())
+      d <- tbl(con, "yrp") %>%
+        filter(year %in% !!inp_si_y() & reporter_iso != partner_iso)
       
       # print(inp_si_y())
       # print(inp_si_y2())
       
-      d <- tradepolicy::agtpa_applications %>% 
-        filter(year %in% !!inp_si_y()) %>% 
-        mutate(
-          exporter = tolower(exporter),
-          importer = tolower(importer)
-        )
+      # d <- tradepolicy::agtpa_applications %>% 
+      #   filter(year %in% !!inp_si_y()) %>% 
+      #   mutate(
+      #     exporter = tolower(exporter),
+      #     importer = tolower(importer)
+      #   )
       
       ### 3.2. aggregate and transform data ----
       
-      # d <- d %>%
-      #   select(year, importer = reporter_iso, exporter = partner_iso, 
-      #          trade = trade_value_usd_imp)
+      d <- d %>%
+        select(year, importer = reporter_iso, exporter = partner_iso,
+               trade = trade_value_usd_imp)
 
       # add GRAVITY variables
       
-      # d <- d %>%
-      #   mutate(
-      #     country1 = pmin(importer, exporter, na.rm = T),
-      #     country2 = pmax(importer, exporter, na.rm = T)
-      #   ) %>%
-      #   inner_join(
-      #     tbl(con, "distances") %>% 
-      #       select(country1, country2, dist, contig, comlang_off, colony),
-      #     by = c("country1", "country2")
-      #   )
+      d <- d %>%
+        mutate(
+          country1 = pmin(importer, exporter, na.rm = T),
+          country2 = pmax(importer, exporter, na.rm = T)
+        ) %>%
+        inner_join(
+          tbl(con, "distances") %>%
+            select(country1, country2, dist, contig, comlang_off, colony),
+          by = c("country1", "country2")
+        )
       
       # add RTA data
       
-      # d <- d %>%
-      #   left_join(
-      #     tbl(con, "rtas") %>%
-      #       filter(year %in% !!inp_si_y()),
-      #     by = c("year", "country1", "country2")
-      #   ) %>%
-      #   mutate(
-      #     rta = case_when(
-      #       is.na(rta) ~ 0L,
-      #       TRUE ~ rta
-      #     )
-      #   ) %>%
-      #   select(-c(country1,country2))
+      d <- d %>%
+        left_join(
+          tbl(con, "rtas") %>%
+            filter(year %in% !!inp_si_y()),
+          by = c("year", "country1", "country2")
+        ) %>%
+        mutate(
+          rta = case_when(
+            is.na(rta) ~ 0L,
+            TRUE ~ rta
+          )
+        ) %>%
+        select(-c(country1,country2))
       
       # transform factors
       
@@ -2083,17 +2082,17 @@ shinyServer(
       
       ### 3.3 collect data ----
       
-      # d <- d %>% 
-      #   collect() %>% 
-      #   arrange(year, importer, exporter)
+      d <- d %>%
+        collect() %>%
+        arrange(year, importer, exporter)
       
       wt_si$inc(1)
       
       ### 3.4. convert dollars in time ----
       
-      # if (inp_si_convert_dollars() != "No conversion") {
-      #   d <- gdp_deflator_adjustment(d, as.integer(inp_si_convert_dollars()))
-      # }
+      if (inp_si_convert_dollars() != "No conversion") {
+        d <- gdp_deflator_adjustment(d, as.integer(inp_si_convert_dollars()))
+      }
       
       wt_si$inc(1)
       
@@ -2142,8 +2141,8 @@ shinyServer(
       #### Fit costs ----
       
       fit_costs <- fepois(
-        # tij_bar ~ log(dist) + contig + comlang_off + colony | exporter + importer,
-        tij_bar ~ log(dist) + cntg + lang + clny | exporter + importer,
+        tij_bar ~ log(dist) + contig + comlang_off + colony | exporter + importer,
+        # tij_bar ~ log(dist) + cntg + lang + clny | exporter + importer,
         data = d_slice,
         glm.iter = 100
       )
@@ -2288,7 +2287,8 @@ shinyServer(
       while(sd_dif > 1e-3 | max_dif > 1e-3) {
         cat(paste0(i," "))
         d <- d %>%
-          mutate(trade_1 = tradehat_0 * change_p_i_0 * change_p_j_0 / (change_omr_full_0 * change_imr_full_0))
+          mutate(trade_1 = tradehat_0 * change_p_i_0 * change_p_j_0 / 
+                   (change_omr_full_0 * change_imr_full_0))
         
         # repeat the counterfactual model
         fit_counterfactual_2 <- fepois(
