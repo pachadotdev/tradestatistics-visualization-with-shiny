@@ -516,7 +516,7 @@ shinyUI(
             
             column(
               12,
-              HTML("<h1>Partial Equilibrium Simulation</h1>"),
+              HTML("<h1>Partial Equilibrium Simulation (EXPERIMENTAL)</h1>"),
               htmlOutput("title_ps_legend", container = tags$p)
             ),
             
