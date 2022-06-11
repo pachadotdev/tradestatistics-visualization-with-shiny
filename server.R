@@ -130,26 +130,30 @@ shinyServer(
       return(s)
     })
     
-    ## Model ----
+    ## Partial Equilibrium Simulation ----
     
-    inp_md_y <- reactive({
-      y2 <- (min(input$md_y[1], input$md_y[2])):(max(input$md_y[1], input$md_y[2]))
-      y2 <- seq(min(y2), max(y2), by = input$md_y_sep)
+    inp_ps_y <- reactive({
+      y2 <- (min(input$ps_y[1], input$ps_y[2])):(max(input$ps_y[1], input$ps_y[2]))
+      y2 <- seq(min(y2), max(y2), by = input$ps_y_sep)
       return(y2)
     })
     
-    inp_md_riso <- reactive({ input$md_r })
-    inp_md_piso <- reactive({ input$md_p })
+    inp_ps_riso <- reactive({ input$ps_r })
+    inp_ps_piso <- reactive({ input$ps_p })
     
-    inp_md_convert_dollars <- reactive({ input$md_a })
+    inp_ps_convert_dollars <- reactive({ input$ps_a })
     
-    inp_md_cluster <- reactive({ input$md_cl })
+    inp_ps_cluster <- reactive({ input$ps_cl })
     
-    inp_md_product_filter <- reactive({ input$md_pf })
-    inp_md_type <- reactive({ input$md_t })
-    inp_md_zero <- reactive({ input$md_zero })
-    inp_md_fml <- reactive({ input$md_fml })
-    inp_md_f <- reactive({ input$md_f })
+    inp_ps_product_filter <- reactive({ input$ps_pf })
+    inp_ps_type <- reactive({ input$ps_t })
+    inp_ps_zero <- reactive({ input$ps_zero })
+    inp_ps_fml <- reactive({ input$ps_fml })
+    inp_ps_f <- reactive({ input$ps_f })
+    
+    inp_ps_sp <- reactive({ input$ps_sp })
+    inp_ps_sra <- reactive({ input$ps_sra })
+    inp_ps_sy <- reactive({ input$ps_sy })
     
     ## Simulate ----
     
@@ -1551,14 +1555,14 @@ shinyServer(
       bindCache(inp_pp_y(), inp_pp_section_code(), inp_pp_convert_dollars()) %>% 
       bindEvent(input$pp_go)
     
-    # Model ----
+    # Partial Equilibrium Simulation ----
     
-    wt_md <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
+    wt_ps <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
     
     ## 1. upload custom data ----
     
-    md_custom_data <- eventReactive(input$md_go, {
-      uploaded_file <- input$md_own
+    ps_custom_data <- eventReactive(input$ps_go, {
+      uploaded_file <- input$ps_own
       
       if(!is.null(uploaded_file)) {
         inp_data <- rio::import(file = uploaded_file$datapath, format = tools::file_ext(uploaded_file$name)) %>%
@@ -1572,35 +1576,35 @@ shinyServer(
     
     ## 2. define model formula ----
     
-    lhs_md <- eventReactive(input$md_go, {
-      lhs <- gsub("\\s+", "", gsub("~.*", "", inp_md_fml()))
+    lhs_ps <- eventReactive(input$ps_go, {
+      lhs <- gsub("\\s+", "", gsub("~.*", "", inp_ps_fml()))
       return(lhs)
     })
     
-    rhs_md <- eventReactive(input$md_go, {
-      rhs <- unlist(strsplit(gsub("\\s+", "", gsub(".*~", "", inp_md_fml())), "\\+"))
+    rhs_ps <- eventReactive(input$ps_go, {
+      rhs <- unlist(strsplit(gsub("\\s+", "", gsub(".*~", "", inp_ps_fml())), "\\+"))
       rhs <- sort(rhs[rhs != "+"])
       return(rhs)
     })
     
-    raw_lhs_md <- reactive({
-      x <- unlist(regmatches(lhs_md(), gregexpr("(?<=\\().*?(?=\\))", lhs_md(), perl = T)))
+    raw_lhs_ps <- reactive({
+      x <- unlist(regmatches(lhs_ps(), gregexpr("(?<=\\().*?(?=\\))", lhs_ps(), perl = T)))
       x <- x[x != ""]
       return(x)
     })
     
-    raw_rhs_md <- reactive({
-      x <- unlist(regmatches(rhs_md(), gregexpr("(?<=\\().*?(?=\\))", rhs_md(), perl = T)))
+    raw_rhs_ps <- reactive({
+      x <- unlist(regmatches(rhs_ps(), gregexpr("(?<=\\().*?(?=\\))", rhs_ps(), perl = T)))
       x <- x[x != ""]
       return(x)
     })
     
-    fml_md <- eventReactive(input$md_go, {
-      fml <- paste0(lhs_md(), " ~ ", paste(rhs_md(), collapse = " + "))
-      if (inp_md_type() == "olsrem") {
+    fml_ps <- eventReactive(input$ps_go, {
+      fml <- paste0(lhs_ps(), " ~ ", paste(rhs_ps(), collapse = " + "))
+      if (inp_ps_type() == "olsrem") {
         fml <- paste(fml, "| log(remoteness_exp) + log(remoteness_imp)")
       }
-      if (inp_md_type() == "olsfe") {
+      if (inp_ps_type() == "olsfe") {
         fml <- paste(fml, "| reporter_yr + partner_yr")
       }
       # print(fml)
@@ -1609,13 +1613,13 @@ shinyServer(
     
     ## 3. read from SQL ----
     
-    df_dtl_md <- reactive({
+    df_dtl_ps <- reactive({
       print("Collecting model data...")
-      wt_md$start()
+      wt_ps$start()
       
       ### 3.1. apply filters ----
       
-      tbl_sql <- if (any(inp_md_product_filter() != "all")) {
+      tbl_sql <- if (any(inp_ps_product_filter() != "all")) {
         "yrpc"
       } else {
         "yrp"
@@ -1625,28 +1629,28 @@ shinyServer(
       
       d <- d %>%
         filter(
-          year %in% !!inp_md_y() & reporter_iso != partner_iso
+          year %in% !!inp_ps_y() & reporter_iso != partner_iso
         )
       
-      if (any(inp_md_riso() != "all")) {
+      if (any(inp_ps_riso() != "all")) {
         d <- d %>%
           filter(
-            reporter_iso %in% !!inp_md_riso()
+            reporter_iso %in% !!inp_ps_riso()
           )
       }
       
-      if (any(inp_md_piso() != "all")) {
+      if (any(inp_ps_piso() != "all")) {
         d <- d %>%
           filter(
-            partner_iso %in% !!inp_md_piso()
+            partner_iso %in% !!inp_ps_piso()
           )
       }
       
       # d <- d %>% collect()
       
-      wt_md$inc(1)
+      wt_ps$inc(1)
       
-      if (any(inp_md_product_filter() %in% "vaccine")) {
+      if (any(inp_ps_product_filter() %in% "vaccine")) {
         d <- d %>% 
           left_join(
             tbl(con, "vaccine_inputs")
@@ -1659,12 +1663,12 @@ shinyServer(
           )
       }
       
-      if (any(inp_md_product_filter() != "all")) {
+      if (any(inp_ps_product_filter() != "all")) {
         d <- d %>%
-          filter(section_code %in% !!inp_md_product_filter())
+          filter(section_code %in% !!inp_ps_product_filter())
       }
       
-      wt_md$inc(1)
+      wt_ps$inc(1)
       
       #### aggregate data ----
       
@@ -1675,7 +1679,7 @@ shinyServer(
         summarise(trade = sum(trade, na.rm = T)) %>%
         ungroup()
       
-      if (inp_md_zero() == "yes") {
+      if (inp_ps_zero() == "yes") {
         d <- d %>% 
           filter(trade > 0)
       }
@@ -1686,7 +1690,7 @@ shinyServer(
         collect() %>% 
         arrange(year, importer, exporter)
       
-      wt_md$inc(1)
+      wt_ps$inc(1)
       
       ### 3.2. add geo dist data ----
       
@@ -1701,11 +1705,11 @@ shinyServer(
         ) %>%
         select(-c(country1,country2))
       
-      wt_md$inc(1)
+      wt_ps$inc(1)
       
       ### 3.3. add RTA data ----
       
-      if (any(rhs_md() %in% "rta")) {
+      if (any(rhs_ps() %in% "rta")) {
         d <- d %>%
           mutate(
             country1 = pmin(importer, exporter),
@@ -1713,7 +1717,7 @@ shinyServer(
           ) %>%
           left_join(
             tbl(con, "rtas") %>%
-              filter(year %in% !!inp_md_y()) %>%
+              filter(year %in% !!inp_ps_y()) %>%
               collect(),
             by = c("year", "country1", "country2")
           ) %>%
@@ -1726,11 +1730,11 @@ shinyServer(
           select(-c(country1,country2))
       }
       
-      wt_md$inc(1)
+      wt_ps$inc(1)
       
       ### 3.4. create remoteness indexes ----
       
-      if (inp_md_type() == "olsrem") {
+      if (inp_ps_type() == "olsrem") {
         d <- d %>%
           # Create Yit en Eit
           group_by(importer, year) %>%
@@ -1769,11 +1773,11 @@ shinyServer(
           select(-c(total_y, total_e))
       }
       
-      wt_md$inc(1)
+      wt_ps$inc(1)
       
       ### 3.5. create fixed effects ----
       
-      if (inp_md_type() == "olsfe") {
+      if (inp_ps_type() == "olsfe") {
         d <- d %>%
           mutate(
             importer_yr = paste0(importer, year),
@@ -1781,73 +1785,74 @@ shinyServer(
           )
       }
       
-      wt_md$inc(.5)
+      wt_ps$inc(.5)
       
       ### 3.5. create clustering variable ----
       
-      if (inp_md_cluster() == "yes") {
+      if (inp_ps_cluster() == "yes") {
         d <- d %>%
           mutate(imp_exp = paste(importer, exporter, sep = "_"))
       }
       
-      wt_md$inc(.5)
+      wt_ps$inc(.5)
       
       ### 3.6. add GDP / GDP percap ----
       
-      if (any(c(raw_rhs_md(), rhs_md()) %in% 
+      if (any(c(raw_rhs_ps(), rhs_ps()) %in% 
               c("gdp_importer", "gdp_percap_importer", "gdp_exporter", "gdp_percap_exporter"))) {
         d <- d %>% 
           inner_join(
             tbl(con, "gdp") %>% 
-              filter(year %in% !!inp_md_y()) %>% 
+              filter(year %in% !!inp_ps_y()) %>% 
               select(country_iso, year, gdp_importer = gdp, gdp_percap_importer = gdp_percap) %>% 
               collect(),
-            by = c("importer" = "country_iso")
+            by = c("importer" = "country_iso", "year")
           )
         
         d <- d %>% 
           inner_join(
             tbl(con, "gdp") %>% 
-              filter(year %in% !!inp_md_y()) %>% 
+              filter(year %in% !!inp_ps_y()) %>% 
               select(country_iso, year, gdp_exporter = gdp, gdp_percap_exporter = gdp_percap) %>% 
               collect(),
-            by = c("exporter" = "country_iso")
+            by = c("exporter" = "country_iso", "year")
           )
       }
       
       ### 3.7. convert dollars in time ----
       
-      if (inp_md_convert_dollars() != "No conversion") {
-        d <- gdp_deflator_adjustment(d, as.integer(inp_md_convert_dollars()))
-      }
+      # CHECK LATER ----
+      # if (inp_ps_convert_dollars() != "No conversion") {
+      #   d <- gdp_deflator_adjustment(d, as.integer(inp_ps_convert_dollars()))
+      # }
       
       ### 3.8. add MFN data ----
       
-      if (any(c(raw_rhs_md(), rhs_md()) %in% "mfn")) {
+      if (any(c(raw_rhs_ps(), rhs_ps()) %in% "mfn")) {
         tar <- tbl(con, "tariffs") %>%
           filter(
-            year %in% !!inp_md_y()
+            year %in% !!inp_ps_y()
           )
         
         trd <- tbl(con, "yrpc") %>% 
           filter(
-            year %in% !!inp_md_y() & reporter_iso %in% !!inp_md_riso()
+            year %in% !!inp_ps_y() & reporter_iso %in% !!inp_ps_riso()
           )
         
-        if (any(inp_md_piso() != "all")) {
+        if (any(inp_ps_piso() != "all")) {
           tar <- tar %>%
             filter(
               # here we need the applied tariffs when the product gets to destination
-              reporter_iso %in% !!inp_md_piso()
+              reporter_iso %in% !!inp_ps_piso()
             )
           
           trd <- tbl(con, "yrpc") %>% 
             filter(
-              partner_iso %in% !!inp_md_riso()
+              partner_iso %in% !!inp_ps_riso()
             )
         }
         
-        if (any(inp_md_product_filter() %in% "vaccine")) {
+        if (any(inp_ps_product_filter() %in% "vaccine")) {
           trd <- trd %>% 
             left_join(
               tbl(con, "vaccine_inputs")
@@ -1860,9 +1865,9 @@ shinyServer(
             )
         }
         
-        if (length(inp_md_product_filter()) > 0) {
+        if (length(inp_ps_product_filter()) > 0) {
           trd <- trd %>%
-            filter(section_code %in% !!inp_md_product_filter())
+            filter(section_code %in% !!inp_ps_product_filter())
         }
         
         trd <- trd %>%
@@ -1888,11 +1893,11 @@ shinyServer(
         d <- d %>% inner_join(trd); rm(trade)
       }
       
-      wt_md$inc(1)
+      wt_ps$inc(1)
       
       gc()
       
-      # print(c(raw_lhs_md(), raw_rhs_md()))
+      # print(c(raw_lhs_ps(), raw_rhs_ps()))
       print(colnames(d))
       
       return(
@@ -1900,72 +1905,174 @@ shinyServer(
         d[,
           colnames(d) %in% 
             c("year", "importer", "exporter",
-              lhs_md(), rhs_md(), raw_lhs_md(), raw_rhs_md(),
+              lhs_ps(), rhs_ps(), raw_lhs_ps(), raw_rhs_ps(),
               "remoteness_exp", "remoteness_imp", "imp_exp"
             )
         ]
       )
     }) %>% 
       bindCache(
-        inp_md_y(), inp_md_riso(), inp_md_piso(), inp_md_type(), inp_md_zero(),
-        inp_md_convert_dollars(), inp_md_cluster(), inp_md_product_filter(),
-        fml_md(), lhs_md(), rhs_md(), raw_lhs_md(), raw_rhs_md()
+        inp_ps_y(), inp_ps_riso(), inp_ps_piso(), inp_ps_type(), inp_ps_zero(),
+        inp_ps_convert_dollars(), inp_ps_cluster(), inp_ps_product_filter(),
+        fml_ps(), lhs_ps(), rhs_ps(), raw_lhs_ps(), raw_rhs_ps()
       ) %>%
-      bindEvent(input$md_go)
+      bindEvent(input$ps_go)
     
-    df_dtl_2_md <- eventReactive(input$md_go, {
+    df_dtl_2_ps <- eventReactive(input$ps_go, {
       ### 3.8. join with custom data ----
       
-      if (nrow(md_custom_data()) > 0) {
-        d <- df_dtl_md() %>% inner_join(md_custom_data())
+      if (nrow(ps_custom_data()) > 0) {
+        d <- df_dtl_ps() %>% inner_join(ps_custom_data())
       } else {
-        d <- df_dtl_md()
+        d <- df_dtl_ps()
       }
       
+      d <- d %>% select(year, everything())
+      
+      # print(d)
       return(d)
     })
     
     ## 4. Fit model ----
     
-    fit_md <- eventReactive(input$md_go, {
+    fit_ps <- eventReactive(input$ps_go, {
       print("Fitting model...")
       
-      fml <- as.formula(fml_md())
+      fml <- as.formula(fml_ps())
       
-      if (any(inp_md_type() %in% c("ols", "olsrem", "olsfe"))) {
-        if (inp_md_cluster() == "yes") {
+      if (any(inp_ps_type() %in% c("ols", "olsrem", "olsfe"))) {
+        if (inp_ps_cluster() == "yes") {
           m <- tryCatch(
-            feols(fml, df_dtl_2_md(), cluster = ~imp_exp),
+            feols(fml, df_dtl_2_ps(), cluster = ~imp_exp),
             error = function(e) { custom_regression_error() }
           )
         } else {
           m <- tryCatch(
-            feols(fml, df_dtl_2_md()),
+            feols(fml, df_dtl_2_ps()),
             error = function(e) { custom_regression_error() }
           )
         }
       }
       
-      if (inp_md_type() == "ppml") {
-        if (inp_md_cluster() == "yes") {
+      if (inp_ps_type() == "ppml") {
+        if (inp_ps_cluster() == "yes") {
           m <- tryCatch(
-            feglm(fml, df_dtl_2_md(), cluster = ~imp_exp,
+            feglm(fml, df_dtl_2_ps(), cluster = ~imp_exp,
                   family = quasipoisson(link = "log")),
             error = function(e) { custom_regression_error() }
           )
         } else {
           m <- tryCatch(
-            feglm(fml, df_dtl_2_md(), family = quasipoisson(link = "log")),
+            feglm(fml, df_dtl_2_ps(), family = quasipoisson(link = "log")),
             error = function(e) { custom_regression_error() }
           )
         }
       }
       
-      wt_md$inc(2)
+      wt_ps$inc(1)
       gc()
       
-      wt_md$close() 
       return(m)
+    })
+    
+    ## 5. Simulate ----
+    
+    pred_trade_lines_ps <- eventReactive(input$ps_go, {
+      # print(inp_ps_sy()) # print(inp_ps_sp()) # print(inp_ps_sra())
+      
+      d <- df_dtl_2_ps() %>%
+        filter(
+          exporter %in% !!inp_ps_sp()
+          # importer %in% !!inp_ps_sp()
+        )
+      
+      d <- d %>%
+        mutate(predicted_trade = predict(fit_ps(), newdata = d)) %>%
+        ungroup() %>% 
+        select(year, exporter, trade, predicted_trade) %>%
+        group_by(year, exporter) %>%
+        # summarise_if(is.numeric, sum, na.rm = T)
+        summarise(
+          trade = sum(trade, na.rm = T),
+          predicted_trade = sum(predicted_trade, na.rm = T)
+        )
+      
+      d <- d %>%
+        pivot_longer(trade:predicted_trade, names_to = "variable", values_to = "value")
+      
+      d <- d %>% 
+        mutate(
+          variable = case_when(
+            variable == "trade" ~ "Observed trade",
+            TRUE ~ "Predicted trade"
+          )
+        )
+      
+      d2 <- df_dtl_2_ps() %>%
+        filter(
+          exporter %in% !!inp_ps_sp()
+          # importer %in% !!inp_ps_sp()
+        ) %>% 
+        mutate(
+          rta = case_when(
+            year >= !!inp_ps_sy() ~ as.integer(!!inp_ps_sra()),
+            TRUE ~ rta
+          )
+        )
+
+      d2 <- d2 %>%
+        mutate(predicted_trade = predict(fit_ps(), newdata = d2)) %>%
+        select(year, exporter, predicted_trade) %>%
+        group_by(year, exporter) %>%
+        summarise_if(is.numeric, sum, na.rm = T)
+      
+      d2 <- d2 %>%
+        pivot_longer(predicted_trade, names_to = "variable", values_to = "value")
+
+      d2 <- d2 %>% 
+        mutate(
+          variable = "Predicted trade (altered RTA)"
+        )
+      
+      d <- d %>% bind_rows(d2); rm(d2)
+      
+      # d <- d %>% 
+      #   mutate(variable = paste(exporter, variable)) %>% 
+      #   select(-exporter)
+      
+      d$variable <- factor(d$variable,
+                           levels = c("Observed trade", "Predicted trade", "Predicted trade (altered RTA)"))
+      
+      wt_ps$inc(1)
+
+      # d <- d %>% 
+      #   pivot_wider(values_from = "value", names_from = "variable")
+      
+      # g <- hchart(d,
+      #        "column",
+      #        hcaes(x = year, y = value, group = variable),
+      #        tooltip = list(
+      #          pointFormatter = custom_tooltip_short()
+      #        )) %>%
+      #   hc_xAxis(title = list(text = "Year")) %>%
+      #   hc_yAxis(title = list(text = "USD billion"),
+      #            labels = list(formatter = JS("function() { return this.value / 1000000000 }"))) %>%
+      #   hc_title(text = "Aggregated effect on exports for the selected countries")
+
+      g <- ggplot(d) +
+        geom_col(aes(x = as.factor(year), y = value / 1000000000, fill = variable),
+                 position = "dodge2") +
+        facet_wrap(~exporter, scales = "free_y") +
+        scale_fill_viridis_d() +
+        theme_minimal() +
+        labs(
+          x = "Year",
+          y = "USD billion",
+          title = "Aggregated effect on exports for the selected countries"
+        )
+      
+      wt_ps$close()
+      return(g)
     })
     
     # Simulate ----
@@ -2491,7 +2598,7 @@ shinyServer(
     output$title_cp_legend <- renderText({ legend_txt })
     output$title_cc_legend <- renderText({ legend_txt })
     output$title_pp_legend <- renderText({ legend_txt })
-    output$title_md_legend <- renderText({ legend_txt })
+    output$title_ps_legend <- renderText({ legend_txt })
     output$title_si_legend <- renderText({ legend_txt })
     
     ## Country profile ----
@@ -2595,13 +2702,15 @@ shinyServer(
     
     ## Model ----
     
-    output$df_stl_md <- eventReactive(input$md_go, { "Data preview" })
-    output$df_dtl_pre_md <- renderTable({ head(df_dtl_2_md()) })
-    output$fit_stl_md <- eventReactive(input$md_go, { "Model summary" })
-    output$tidy_md <- renderTable(tidy(fit_md()))
-    output$glance_md <- renderTable(glance(fit_md()))
-    output$fit_res_md <- eventReactive(input$md_go, { "Model results" })
-    output$fit_cat_md <- renderPrint({ fit_md() })
+    output$df_stl_ps <- eventReactive(input$ps_go, { "Data preview" })
+    output$df_dtl_pre_ps <- renderTable({ head(df_dtl_2_ps()) })
+    output$fit_stl1_ps <- eventReactive(input$ps_go, { "Model summary" })
+    output$tidy_ps <- renderTable(tidy(fit_ps()))
+    output$glance_ps <- renderTable(glance(fit_ps()))
+    output$fit_stl2_ps <- eventReactive(input$ps_go, { "Model results" })
+    output$fit_cat_ps <- renderPrint({ fit_ps() })
+    output$pred_stl_ps <- eventReactive(input$ps_go, { "Model simulation" })
+    output$pred_trade_lines_ps <- renderPlot({ pred_trade_lines_ps() })
     
     ## Simulate ----
     
@@ -2752,17 +2861,17 @@ shinyServer(
       downloadButton('dwn_pp_pre', label = 'Aggregated data')
     })
     
-    ### Model ----
+    ### Partial Equilibrium Simulation ----
     
-    dwn_md_stl <- eventReactive(input$md_go, { "Download model data" })
+    dwn_ps_stl <- eventReactive(input$ps_go, { "Download model data" })
     
-    dwn_md_txt <- eventReactive(input$md_go, {
+    dwn_ps_txt <- eventReactive(input$ps_go, {
       "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
     })
     
-    dwn_md_fmt <- eventReactive(input$md_go, {
+    dwn_ps_fmt <- eventReactive(input$ps_go, {
       selectInput(
-        "md_f",
+        "ps_f",
         "Download data as:",
         choices = available_formats,
         selected = NULL,
@@ -2770,36 +2879,36 @@ shinyServer(
       )
     })
     
-    output$dwn_md_dtl_pre <- downloadHandler(
+    output$dwn_ps_dtl_pre <- downloadHandler(
       filename = function() {
-        glue("{ inp_md_type() }_{ inp_md_riso() }_{ inp_md_piso() }_{ min(inp_md_y()) }_{ max(inp_md_y()) }.{ inp_md_f() }")
+        glue("{ inp_ps_type() }_{ inp_ps_riso() }_{ inp_ps_piso() }_{ min(inp_ps_y()) }_{ max(inp_ps_y()) }.{ inp_ps_f() }")
       },
       content = function(filename) {
-        rio::export(df_dtl_md(), filename)
+        rio::export(df_dtl_ps(), filename)
       },
       contentType = "application/zip"
     )
     
-    output$dwn_md_fit_pre <- downloadHandler(
+    output$dwn_ps_fit_pre <- downloadHandler(
       filename = function() {
-        glue("{ inp_md_type() }_{ inp_md_riso() }_{ inp_md_piso() }_{ min(inp_md_y()) }_{ max(inp_md_y()) }.rds")
+        glue("{ inp_ps_type() }_{ inp_ps_riso() }_{ inp_ps_piso() }_{ min(inp_ps_y()) }_{ max(inp_ps_y()) }.rds")
       },
       content = function(filename) {
-        saveRDS(fit_md(), filename)
+        saveRDS(fit_ps(), filename)
       },
       contentType = "application/zip"
     )
     
-    output$dwn_md_stl <- renderText({dwn_md_stl()})
-    output$dwn_md_txt <- renderText({dwn_md_txt()})
-    output$dwn_md_fmt <- renderUI({dwn_md_fmt()})
-    output$dwn_md_dtl <- renderUI({
-      req(input$md_go)
-      downloadButton('dwn_md_dtl_pre', label = 'Detailed data')
+    output$dwn_ps_stl <- renderText({dwn_ps_stl()})
+    output$dwn_ps_txt <- renderText({dwn_ps_txt()})
+    output$dwn_ps_fmt <- renderUI({dwn_ps_fmt()})
+    output$dwn_ps_dtl <- renderUI({
+      req(input$ps_go)
+      downloadButton('dwn_ps_dtl_pre', label = 'Detailed data')
     })
-    output$dwn_md_fit <- renderUI({
-      req(input$md_go)
-      downloadButton('dwn_md_fit_pre', label = 'Fitted model')
+    output$dwn_ps_fit <- renderUI({
+      req(input$ps_go)
+      downloadButton('dwn_ps_fit_pre', label = 'Fitted model')
     })
     
     ## Cite ----
@@ -2833,7 +2942,7 @@ shinyServer(
       # strip shiny related URL parameters
       reactiveValuesToList(input)
       setBookmarkExclude(c(
-        "md_own", "md_f", "cp_f", "cc_f", "sidebarCollapsed", "sidebarItemExpanded"
+        "ps_own", "ps_f", "cp_f", "cc_f", "sidebarCollapsed", "sidebarItemExpanded"
       ))
       session$doBookmark()
     })

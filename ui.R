@@ -20,7 +20,7 @@ shinyUI(
           
           menuItem("Product profile", tabName = "pp"),
           
-          menuItem("Model", tabName = "md", badgeLabel = "new", badgeColor = "green"),
+          menuItem("P.E. Simulation", tabName = "ps", badgeLabel = "new", badgeColor = "green"),
           
           # menuItem("Simulate", tabName = "si", badgeLabel = "SKETCH", badgeColor = "red"),
       
@@ -508,7 +508,7 @@ shinyUI(
           ),
           
           tabItem(
-            tabName = "md",
+            tabName = "ps",
             
             # Model ----
             
@@ -516,8 +516,8 @@ shinyUI(
             
             column(
               12,
-              HTML("<h1>Gravity Models</h1>"),
-              htmlOutput("title_md_legend", container = tags$p)
+              HTML("<h1>Partial Equilibrium Simulation</h1>"),
+              htmlOutput("title_ps_legend", container = tags$p)
             ),
             
             ## Model variables ----
@@ -531,7 +531,7 @@ shinyUI(
             column(
               6,
               sliderInput(
-                "md_y",
+                "ps_y",
                 "Years",
                 min = available_yrs_min,
                 max = available_yrs_max,
@@ -546,7 +546,7 @@ shinyUI(
             column(
               6,
               sliderInput(
-                "md_y_sep",
+                "ps_y_sep",
                 "Interval of years",
                 # min = available_yrs_min,
                 min = 1,
@@ -574,11 +574,11 @@ shinyUI(
             column(
               3,
               selectInput(
-                "md_r",
+                "ps_r",
                 "Importer",
                 choices = available_reporters_iso,
                 # choices = available_reporters_iso[available_reporters_iso != "all"],
-                selected = "can",
+                selected = "all",
                 selectize = TRUE,
                 width = "100%",
                 multiple = TRUE
@@ -597,7 +597,7 @@ shinyUI(
             column(
               3,
               selectInput(
-                "md_p",
+                "ps_p",
                 "Exporter",
                 choices = available_reporters_iso,
                 selected = "all",
@@ -619,7 +619,7 @@ shinyUI(
             column(
               3,
               selectInput(
-                "md_t",
+                "ps_t",
                 "Model type",
                 choices = available_models,
                 selected = "ppml",
@@ -643,7 +643,7 @@ shinyUI(
             column(
               3,
               selectInput(
-                "md_zero",
+                "ps_zero",
                 "Drop zero flows",
                 choices = list("Yes" = "yes", "No" = "no"),
                 selected = c("no"),
@@ -664,7 +664,7 @@ shinyUI(
             column(
               3,
               selectInput(
-                "md_a",
+                "ps_a",
                 "Convert to dollars of the year",
                 choices = c("No conversion", 2000:2019),
                 selected = "",
@@ -686,7 +686,7 @@ shinyUI(
             column(
               3,
               selectInput(
-                "md_cl",
+                "ps_cl",
                 "Use country pairs for clustering",
                 choices = list("Yes" = "yes", "No" = "no"),
                 selected = c("no"),
@@ -710,7 +710,7 @@ shinyUI(
             column(
               3,
               selectInput(
-                "md_pf",
+                "ps_pf",
                 "Section/Commodity",
                 choice = list(
                   "All Products" = available_all,
@@ -740,7 +740,7 @@ shinyUI(
             column(
               3,
               fileInput(
-                'md_own', 
+                'ps_own', 
                 'Upload your own data',
                 accept = c(
                   'text/csv',
@@ -770,14 +770,12 @@ shinyUI(
                 )
             ),
             
-            ## Model results ----
-            
             column(
               12,
               textInput(
-                "md_fml",
+                "ps_fml",
                 "Model formula",
-                "trade ~ log(dist) + log(gdp_exporter) + colony + comlang_off + contig",
+                "trade ~ log(dist) + log(gdp_exporter) + rta + colony + comlang_off + contig",
                 width = "100%",
                 placeholder = "Any valid R formula"
               ) %>% 
@@ -818,12 +816,107 @@ shinyUI(
                   size = "l"
                 )
             ),
+  
+            column(
+              12,
+              hr(),
+              h2("RTA change simulation")
+            ),          
+
+            column(
+              4,
+              selectInput(
+                "ps_sp",
+                "Alter RTAs situation for",
+                choices = available_reporters_iso,
+                selected = c("can", "usa", "mex"),
+                selectize = TRUE,
+                width = "100%",
+                multiple = TRUE
+              ) %>% 
+                helper(
+                  type = "inline",
+                  title = "Alter RTAs situation for",
+                  content = c("This corresponds to a 'what if' situation, for example, what would have happened (according
+                              to the model) if the countries you've chosen dropped or subscribed their RTA starting in
+                              a certain year (i.e. what if Chile and Chile would have subscribed their RTA back in 2002 
+                              instead of 2006).",
+                              "",
+                              "<b>References</b>",
+                              "Yotov, Y. V., Piermartini, R., and Larch, M. <i><a href='https://www.wto.org/english/res_e/publications_e/advancedguide2016_e.htm'>An Advanced Guide to Trade Policy Analysis: The Structural Gravity Model</a></i>. WTO iLibrary, 2016."),
+                  buttonLabel = "Got it!",
+                  easyClose = FALSE,
+                  fade = TRUE,
+                  size = "s"
+                )
+            ),
+            
+            column(
+              4,
+              selectInput(
+                "ps_sra",
+                "RTA action",
+                choice = list("Drop RTA" = 0L, "Subscribe RTA" = 1L),
+                selected = 0L,
+                selectize = TRUE,
+                width = "100%",
+                multiple = FALSE
+              ) %>% 
+                helper(
+                  type = "inline",
+                  title = "RTA action",
+                  content = c("This corresponds to a 'what if' situation, for example, what would have happened (according
+                              to the model) if the countries you've chosen dropped or subscribed their RTA starting in
+                              a certain year (i.e. what if Chile and Chile would have subscribed their RTA back in 2002 
+                              instead of 2006).",
+                              "",
+                              "<b>References</b>",
+                              "Yotov, Y. V., Piermartini, R., and Larch, M. <i><a href='https://www.wto.org/english/res_e/publications_e/advancedguide2016_e.htm'>An Advanced Guide to Trade Policy Analysis: The Structural Gravity Model</a></i>. WTO iLibrary, 2016."),
+                  buttonLabel = "Got it!",
+                  easyClose = FALSE,
+                  fade = TRUE,
+                  size = "s"
+                )
+            ),
+            
+            column(
+              4,
+              sliderInput(
+                "ps_sy",
+                "Since year",
+                min = available_yrs_min,
+                max = available_yrs_max,
+                value = 2002,
+                sep = "",
+                step = 1,
+                ticks = FALSE,
+                width = "100%"
+              ) %>% 
+                helper(
+                  type = "inline",
+                  title = "Since year",
+                  content = c("This corresponds to a 'what if' situation, for example, what would have happened (according
+                              to the model) if the countries you've chosen dropped or subscribed their RTA starting in
+                              a certain year (i.e. what if Chile and Chile would have subscribed their RTA back in 2002 
+                              instead of 2006).",
+                              "",
+                              "<b>References</b>",
+                              "Yotov, Y. V., Piermartini, R., and Larch, M. <i><a href='https://www.wto.org/english/res_e/publications_e/advancedguide2016_e.htm'>An Advanced Guide to Trade Policy Analysis: The Structural Gravity Model</a></i>. WTO iLibrary, 2016."),
+                  buttonLabel = "Got it!",
+                  easyClose = FALSE,
+                  fade = TRUE,
+                  size = "s"
+                )
+            ),
+            
+            ## Model results ----
             
             column(
               12,
               align="center",
+              hr(),
               actionButton(
-                "md_go", 
+                "ps_go", 
                 "Give me the results for this model",
                 class = "btn-primary"
               )
@@ -831,24 +924,27 @@ shinyUI(
             
             column(
               12,
-              htmlOutput("df_stl_md", container = tags$h2),
-              tableOutput("df_dtl_pre_md"),
-              htmlOutput("fit_stl_md", container = tags$h2),
-              tableOutput("tidy_md"),
-              tableOutput("glance_md"),
-              htmlOutput("fit_res_md", container = tags$h2),
-              verbatimTextOutput("fit_cat_md"),
+              htmlOutput("df_stl_ps", container = tags$h2),
+              tableOutput("df_dtl_pre_ps"),
+              htmlOutput("fit_stl1_ps", container = tags$h2),
+              tableOutput("tidy_ps"),
+              tableOutput("glance_ps"),
+              htmlOutput("fit_stl2_ps", container = tags$h2),
+              verbatimTextOutput("fit_cat_ps"),
+              htmlOutput("pred_stl_ps", container = tags$h2),
+              # highchartOutput("pred_trade_lines_ps")
+              plotOutput("pred_trade_lines_ps")
             ),
             
             ## Download ----
             
             column(
               12,
-              htmlOutput("dwn_md_stl", container = tags$h2),
-              htmlOutput("dwn_md_txt", container = tags$p),
-              uiOutput("dwn_md_fmt"),
-              uiOutput("dwn_md_dtl"),
-              uiOutput("dwn_md_fit")
+              htmlOutput("dwn_ps_stl", container = tags$h2),
+              htmlOutput("dwn_ps_txt", container = tags$p),
+              uiOutput("dwn_ps_fmt"),
+              uiOutput("dwn_ps_dtl"),
+              uiOutput("dwn_ps_fit")
             )
           ),
           
