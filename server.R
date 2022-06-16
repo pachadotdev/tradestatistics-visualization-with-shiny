@@ -1940,6 +1940,8 @@ shinyServer(
           # importer %in% !!inp_ps_sp()
         )
       
+      d <- d %>% mutate(`UNFEASIBLE` = NA, `ESTIMATION` = NA)
+      
       d <- d %>%
         mutate(predicted_trade = predict(fit_ps(), newdata = d)) %>%
         ungroup() %>% 
@@ -1950,6 +1952,8 @@ shinyServer(
           trade = sum(trade, na.rm = T),
           predicted_trade = sum(predicted_trade, na.rm = T)
         )
+      
+      d <- d %>% select(-c("UNFEASIBLE", "ESTIMATION"))
       
       d <- d %>%
         pivot_longer(trade:predicted_trade, names_to = "variable", values_to = "value")
@@ -1974,19 +1978,21 @@ shinyServer(
           )
         )
 
+      d2 <- d2 %>% mutate(`UNFEASIBLE` = NA, `ESTIMATION` = NA)
+      
       d2 <- d2 %>%
         mutate(predicted_trade = predict(fit_ps(), newdata = d2)) %>%
         select(year, exporter, predicted_trade) %>%
         group_by(year, exporter) %>%
         summarise_if(is.numeric, sum, na.rm = T)
       
+      d2 <- d2 %>% select(-c("UNFEASIBLE", "ESTIMATION"))
+      
       d2 <- d2 %>%
         pivot_longer(predicted_trade, names_to = "variable", values_to = "value")
 
       d2 <- d2 %>% 
-        mutate(
-          variable = "Predicted trade (altered RTA)"
-        )
+        mutate(variable = "Predicted trade (altered RTA)")
       
       d <- d %>% bind_rows(d2); rm(d2)
       
@@ -2896,7 +2902,8 @@ shinyServer(
       # strip shiny related URL parameters
       reactiveValuesToList(input)
       setBookmarkExclude(c(
-        "ps_own", "ps_f", "cp_f", "cc_f", "sidebarCollapsed", "sidebarItemExpanded"
+        "ps_own", "ps_f", "cp_f", "cc_f", "sidebarCollapsed", "sidebarItemExpanded",
+        "shinyhelper-modal_params"
       ))
       session$doBookmark()
     })
