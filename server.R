@@ -1601,9 +1601,6 @@ shinyServer(
     
     fml_ps <- eventReactive(input$ps_go, {
       fml <- paste0(lhs_ps(), " ~ ", paste(rhs_ps(), collapse = " + "))
-      if (inp_ps_type() == "olsrem") {
-        fml <- paste(fml, "| log(remoteness_exp) + log(remoteness_imp)")
-      }
       if (inp_ps_type() == "olsfe") {
         fml <- paste(fml, "| reporter_yr + partner_yr")
       }
@@ -1730,52 +1727,9 @@ shinyServer(
           select(-c(country1,country2))
       }
       
-      wt_ps$inc(1)
+      wt_ps$inc(2)
       
-      ### 3.4. create remoteness indexes ----
-      
-      if (inp_ps_type() == "olsrem") {
-        d <- d %>%
-          # Create Yit en Eit
-          group_by(importer, year) %>%
-          mutate(
-            y = sum(trade),
-            total_y = sum(y, na.rm = T)
-          ) %>%
-          
-          group_by(exporter, year) %>%
-          mutate(
-            e = sum(trade),
-            total_e = sum(e, na.rm = T)
-          ) %>% 
-          
-          group_by(year) %>%
-          mutate(
-            total_y = max(total_y, na.rm = T),
-            total_e = max(total_e, na.rm = T)
-          )
-        
-        d <- d %>%
-          # Replicate rem_imp
-          group_by(importer, year) %>%
-          mutate(
-            remoteness_imp = sum(dist / (y / total_y), na.rm = T)
-          )
-        
-        d <- d %>% 
-          # Replicate rem_exp
-          group_by(exporter, year) %>%
-          mutate(
-            remoteness_exp = sum(dist *  total_e / e, na.rm = T)
-          )
-        
-        d <- d %>%
-          select(-c(total_y, total_e))
-      }
-      
-      wt_ps$inc(1)
-      
-      ### 3.5. create fixed effects ----
+      ### 3.4. create fixed effects ----
       
       if (inp_ps_type() == "olsfe") {
         d <- d %>%
@@ -1940,7 +1894,7 @@ shinyServer(
       
       fml <- as.formula(fml_ps())
       
-      if (any(inp_ps_type() %in% c("ols", "olsrem", "olsfe"))) {
+      if (any(inp_ps_type() %in% c("ols", "olsfe"))) {
         if (inp_ps_cluster() == "yes") {
           m <- tryCatch(
             feols(fml, df_dtl_2_ps(), cluster = ~imp_exp),

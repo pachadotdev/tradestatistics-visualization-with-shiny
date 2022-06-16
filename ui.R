@@ -510,7 +510,7 @@ shinyUI(
           tabItem(
             tabName = "ps",
             
-            # Model ----
+            # Partial Equilibrium Simulation ----
             
             useWaitress(),
             

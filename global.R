@@ -101,8 +101,8 @@ names(available_commodities_code) <- glue("{ commodities_to_display$commodity_co
 
 ## Models ----
 
-available_models <- list("ols", "olsrem", "olsfe", "ppml")
-names(available_models) <- c("OLS", "OLS (Remoteness Index)", "OLS (Fixed Effects)", "Poisson Pseudo Maximum Likelihood (PPML)")
+available_models <- list("ols", "olsfe", "ppml")
+names(available_models) <- c("OLS", "OLS (Fixed Effects)", "Poisson Pseudo Maximum Likelihood (PPML)")
 
 ## Formats ----
 
