@@ -1776,6 +1776,7 @@ shinyServer(
       ### 3.7. convert dollars in time ----
       
       # CHECK LATER ----
+      
       # if (inp_ps_convert_dollars() != "No conversion") {
       #   d <- gdp_deflator_adjustment(d, as.integer(inp_ps_convert_dollars()))
       # }
@@ -1790,7 +1791,7 @@ shinyServer(
         
         trd <- tbl(con, "yrpc") %>% 
           filter(
-            year %in% !!inp_ps_y() & reporter_iso %in% !!inp_ps_riso()
+            year %in% !!inp_ps_y()
           )
         
         if (any(inp_ps_piso() != "all")) {
@@ -1819,17 +1820,20 @@ shinyServer(
             )
         }
         
-        if (length(inp_ps_product_filter()) > 0) {
+        if (any(inp_ps_product_filter() != "all")) {
           trd <- trd %>%
             filter(section_code %in% !!inp_ps_product_filter())
         }
         
+        print("TABLE TRD")
+        print(trd)
+        
         trd <- trd %>%
-          select(year, reporter_iso, partner_iso, commodity_code, trade_value_usd_exp) %>% 
+          select(year, reporter_iso, partner_iso, commodity_code, trade_value_usd_imp) %>% 
           inner_join(
             tar %>% 
-              select(year, partner_iso = reporter_iso, commodity_code, mfn = simple_average),
-            by = c("year", "partner_iso", "commodity_code")
+              select(year, reporter_iso, commodity_code, mfn = simple_average),
+            by = c("year", "reporter_iso", "commodity_code")
           )
         
         trd <- trd %>%
@@ -1844,7 +1848,10 @@ shinyServer(
         
         rm(tar)
         
-        d <- d %>% inner_join(trd); rm(trade)
+        d <- d %>% 
+          inner_join(trd)
+        
+        rm(trade)
       }
       
       wt_ps$inc(1)
@@ -1953,8 +1960,6 @@ shinyServer(
           predicted_trade = sum(predicted_trade, na.rm = T)
         )
       
-      d <- d %>% select(-c("UNFEASIBLE", "ESTIMATION"))
-      
       d <- d %>%
         pivot_longer(trade:predicted_trade, names_to = "variable", values_to = "value")
       
@@ -1985,8 +1990,6 @@ shinyServer(
         select(year, exporter, predicted_trade) %>%
         group_by(year, exporter) %>%
         summarise_if(is.numeric, sum, na.rm = T)
-      
-      d2 <- d2 %>% select(-c("UNFEASIBLE", "ESTIMATION"))
       
       d2 <- d2 %>%
         pivot_longer(predicted_trade, names_to = "variable", values_to = "value")
