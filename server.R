@@ -14,8 +14,8 @@ shinyServer(
       return(y)
     })
     
-    inp_cp_r <- reactive({ input$cp_r })
-    inp_cp_p <- reactive({ input$cp_p })
+    inp_cp_r <- reactive({ sort(input$cp_r) })
+    inp_cp_p <- reactive({ sort(input$cp_p) })
     
     inp_cp_f <- reactive({ input$cp_f })
     
@@ -47,8 +47,8 @@ shinyServer(
     
     inp_cc_y <- reactive({ input$cc_y })
     
-    inp_cc_r1 <- reactive({ input$cc_r1 })
-    inp_cc_r2 <- reactive({ input$cc_r2 })
+    inp_cc_r1 <- reactive({ sort(input$cc_r1) })
+    inp_cc_r2 <- reactive({ sort(input$cc_r2) })
     inp_cc_p <- reactive({ input$cc_p })
     
     inp_cc_f <- reactive({ input$cc_f })
@@ -104,7 +104,7 @@ shinyServer(
       return(y)
     })
     
-    inp_pp_section_code <- reactive({ input$pp_s })
+    inp_pp_section_code <- reactive({ sort(input$pp_s) })
     
     inp_pp_convert_dollars <- reactive({ input$pp_a })
     
@@ -138,8 +138,8 @@ shinyServer(
       return(y2)
     })
     
-    inp_ps_riso <- reactive({ input$ps_r })
-    inp_ps_piso <- reactive({ input$ps_p })
+    inp_ps_riso <- reactive({ sort(input$ps_r) })
+    inp_ps_piso <- reactive({ sort(input$ps_p) })
     
     inp_ps_convert_dollars <- reactive({ input$ps_a })
     
@@ -1825,9 +1825,6 @@ shinyServer(
             filter(section_code %in% !!inp_ps_product_filter())
         }
         
-        print("TABLE TRD")
-        print(trd)
-        
         trd <- trd %>%
           select(year, reporter_iso, partner_iso, commodity_code, trade_value_usd_imp) %>% 
           inner_join(
@@ -1947,7 +1944,7 @@ shinyServer(
           # importer %in% !!inp_ps_sp()
         )
       
-      d <- d %>% mutate(`UNFEASIBLE` = NA, `ESTIMATION` = NA)
+      d <- d %>% mutate(`UNFEASIBLE` = NA_real_, `ESTIMATION` = NA_real_)
       
       d <- d %>%
         mutate(predicted_trade = predict(fit_ps(), newdata = d)) %>%
@@ -1983,13 +1980,15 @@ shinyServer(
           )
         )
 
-      d2 <- d2 %>% mutate(`UNFEASIBLE` = NA, `ESTIMATION` = NA)
+      d2 <- d2 %>% mutate(`UNFEASIBLE` = NA_real_, `ESTIMATION` = NA_real_)
       
       d2 <- d2 %>%
         mutate(predicted_trade = predict(fit_ps(), newdata = d2)) %>%
         select(year, exporter, predicted_trade) %>%
         group_by(year, exporter) %>%
-        summarise_if(is.numeric, sum, na.rm = T)
+        summarise(
+          predicted_trade = sum(predicted_trade, na.rm = T)
+        )
       
       d2 <- d2 %>%
         pivot_longer(predicted_trade, names_to = "variable", values_to = "value")
