@@ -288,7 +288,7 @@ shinyServer(
     ## Data ----
     
     df_agg_cp <- reactive({
-      wt_cp$start()
+      wt_cp$notify(position = "tr")
       
       d <- tbl(con, tbl_agg_cp())
       
@@ -744,7 +744,7 @@ shinyServer(
     ## Data ----
     
     df_agg_r1_cc <- reactive({
-      wt_cc$start()
+      wt_cc$notify(position = "tr")
       
       d <- tbl(con, tbl_agg_cc())
       
@@ -1266,7 +1266,7 @@ shinyServer(
     ## Data ----
     
     df_dtl_pp <- reactive({
-      wt_pp$start()
+      wt_pp$notify(position = "tr")
       
       d <- tbl(con, "yrpc") %>% 
         filter(year %in% !!inp_pp_y())
@@ -1612,7 +1612,7 @@ shinyServer(
     
     df_dtl_ps <- reactive({
       print("Collecting model data...")
-      wt_ps$start()
+      wt_ps$notify(position = "tr")
       
       ### 3.1. apply filters ----
       
@@ -2045,7 +2045,7 @@ shinyServer(
     # 
     # df_dtl_si <- reactive({
     #   print("Collecting simulation data...")
-    #   wt_si$start()
+    #   wt_si$notify(position = "tr")
     #   
     #   ### 3.1. apply filters ----
     #   
