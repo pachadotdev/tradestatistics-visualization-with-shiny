@@ -3,7 +3,6 @@
 #' @param request Internal parameter for `{shiny}`.
 #'     DO NOT REMOVE.
 #' @import shiny
-#' @importFrom bslib bs_theme
 #' @importFrom shinyhelper helper
 #' @importFrom waiter useWaitress
 #' @noRd
@@ -13,20 +12,17 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # Your application UI logic
     fluidPage(
-      title = "Partial Equilibrium Simulation",
-      theme = bs_theme(),
+      title = "Model + Simulation",
       fluidRow(
-        # Partial Equilibrium Simulation ----
-
         useWaitress(),
 
         column(
           12,
-          HTML("<h1>Partial Equilibrium Simulation</h1>"),
+          HTML("<h1>Model + Simulation</h1>"),
           htmlOutput("title_legend", container = tags$p)
         ),
 
-        ## Model variables ----
+        # Model variables ----
 
         col_12(
           hr(),
@@ -49,7 +45,7 @@ app_ui <- function(request) {
 
         col_6(
           sliderInput(
-            "y_sep",
+            "i",
             "Interval of years",
             min = 1,
             max = 5,
@@ -140,10 +136,10 @@ app_ui <- function(request) {
 
         col_3(
           selectInput(
-            "zero",
+            "z",
             "Drop zero flows",
-            choices = c("Yes" = "yes", "No" = "no"),
-            selected = c("no"),
+            choices = available_logicals(),
+            selected = "no",
             selectize = TRUE,
             width = "100%"
           ) %>%
@@ -160,7 +156,7 @@ app_ui <- function(request) {
 
         col_3(
           selectInput(
-            "a",
+            "d",
             "Convert to dollars of the year",
             choices = c("No conversion", 2000:2019),
             selected = "",
@@ -181,10 +177,10 @@ app_ui <- function(request) {
 
         col_3(
           selectInput(
-            "cl",
+            "c",
             "Use country pairs for clustering",
-            choices = c("Yes" = "yes", "No" = "no"),
-            selected = c("no"),
+            choices = available_logicals(),
+            selected = "no",
             selectize = TRUE,
             width = "100%"
           ) %>%
@@ -204,7 +200,7 @@ app_ui <- function(request) {
 
         col_3(
           selectInput(
-            "pf",
+            "s",
             "Section/Commodity",
             choices = list(
               "All Products" = available_all(),
@@ -316,7 +312,7 @@ app_ui <- function(request) {
 
         col_4(
           selectInput(
-            "sp",
+            "rc",
             "Alter RTAs situation for",
             choices = available_reporters_iso(),
             selected = c("can", "usa", "mex"),
@@ -343,8 +339,8 @@ app_ui <- function(request) {
 
         col_4(
           selectInput(
-            "sra",
-            "RTA action",
+            "rm",
+            "RTA modification",
             choices = c("Drop RTA" = 0L, "Subscribe RTA" = 1L),
             selected = 0L,
             selectize = TRUE,
@@ -370,7 +366,7 @@ app_ui <- function(request) {
 
         col_4(
           sliderInput(
-            "sy",
+            "ry",
             "Since year",
             min = available_yrs_min(),
             max = available_yrs_max(),
@@ -397,7 +393,7 @@ app_ui <- function(request) {
             )
         ),
 
-        ## Model results ----
+        # Model results ----
 
         col_12(
           align="center",
@@ -410,47 +406,47 @@ app_ui <- function(request) {
         ),
 
         col_12(
-          htmlOutput("df_stl", container = tags$h2),
-          tableOutput("df_dtl_pre"),
+          htmlOutput("hdata_stl", container = tags$h2),
+          tableOutput("hdata_dtl"),
           htmlOutput("fit_stl1", container = tags$h2),
-          tableOutput("tidy"),
-          tableOutput("glance"),
+          tableOutput("fit_tidy"),
+          tableOutput("fit_glance"),
           htmlOutput("fit_stl2", container = tags$h2),
-          verbatimTextOutput("fit_cat"),
-          htmlOutput("pred_stl", container = tags$h2),
-          plotOutput("pred_trade_lines")
+          verbatimTextOutput("fit_cat")
+          # htmlOutput("pred_stl", container = tags$h2),
+          # plotOutput("pred_trade_lines")
         ),
 
-        ## Download ----
+        # Download ----
+
+        # col_12(
+        #   htmlOutput("dwn_stl", container = tags$h2),
+        #   htmlOutput("dwn_txt", container = tags$p),
+        #   uiOutput("dwn_fmt"),
+        #   uiOutput("dwn_dtl"),
+        #   uiOutput("dwn_fit")
+        # ),
+
+        # Cite ----
+
+        # col_12(
+        #   htmlOutput("cite_stl", container = tags$h2),
+        #   htmlOutput("cite_chicago_stl", container = tags$h3),
+        #   htmlOutput("cite", container = tags$p),
+        #   htmlOutput("cite_bibtex_stl", container = tags$h3),
+        #   verbatimTextOutput("cite_bibtex")
+        # ),
+
+        # Footer ----
 
         col_12(
-          htmlOutput("dwn_stl", container = tags$h2),
-          htmlOutput("dwn_txt", container = tags$p),
-          uiOutput("dwn_fmt"),
-          uiOutput("dwn_dtl"),
-          uiOutput("dwn_fit")
+          hr(),
+          htmlOutput("site_footer", container = tags$p)
         )
-      ),
-
-      # Cite ----
-
-      col_12(
-        htmlOutput("cite_stl", container = tags$h2),
-        htmlOutput("cite_chicago_stl", container = tags$h3),
-        htmlOutput("cite", container = tags$p),
-        htmlOutput("cite_bibtex_stl", container = tags$h3),
-        verbatimTextOutput("cite_bibtex")
       ),
 
       uiOutput(outputId = "dynamicUI")
     ),
-
-    col_12(
-      hr(),
-      htmlOutput("site_footer", container = tags$p)
-    ),
-
-    # Footer ----
 
     tags$footer(
       tags$link(rel = "shortcut icon", href = "img/favicon.ico")

@@ -4,6 +4,10 @@
 #' @noRd
 available_all <- function() { c("All Products" = "all") }
 
+available_logicals <- function() {
+  c("Yes" = "yes", "No" = "no")
+}
+
 available_models <- function() {
   c("OLS" = "ols",
     "OLS (Fixed Effects)" = "olsfe",

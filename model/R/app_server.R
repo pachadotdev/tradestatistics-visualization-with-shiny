@@ -25,32 +25,28 @@ app_server <- function(input, output, session) {
 
   observe_helpers()
 
-  ## Partial Equilibrium Simulation ----
-
   inp_y <- reactive({
     y2 <- (min(input$y[1], input$y[2])):(max(input$y[1], input$y[2]))
-    y2 <- seq(min(y2), max(y2), by = input$y_sep)
+    y2 <- seq(min(y2), max(y2), by = input$i)
     return(y2)
   })
 
-  inp_riso <- reactive({ sort(input$r) })
-  inp_piso <- reactive({ sort(input$p) })
+  inp_r <- reactive({ sort(input$r) }) # reporter
+  inp_p <- reactive({ sort(input$p) }) # partner
+  inp_t <- reactive({ input$t }) # model type
+  inp_z <- reactive({ input$z }) # drop zeros
+  inp_d <- reactive({ input$d }) # adjust dollar
+  inp_c <- reactive({ input$c }) # cluste
+  inp_s <- reactive({ input$s }) # section/commodity
 
-  inp_convert_dollars <- reactive({ input$a })
-
-  inp_cluster <- reactive({ input$cl })
-
-  inp_product_filter <- reactive({ input$pf })
-  inp_type <- reactive({ input$t })
-  inp_zero <- reactive({ input$zero })
   inp_fml <- reactive({ input$fml })
-  inp_f <- reactive({ input$f })
+  inp_fmt <- reactive({ input$fmt })
 
-  inp_sp <- reactive({ input$sp })
-  inp_sra <- reactive({ input$sra })
-  inp_sy <- reactive({ input$sy })
+  inp_rc <- reactive({ input$rc }) # rta action
+  inp_rm <- reactive({ input$rm }) # rta modification
+  inp_ry <- reactive({ input$ry }) # rta year
 
-  # Partial Equilibrium Simulation ----
+  # Model + Simulation ----
 
   wt <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
 
@@ -96,7 +92,7 @@ app_server <- function(input, output, session) {
 
   fml <- eventReactive(input$go, {
     fml <- paste0(lhs(), " ~ ", paste(rhs(), collapse = " + "))
-    if (inp_type() == "olsfe") {
+    if (inp_t() == "olsfe") {
       fml <- paste(fml, "| reporter_yr + partner_yr")
     }
     return(fml)
@@ -110,7 +106,7 @@ app_server <- function(input, output, session) {
 
     ### 3.1. apply filters ----
 
-    tbl_sql <- if (any(inp_product_filter() != "all")) {
+    tbl_sql <- if (any(inp_s() != "all")) {
       "yrpc"
     } else {
       "yrp"
@@ -124,23 +120,23 @@ app_server <- function(input, output, session) {
         !!sym("reporter_iso") != !!sym("partner_iso")
       )
 
-    if (any(inp_riso() != "all")) {
+    if (any(inp_r() != "all")) {
       d <- d %>%
         filter(
-          !!sym("reporter_iso") %in% !!inp_riso()
+          !!sym("reporter_iso") %in% !!inp_r()
         )
     }
 
-    if (any(inp_piso() != "all")) {
+    if (any(inp_p() != "all")) {
       d <- d %>%
         filter(
-          !!sym("partner_iso") %in% !!inp_piso()
+          !!sym("partner_iso") %in% !!inp_p()
         )
     }
 
     wt$inc(1)
 
-    if (any(inp_product_filter() %in% "vaccine")) {
+    if (any(inp_s() %in% "vaccine")) {
       d <- d %>%
         left_join(
           tbl(sql_con, "vaccine_inputs")
@@ -153,9 +149,9 @@ app_server <- function(input, output, session) {
         )
     }
 
-    if (any(inp_product_filter() != "all")) {
+    if (any(inp_s() != "all")) {
       d <- d %>%
-        filter(!!sym("section_code") %in% !!inp_product_filter())
+        filter(!!sym("section_code") %in% !!inp_s())
     }
 
     wt$inc(1)
@@ -171,7 +167,7 @@ app_server <- function(input, output, session) {
       summarise(trade = sum(!!sym("trade"), na.rm = T)) %>%
       ungroup()
 
-    if (inp_zero() == "yes") {
+    if (inp_z() == "yes") {
       d <- d %>%
         filter(!!sym("trade") > 0)
     }
@@ -215,7 +211,8 @@ app_server <- function(input, output, session) {
         ) %>%
         mutate(
           rta = case_when(
-            is.na(!!sym("rta")) ~ 0L, TRUE ~ !!sym("rta")
+            is.na(!!sym("rta")) ~ 0L,
+            TRUE ~ !!sym("rta")
           )
         ) %>%
         select(-!!sym("country1"),-!!sym("country2"))
@@ -225,7 +222,7 @@ app_server <- function(input, output, session) {
 
     ### 3.4. create fixed effects ----
 
-    if (inp_type() == "olsfe") {
+    if (inp_t() == "olsfe") {
       d <- d %>%
         mutate(
           importer_yr = paste0(!!sym("importer"), !!sym("year")),
@@ -237,7 +234,7 @@ app_server <- function(input, output, session) {
 
     ### 3.5. create clustering variable ----
 
-    if (inp_cluster() == "yes") {
+    if (inp_c() == "yes") {
       d <- d %>%
         mutate(imp_exp = paste(!!sym("importer"), !!sym("exporter"), sep = "_"))
     }
@@ -275,8 +272,8 @@ app_server <- function(input, output, session) {
 
     # CHECK LATER ----
 
-    # if (inp_convert_dollars() != "No conversion") {
-    #   d <- gdp_deflator_adjustment(d, as.integer(inp_convert_dollars()))
+    # if (inp_d() != "No conversion") {
+    #   d <- gdp_deflator_adjustment(d, as.integer(inp_d()))
     # }
 
     ### 3.8. add MFN data ----
@@ -292,20 +289,20 @@ app_server <- function(input, output, session) {
           !!sym("year") %in% !!inp_y()
         )
 
-      if (any(inp_piso() != "all")) {
+      if (any(inp_p() != "all")) {
         tar <- tar %>%
           filter(
             # here we need the applied tariffs when the product gets to destination
-            !!sym("reporter_iso") %in% !!inp_piso()
+            !!sym("reporter_iso") %in% !!inp_p()
           )
 
         trd <- tbl(sql_con, "yrpc") %>%
           filter(
-            !!sym("partner_iso") %in% !!inp_riso()
+            !!sym("partner_iso") %in% !!inp_r()
           )
       }
 
-      if (any(inp_product_filter() %in% "vaccine")) {
+      if (any(inp_s() %in% "vaccine")) {
         trd <- trd %>%
           left_join(
             tbl(sql_con, "vaccine_inputs")
@@ -318,9 +315,9 @@ app_server <- function(input, output, session) {
           )
       }
 
-      if (any(inp_product_filter() != "all")) {
+      if (any(inp_s() != "all")) {
         trd <- trd %>%
-          filter(!!sym("section_code") %in% !!inp_product_filter())
+          filter(!!sym("section_code") %in% !!inp_s())
       }
 
       trd <- trd %>%
@@ -371,8 +368,8 @@ app_server <- function(input, output, session) {
     )
   }) %>%
     bindCache(
-      inp_y(), inp_riso(), inp_piso(), inp_type(), inp_zero(),
-      inp_convert_dollars(), inp_cluster(), inp_product_filter(),
+      inp_y(), inp_r(), inp_p(), inp_t(), inp_z(),
+      inp_d(), inp_c(), inp_s(),
       fml(), lhs(), rhs(), raw_lhs(), raw_rhs()
     ) %>%
     bindEvent(input$go)
@@ -398,8 +395,8 @@ app_server <- function(input, output, session) {
 
     fml <- as.formula(fml())
 
-    if (any(inp_type() %in% c("ols", "olsfe"))) {
-      if (inp_cluster() == "yes") {
+    if (any(inp_t() %in% c("ols", "olsfe"))) {
+      if (inp_c() == "yes") {
         m <- tryCatch(
           feols(fml, df_dtl_2(), cluster = ~imp_exp),
           error = function(e) { custom_regression_error() }
@@ -412,8 +409,8 @@ app_server <- function(input, output, session) {
       }
     }
 
-    if (inp_type() == "ppml") {
-      if (inp_cluster() == "yes") {
+    if (inp_t() == "ppml") {
+      if (inp_c() == "yes") {
         m <- tryCatch(
           feglm(fml, df_dtl_2(), cluster = ~imp_exp,
                 family = quasipoisson(link = "log")),
@@ -438,7 +435,7 @@ app_server <- function(input, output, session) {
   pred_trade_lines <- eventReactive(input$go, {
     d <- df_dtl_2() %>%
       filter(
-        !!sym("exporter") %in% !!inp_sp()
+        !!sym("exporter") %in% !!inp_rc()
       )
 
     d <- d %>% mutate(`UNFEASIBLE` = NA_real_, `ESTIMATION` = NA_real_)
@@ -468,11 +465,11 @@ app_server <- function(input, output, session) {
 
     d2 <- df_dtl_2() %>%
       filter(
-        !!sym("exporter") %in% !!inp_sp()
+        !!sym("exporter") %in% !!inp_rc()
       ) %>%
       mutate(
         rta = case_when(
-          !!sym("year") >= !!inp_sy() ~ as.integer(!!inp_sra()),
+          !!sym("year") >= !!inp_ry() ~ as.integer(!!inp_rm()),
           TRUE ~ !!sym("rta")
         )
       )
@@ -523,6 +520,8 @@ app_server <- function(input, output, session) {
 
   # Cite ----
 
+  site_url <- "https://shiny.tradestatistics.io"
+
   cite <- reactive({
     glue(
       "Open Trade Statistics. \"OTS BETA DASHBOARD\". <i>Open Trade Statistics</i>.
@@ -533,11 +532,11 @@ app_server <- function(input, output, session) {
   cite_bibtex <- reactive({
     glue("@misc{{open_trd_statistics_{lubridate::year(Sys.Date())},
       title = {{Open Trade Statistics Beta Dashboard}},
-      url = {{{ site_url }/}},
+      url = {{{site_url}}},
       author = {{Vargas, Mauricio}},
       doi = {{10.5281/zenodo.3738793}},
       publisher = {{Open Trade Statistics}},
-      year = {{2019}},
+      year = {{2022}},
       month = {{Apr}},
       note = {{Accessed: { months(Sys.Date()) } { lubridate::day(Sys.Date()) }, { lubridate::year(Sys.Date()) }}}}}"
     )
@@ -545,97 +544,92 @@ app_server <- function(input, output, session) {
 
   # Outputs ----
 
-  ## Titles ----
+  output$title_legend <- renderText({
+    "The information displayed here is based on
+    <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read
+    our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a>
+    for a full description of restrictions and applicable licenses. These
+    figures do not include services or foreign direct investment."
+  })
 
-  # put here to avoid repetition in UI
-  legend_txt <- "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
-      of restrictions and applicable licenses. These figures do not include services or foreign direct investment."
+  hdata_stl <- eventReactive(input$go, { "Data preview" })
+  fit_stl1 <- eventReactive(input$go, { "Model summary" })
+  fit_stl2 <- eventReactive(input$go, { "Model results" })
+  # pred_stl <- eventReactive(input$go, { "Model simulation" })
 
-  output$title_legend <- renderText({ legend_txt })
-
-  ## Model ----
-
-  output$df_stl <- eventReactive(input$go, { "Data preview" })
-  output$df_dtl_pre <- renderTable({ head(df_dtl_2()) })
-  output$fit_stl1 <- eventReactive(input$go, { "Model summary" })
-  output$tidy <- renderTable(tidy(fit()))
-  output$glance <- renderTable(glance(fit()))
-  output$fit_stl2 <- eventReactive(input$go, { "Model results" })
+  output$hdata_stl <- renderText({ hdata_stl() })
+  output$hdata_dtl <- renderTable({ head(df_dtl_2()) })
+  output$fit_stl1 <- renderText({ fit_stl1() })
+  output$fit_tidy <- renderTable({ tidy(fit()) })
+  output$fit_glance <- renderTable({ glance(fit()) })
+  output$fit_stl2 <- renderText({ fit_stl2() })
   output$fit_cat <- renderPrint({ fit() })
-  output$pred_stl <- eventReactive(input$go, { "Model simulation" })
-  output$pred_trade_lines <- renderPlot({ pred_trade_lines() })
+  # output$pred_stl <- renderText({ pred_stl() })
+  # output$pred_trade_lines <- renderPlot({ pred_trade_lines() })
 
   ## Download ----
 
-  ### Partial Equilibrium Simulation ----
-
-  dwn_stl <- eventReactive(input$go, { "Download model data" })
-
-  dwn_txt <- eventReactive(input$go, {
-    "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
-  })
-
-  dwn_fmt <- eventReactive(input$go, {
-    selectInput(
-      "f",
-      "Download data as:",
-      choices = available_formats(),
-      selected = NULL,
-      selectize = TRUE
-    )
-  })
-
-  output$dwn_dtl_pre <- downloadHandler(
-    filename = function() {
-      glue("{ inp_type() }_{ inp_riso() }_{ inp_piso() }_{ min(inp_y()) }_{ max(inp_y()) }.{ inp_f() }")
-    },
-    content = function(filename) {
-      export(df_dtl(), filename)
-    },
-    contentType = "application/zip"
-  )
-
-  output$dwn_fit_pre <- downloadHandler(
-    filename = function() {
-      glue("{ inp_type() }_{ inp_riso() }_{ inp_piso() }_{ min(inp_y()) }_{ max(inp_y()) }.rds")
-    },
-    content = function(filename) {
-      saveRDS(fit(), filename)
-    },
-    contentType = "application/zip"
-  )
-
-  output$dwn_stl <- renderText({dwn_stl()})
-  output$dwn_txt <- renderText({dwn_txt()})
-  output$dwn_fmt <- renderUI({dwn_fmt()})
-  output$dwn_dtl <- renderUI({
-    req(input$go)
-    downloadButton('dwn_dtl_pre', label = 'Detailed data')
-  })
-  output$dwn_fit <- renderUI({
-    req(input$go)
-    downloadButton('dwn_fit_pre', label = 'Fitted model')
-  })
+  # dwn_stl <- eventReactive(input$go, { "Download model data" })
+  #
+  # dwn_txt <- eventReactive(input$go, {
+  #   "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
+  # })
+  #
+  # dwn_fmt <- eventReactive(input$go, {
+  #   selectInput(
+  #     "fmt",
+  #     "Download data as:",
+  #     choices = available_formats(),
+  #     selected = NULL,
+  #     selectize = TRUE
+  #   )
+  # })
+  #
+  # output$dwn_dtl_pre <- downloadHandler(
+  #   filename = function() {
+  #     glue("{ inp_t() }_{ inp_r() }_{ inp_p() }_{ min(inp_y()) }_{ max(inp_y()) }.{ inp_f() }")
+  #   },
+  #   content = function(filename) {
+  #     export(df_dtl(), filename)
+  #   },
+  #   contentType = "application/zip"
+  # )
+  #
+  # output$dwn_fit_pre <- downloadHandler(
+  #   filename = function() {
+  #     glue("{ inp_t() }_{ inp_r() }_{ inp_p() }_{ min(inp_y()) }_{ max(inp_y()) }.rds")
+  #   },
+  #   content = function(filename) {
+  #     saveRDS(fit(), filename)
+  #   },
+  #   contentType = "application/zip"
+  # )
+  #
+  # output$dwn_stl <- renderText({ dwn_stl() })
+  # output$dwn_txt <- renderText({ dwn_txt() })
+  # output$dwn_fmt <- renderUI({ dwn_fmt() })
+  # output$dwn_dtl <- renderUI({
+  #   req(input$go)
+  #   downloadButton('dwn_dtl_pre', label = 'Detailed data')
+  # })
+  # output$dwn_fit <- renderUI({
+  #   req(input$go)
+  #   downloadButton('dwn_fit_pre', label = 'Fitted model')
+  # })
 
   ## Cite ----
 
-  output$cite_stl <- renderText({"Cite"})
+  # output$cite_stl <- eventReactive(input$go, { renderText({"Cite"}) })
+  #
+  # output$cite_chicago_stl <- eventReactive(input$go, { renderText({ "Chicago citation" }) })
+  #
+  # output$cite <- eventReactive(input$go, { renderText({ cite() }) })
+  #
+  # output$cite_bibtex_stl <- eventReactive(input$go, { renderText({"BibTeX entry"}) })
+  #
+  # output$cite_bibtex <- eventReactive(input$go, { renderText({ cite_bibtex() }) })
 
-  output$cite_chicago_stl <- renderText({
-    "Chicago citation"
-  })
-
-  output$cite <- renderText({
-    cite()
-  })
-
-  output$cite_bibtex_stl <- renderText({
-    "BibTeX entry"
-  })
-
-  output$cite_bibtex <- renderText({
-    cite_bibtex()
-  })
+  # Footer ----
 
   output$site_footer <- renderText({
     glue("<center><i>Open Trade Statistics {lubridate::year(Sys.Date())}.</i></center>")
@@ -648,7 +642,6 @@ app_server <- function(input, output, session) {
     # strip shiny related URL parameters
     rvtl(input)
     setBookmarkExclude(c(
-      "own", "f", "sidebarCollapsed", "sidebarItemExpanded",
       "shinyhelper-modal_params"
     ))
     session$doBookmark()
