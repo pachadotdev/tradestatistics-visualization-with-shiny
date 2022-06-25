@@ -412,20 +412,20 @@ app_ui <- function(request) {
           tableOutput("fit_tidy"),
           tableOutput("fit_glance"),
           htmlOutput("fit_stl2", container = tags$h2),
-          verbatimTextOutput("fit_cat")
-          # htmlOutput("pred_stl", container = tags$h2),
-          # plotOutput("pred_trade_lines")
+          verbatimTextOutput("fit_cat"),
+          htmlOutput("pred_stl", container = tags$h2),
+          plotOutput("pred_trade_plot")
         ),
 
         # Download ----
 
-        # col_12(
-        #   htmlOutput("dwn_stl", container = tags$h2),
-        #   htmlOutput("dwn_txt", container = tags$p),
-        #   uiOutput("dwn_fmt"),
-        #   uiOutput("dwn_dtl"),
-        #   uiOutput("dwn_fit")
-        # ),
+        col_12(
+          htmlOutput("dwn_stl", container = tags$h2),
+          htmlOutput("dwn_txt", container = tags$p),
+          uiOutput("dwn_fmt"),
+          uiOutput("dwn_dtl"),
+          uiOutput("dwn_fit")
+        ),
 
         # Cite ----
 

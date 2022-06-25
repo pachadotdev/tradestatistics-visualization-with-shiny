@@ -432,7 +432,7 @@ app_server <- function(input, output, session) {
 
   ## 5. Simulate ----
 
-  pred_trade_lines <- eventReactive(input$go, {
+  pred_trade_plot <- eventReactive(input$go, {
     d <- df_dtl_2() %>%
       filter(
         !!sym("exporter") %in% !!inp_rc()
@@ -555,7 +555,7 @@ app_server <- function(input, output, session) {
   hdata_stl <- eventReactive(input$go, { "Data preview" })
   fit_stl1 <- eventReactive(input$go, { "Model summary" })
   fit_stl2 <- eventReactive(input$go, { "Model results" })
-  # pred_stl <- eventReactive(input$go, { "Model simulation" })
+  pred_stl <- eventReactive(input$go, { "Model simulation" })
 
   output$hdata_stl <- renderText({ hdata_stl() })
   output$hdata_dtl <- renderTable({ head(df_dtl_2()) })
@@ -564,58 +564,60 @@ app_server <- function(input, output, session) {
   output$fit_glance <- renderTable({ glance(fit()) })
   output$fit_stl2 <- renderText({ fit_stl2() })
   output$fit_cat <- renderPrint({ fit() })
-  # output$pred_stl <- renderText({ pred_stl() })
-  # output$pred_trade_lines <- renderPlot({ pred_trade_lines() })
+  output$pred_stl <- renderText({ pred_stl() })
+  output$pred_trade_plot <- renderPlot({ pred_trade_plot() })
 
   ## Download ----
 
-  # dwn_stl <- eventReactive(input$go, { "Download model data" })
-  #
-  # dwn_txt <- eventReactive(input$go, {
-  #   "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
-  # })
-  #
-  # dwn_fmt <- eventReactive(input$go, {
-  #   selectInput(
-  #     "fmt",
-  #     "Download data as:",
-  #     choices = available_formats(),
-  #     selected = NULL,
-  #     selectize = TRUE
-  #   )
-  # })
-  #
-  # output$dwn_dtl_pre <- downloadHandler(
-  #   filename = function() {
-  #     glue("{ inp_t() }_{ inp_r() }_{ inp_p() }_{ min(inp_y()) }_{ max(inp_y()) }.{ inp_f() }")
-  #   },
-  #   content = function(filename) {
-  #     export(df_dtl(), filename)
-  #   },
-  #   contentType = "application/zip"
-  # )
-  #
-  # output$dwn_fit_pre <- downloadHandler(
-  #   filename = function() {
-  #     glue("{ inp_t() }_{ inp_r() }_{ inp_p() }_{ min(inp_y()) }_{ max(inp_y()) }.rds")
-  #   },
-  #   content = function(filename) {
-  #     saveRDS(fit(), filename)
-  #   },
-  #   contentType = "application/zip"
-  # )
-  #
-  # output$dwn_stl <- renderText({ dwn_stl() })
-  # output$dwn_txt <- renderText({ dwn_txt() })
-  # output$dwn_fmt <- renderUI({ dwn_fmt() })
-  # output$dwn_dtl <- renderUI({
-  #   req(input$go)
-  #   downloadButton('dwn_dtl_pre', label = 'Detailed data')
-  # })
-  # output$dwn_fit <- renderUI({
-  #   req(input$go)
-  #   downloadButton('dwn_fit_pre', label = 'Fitted model')
-  # })
+  dwn_stl <- eventReactive(input$go, { "Download model data" })
+
+  dwn_txt <- eventReactive(input$go, {
+    "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
+  })
+
+  dwn_fmt <- eventReactive(input$go, {
+    selectInput(
+      "fmt",
+      "Download data as:",
+      choices = available_formats(),
+      selected = NULL,
+      selectize = TRUE
+    )
+  })
+
+  output$dwn_dtl_pre <- downloadHandler(
+    filename = function() {
+      glue("{ inp_t() }_{ inp_r() }_{ inp_p() }_{ min(inp_y()) }_{ max(inp_y()) }.{ inp_fmt() }")
+    },
+    content = function(filename) {
+      export(df_dtl(), filename)
+    },
+    contentType = "application/zip"
+  )
+
+  output$dwn_fit_pre <- downloadHandler(
+    filename = function() {
+      glue("{ inp_t() }_{ inp_r() }_{ inp_p() }_{ min(inp_y()) }_{ max(inp_y()) }.rds")
+    },
+    content = function(filename) {
+      saveRDS(fit(), filename)
+    },
+    contentType = "application/zip"
+  )
+
+  output$dwn_stl <- renderText({ dwn_stl() })
+  output$dwn_txt <- renderText({ dwn_txt() })
+  output$dwn_fmt <- renderUI({ dwn_fmt() })
+
+  output$dwn_dtl <- renderUI({
+    req(input$go)
+    downloadButton('dwn_dtl_pre', label = 'Detailed data')
+  })
+
+  output$dwn_fit <- renderUI({
+    req(input$go)
+    downloadButton('dwn_fit_pre', label = 'Fitted model')
+  })
 
   ## Cite ----
 
