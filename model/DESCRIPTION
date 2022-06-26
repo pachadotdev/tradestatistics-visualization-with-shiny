@@ -17,6 +17,7 @@ Imports:
     golem (>= 0.3.2),
     janitor (>= 2.1.0),
     magrittr (>= 2.0.3),
+    pkgload,
     pool (>= 0.1.6),
     rio (>= 0.5.29),
     rlang (>= 1.0.2),

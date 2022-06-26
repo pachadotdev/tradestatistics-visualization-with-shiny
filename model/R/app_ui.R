@@ -429,13 +429,11 @@ app_ui <- function(request) {
 
         # Cite ----
 
-        # col_12(
-        #   htmlOutput("cite_stl", container = tags$h2),
-        #   htmlOutput("cite_chicago_stl", container = tags$h3),
-        #   htmlOutput("cite", container = tags$p),
-        #   htmlOutput("cite_bibtex_stl", container = tags$h3),
-        #   verbatimTextOutput("cite_bibtex")
-        # ),
+        col_12(
+          uiOutput("citation_stl"),
+          uiOutput("citation_text"),
+          uiOutput("citation_bibtex")
+        ),
 
         # Footer ----
 

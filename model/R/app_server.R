@@ -282,7 +282,7 @@ app_server <- function(input, output, session) {
           !!sym("year") %in% !!inp_y()
         ) %>%
         select(!!sym("year"), !!sym("reporter_iso"), !!sym("commodity_code"),
-               mfn = !!sym("simple_average"))
+               !!sym("simple_average"))
 
       trd <- tbl(sql_con, "yrc") %>%
         filter(
@@ -324,22 +324,27 @@ app_server <- function(input, output, session) {
       }
 
       trd <- trd %>%
-        inner_join(tar, by = c("year", "reporter_iso", "commodity_code"))
-
-      trd <- trd %>%
-        select(!!sym("year"),
-               importer = !!sym("reporter_iso"),
-               trade = !!sym("trade_value_usd_imp"),
-               !!sym("mfn"))
-
-      # TODO: do this in SQL!!
-      trd <- trd %>%
-        collect() %>%
+        inner_join(tar, by = c("year", "reporter_iso", "commodity_code")) %>%
+        select(
+          !!sym("year"),
+          importer = !!sym("reporter_iso"),
+          !!sym("trade_value_usd_imp"),
+          !!sym("simple_average")
+        ) %>%
+        filter(
+          !!sym("trade_value_usd_imp") > 0,
+          !!sym("simple_average") > 0
+        ) %>%
+        mutate(
+          avg_x_trade = !!sym("simple_average") * !!sym("trade_value_usd_imp")
+        ) %>%
         group_by(!!sym("year"), !!sym("importer")) %>%
         summarise(
-          mfn = weighted.mean(!!sym("mfn"), !!sym("trade"), na.rm = T)
+          mfn = (1 / 100) * sum(!!sym("avg_x_trade"), na.rm = T) /
+            sum(!!sym("trade_value_usd_imp"), na.rm = T)
         ) %>%
-        ungroup()
+        ungroup() %>%
+        collect()
 
       rm(tar)
 
@@ -520,10 +525,10 @@ app_server <- function(input, output, session) {
 
   site_url <- "https://shiny.tradestatistics.io"
 
-  cite <- reactive({
+  cite_text <- reactive({
     glue(
       "Open Trade Statistics. \"OTS BETA DASHBOARD\". <i>Open Trade Statistics</i>.
-        Accessed {months(Sys.Date()) } { lubridate::day(Sys.Date()) }, { lubridate::year(Sys.Date()) }. { site_url }/"
+        Accessed {months(Sys.Date()) } { lubridate::day(Sys.Date()) }, { lubridate::year(Sys.Date()) }. { site_url }/."
     )
   })
 
@@ -617,17 +622,22 @@ app_server <- function(input, output, session) {
     downloadButton('dwn_fit_pre', label = 'Fitted model')
   })
 
-  ## Cite ----
+  ## Citation ----
 
-  # output$cite_stl <- eventReactive(input$go, { renderText({"Cite"}) })
-  #
-  # output$cite_chicago_stl <- eventReactive(input$go, { renderText({ "Chicago citation" }) })
-  #
-  # output$cite <- eventReactive(input$go, { renderText({ cite() }) })
-  #
-  # output$cite_bibtex_stl <- eventReactive(input$go, { renderText({"BibTeX entry"}) })
-  #
-  # output$cite_bibtex <- eventReactive(input$go, { renderText({ cite_bibtex() }) })
+  output$citation_stl <- renderUI({
+    req(input$go)
+    h2("Citation")
+  })
+
+  output$citation_text <- renderUI({
+    req(input$go)
+    HTML(cite_text())
+  })
+
+  output$citation_bibtex <- renderUI({
+    req(input$go)
+    pre(cite_bibtex())
+  })
 
   # Footer ----
 
