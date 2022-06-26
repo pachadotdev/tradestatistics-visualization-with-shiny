@@ -270,11 +270,9 @@ app_server <- function(input, output, session) {
 
     ### 3.7. convert dollars in time ----
 
-    # CHECK LATER ----
-
-    # if (inp_d() != "No conversion") {
-    #   d <- gdp_deflator_adjustment(d, as.integer(inp_d()))
-    # }
+    if (inp_d() != "No conversion") {
+      d <- gdp_deflator_adjustment(d, as.integer(inp_d()))
+    }
 
     ### 3.8. add MFN data ----
 
@@ -282,12 +280,17 @@ app_server <- function(input, output, session) {
       tar <- tbl(sql_con, "tariffs") %>%
         filter(
           !!sym("year") %in% !!inp_y()
-        )
+        ) %>%
+        select(!!sym("year"), !!sym("reporter_iso"), !!sym("commodity_code"),
+               mfn = !!sym("simple_average"))
 
-      trd <- tbl(sql_con, "yrpc") %>%
+      trd <- tbl(sql_con, "yrc") %>%
         filter(
           !!sym("year") %in% !!inp_y()
-        )
+        ) %>%
+        select(!!sym("year"), !!sym("reporter_iso"),
+                 !!sym("commodity_code"), !!sym("section_code"),
+                 !!sym("trade_value_usd_imp"))
 
       if (any(inp_p() != "all")) {
         tar <- tar %>%
@@ -296,7 +299,7 @@ app_server <- function(input, output, session) {
             !!sym("reporter_iso") %in% !!inp_p()
           )
 
-        trd <- tbl(sql_con, "yrpc") %>%
+        trd <- trd %>%
           filter(
             !!sym("partner_iso") %in% !!inp_r()
           )
@@ -321,23 +324,18 @@ app_server <- function(input, output, session) {
       }
 
       trd <- trd %>%
-        select(!!sym("year"), !!sym("reporter_iso"), !!sym("partner_iso"),
-          !!sym("commodity_code"), !!sym("trade_value_usd_imp")) %>%
-        inner_join(
-          tar %>%
-            select(!!sym("year"), !!sym("reporter_iso"),
-                   !!sym("commodity_code"), mfn = !!sym("simple_average")),
-          by = c("year", "reporter_iso", "commodity_code")
-        )
+        inner_join(tar, by = c("year", "reporter_iso", "commodity_code"))
 
       trd <- trd %>%
         select(!!sym("year"),
                importer = !!sym("reporter_iso"),
-               exporter = !!sym("partner_iso"),
                trade = !!sym("trade_value_usd_imp"),
-               !!sym("mfn")) %>%
+               !!sym("mfn"))
+
+      # TODO: do this in SQL!!
+      trd <- trd %>%
         collect() %>%
-        group_by(!!sym("year"), !!sym("importer"), !!sym("exporter")) %>%
+        group_by(!!sym("year"), !!sym("importer")) %>%
         summarise(
           mfn = weighted.mean(!!sym("mfn"), !!sym("trade"), na.rm = T)
         ) %>%
