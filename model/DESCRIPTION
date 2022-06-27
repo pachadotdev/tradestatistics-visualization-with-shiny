@@ -19,6 +19,7 @@ Imports:
     magrittr (>= 2.0.3),
     pkgload,
     pool (>= 0.1.6),
+    purrr,
     rio (>= 0.5.29),
     rlang (>= 1.0.2),
     RPostgres (>= 1.4.4),

@@ -9,8 +9,11 @@
 #' @importFrom golem with_golem_options
 run_app <- function(
   onStart = NULL,
-  options = list(port = 3838),
-  enableBookmarking = NULL,
+  options = list(
+    port = 3838,
+    shiny.maxRequestSize = 100*1024^2
+  ),
+  enableBookmarking = "url",
   uiPattern = "/",
   ...
 ) {

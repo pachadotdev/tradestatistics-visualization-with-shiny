@@ -270,8 +270,8 @@ app_server <- function(input, output, session) {
 
     ### 3.7. convert dollars in time ----
 
-    if (inp_d() != "No conversion") {
-      d <- gdp_deflator_adjustment(d, as.integer(inp_d()))
+    if (inp_d() != "No") {
+      d <- gdp_deflator_adjustment(d, as.integer(inp_d()), sql_con)
     }
 
     ### 3.8. add MFN data ----
@@ -652,7 +652,7 @@ app_server <- function(input, output, session) {
     # strip shiny related URL parameters
     rvtl(input)
     setBookmarkExclude(c(
-      "shinyhelper-modal_params"
+      "shinyhelper-modal_params", "own"
     ))
     session$doBookmark()
   })
