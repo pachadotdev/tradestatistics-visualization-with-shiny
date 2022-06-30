@@ -150,8 +150,13 @@ app_server <- function(input, output, session) {
     }
 
     if (any(inp_s() != "all")) {
-      d <- d %>%
-        filter(!!sym("section_code") %in% !!inp_s())
+      if (any(nchar(inp_s()) == 4)) {
+        d <- d %>%
+          filter(substr(!!sym("commodity_code"), 1, 4) %in% !!inp_s())
+      } else {
+        d <- d %>%
+          filter(!!sym("section_code") %in% !!inp_s())
+      }
     }
 
     wt$inc(1)

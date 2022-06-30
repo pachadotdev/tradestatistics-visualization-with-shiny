@@ -18,3 +18,12 @@ NULL
 #' @keywords datasets
 #' @name sections_to_display
 NULL
+
+#' commodities_to_display
+#'
+#' Internal dataset for commodity codes.
+#'
+#' @docType data
+#' @keywords datasets
+#' @name commodities_to_display
+NULL

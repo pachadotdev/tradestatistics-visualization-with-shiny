@@ -1,6 +1,4 @@
 #' Available UI parameters expressed as functions
-#' @importFrom dplyr select pull
-#' @importFrom glue glue
 #' @noRd
 available_all <- function() { c("All Products" = "all") }
 
@@ -15,29 +13,15 @@ available_models <- function() {
 }
 
 available_reporters_iso <- function() {
-  out <- otsshinymodel::reporters_to_display %>%
-      select(!!sym("country_iso")) %>%
-      pull()
-
-  names(out) <- otsshinymodel::reporters_to_display %>%
-    select(!!sym("country_name_english")) %>%
-    pull()
-
-  return(out)
+  otsshinymodel::reporters_to_display
 }
 
 available_sections_code <- function() {
-  out <- otsshinymodel::sections_to_display %>%
-      select(!!sym("section_code")) %>%
-      pull()
+  otsshinymodel::sections_to_display
+}
 
-  names_out <- otsshinymodel::sections_to_display %>%
-    select(!!sym("section_fullname_english")) %>%
-    pull()
-
-  names(out) <- glue("{ out } - { names_out }")
-
-  return(out)
+available_commodities_code <- function() {
+  otsshinymodel::commodities_to_display
 }
 
 available_vaccine <- function() { c("Vaccine Inputs" = "vaccine") }

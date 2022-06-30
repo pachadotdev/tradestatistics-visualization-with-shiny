@@ -205,7 +205,8 @@ app_ui <- function(request) {
             choices = list(
               "All Products" = available_all(),
               "Custom Selections" = available_vaccine(),
-              "HS Sections" = available_sections_code()
+              "HS Sections" = available_sections_code(),
+              "HS Commodities" = available_commodities_code()
             ),
             selected = "all",
             selectize = TRUE,
