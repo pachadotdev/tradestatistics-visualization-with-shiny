@@ -8,6 +8,7 @@
 #'     group_by inner_join left_join mutate select summarise tbl ungroup
 #' @importFrom fixest feols feglm
 #' @importFrom janitor clean_names
+#' @importFrom lubridate day year
 #' @importFrom rio import export
 #' @importFrom rlang sym
 #' @importFrom stats as.formula predict quasipoisson weighted.mean
@@ -19,7 +20,7 @@
 app_server <- function(input, output, session) {
   # Connect to SQL ----
 
-  sql_con <- sql_con()
+  con <- sql_con()
 
   # User inputs ----
 
@@ -112,7 +113,7 @@ app_server <- function(input, output, session) {
       "yrp"
     }
 
-    d <- tbl(sql_con, tbl_sql)
+    d <- tbl(con, tbl_sql)
 
     d <- d %>%
       filter(
@@ -139,7 +140,7 @@ app_server <- function(input, output, session) {
     if (any(inp_s() %in% "vaccine")) {
       d <- d %>%
         left_join(
-          tbl(sql_con, "vaccine_inputs")
+          tbl(con, "vaccine_inputs")
         ) %>%
         mutate(
           section_code = case_when(
@@ -193,7 +194,7 @@ app_server <- function(input, output, session) {
         country2 = pmax(!!sym("importer"), !!sym("exporter"))
       ) %>%
       inner_join(
-        tbl(sql_con, "distances") %>% collect(),
+        tbl(con, "distances") %>% collect(),
         by = c("country1", "country2")
       ) %>%
       select(-!!sym("country1"),-!!sym("country2"))
@@ -209,7 +210,7 @@ app_server <- function(input, output, session) {
           country2 = pmax(!!sym("importer"), !!sym("exporter"))
         ) %>%
         left_join(
-          tbl(sql_con, "rtas") %>%
+          tbl(con, "rtas") %>%
             filter(!!sym("year") %in% !!inp_y()) %>%
             collect(),
           by = c("year", "country1", "country2")
@@ -252,7 +253,7 @@ app_server <- function(input, output, session) {
             c("gdp_importer", "gdp_percap_importer", "gdp_exporter", "gdp_percap_exporter"))) {
       d <- d %>%
         inner_join(
-          tbl(sql_con, "gdp") %>%
+          tbl(con, "gdp") %>%
             filter(!!sym("year") %in% !!inp_y()) %>%
             select(!!sym("country_iso"), !!sym("year"),
                    gdp_importer = !!sym("gdp"),
@@ -263,7 +264,7 @@ app_server <- function(input, output, session) {
 
       d <- d %>%
         inner_join(
-          tbl(sql_con, "gdp") %>%
+          tbl(con, "gdp") %>%
             filter(!!sym("year") %in% !!inp_y()) %>%
             select(!!sym("country_iso"), !!sym("year"),
                    gdp_exporter = !!sym("gdp"),
@@ -276,20 +277,20 @@ app_server <- function(input, output, session) {
     ### 3.7. convert dollars in time ----
 
     if (inp_d() != "No") {
-      d <- gdp_deflator_adjustment(d, as.integer(inp_d()), sql_con)
+      d <- gdp_deflator_adjustment(d, as.integer(inp_d()), con)
     }
 
     ### 3.8. add MFN data ----
 
     if (any(c(raw_rhs(), rhs()) %in% "mfn")) {
-      tar <- tbl(sql_con, "tariffs") %>%
+      tar <- tbl(con, "tariffs") %>%
         filter(
           !!sym("year") %in% !!inp_y()
         ) %>%
         select(!!sym("year"), !!sym("reporter_iso"), !!sym("commodity_code"),
                !!sym("simple_average"))
 
-      trd <- tbl(sql_con, "yrc") %>%
+      trd <- tbl(con, "yrc") %>%
         filter(
           !!sym("year") %in% !!inp_y()
         ) %>%
@@ -313,7 +314,7 @@ app_server <- function(input, output, session) {
       if (any(inp_s() %in% "vaccine")) {
         trd <- trd %>%
           left_join(
-            tbl(sql_con, "vaccine_inputs")
+            tbl(con, "vaccine_inputs")
           ) %>%
           mutate(
             section_code = case_when(
@@ -533,12 +534,12 @@ app_server <- function(input, output, session) {
   cite_text <- reactive({
     glue(
       "Open Trade Statistics. \"OTS BETA DASHBOARD\". <i>Open Trade Statistics</i>.
-        Accessed {months(Sys.Date()) } { lubridate::day(Sys.Date()) }, { lubridate::year(Sys.Date()) }. { site_url }/."
+        Accessed {months(Sys.Date()) } { day(Sys.Date()) }, { year(Sys.Date()) }. { site_url }/."
     )
   })
 
   cite_bibtex <- reactive({
-    glue("@misc{{open_trd_statistics_{lubridate::year(Sys.Date())},
+    glue("@misc{{open_trd_statistics_{year(Sys.Date())},
       title = {{Open Trade Statistics Beta Dashboard}},
       url = {{{site_url}}},
       author = {{Vargas, Mauricio}},
@@ -546,7 +547,7 @@ app_server <- function(input, output, session) {
       publisher = {{Open Trade Statistics}},
       year = {{2022}},
       month = {{Apr}},
-      note = {{Accessed: { months(Sys.Date()) } { lubridate::day(Sys.Date()) }, { lubridate::year(Sys.Date()) }}}}}"
+      note = {{Accessed: { months(Sys.Date()) } { day(Sys.Date()) }, { year(Sys.Date()) }}}}}"
     )
   })
 
@@ -647,7 +648,7 @@ app_server <- function(input, output, session) {
   # Footer ----
 
   output$site_footer <- renderText({
-    glue("<center><i>Open Trade Statistics {lubridate::year(Sys.Date())}.</i></center>")
+    glue("<center><i>Open Trade Statistics {year(Sys.Date())}.</i></center>")
   })
 
   # Bookmarking ----
