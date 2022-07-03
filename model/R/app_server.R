@@ -581,7 +581,7 @@ app_server <- function(input, output, session) {
   dwn_stl <- eventReactive(input$go, { "Download model data" })
 
   dwn_txt <- eventReactive(input$go, {
-    "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS), DTA (Stata) and JSON (cross-language)."
+    "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS) and DTA (Stata)."
   })
 
   dwn_fmt <- eventReactive(input$go, {

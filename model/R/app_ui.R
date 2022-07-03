@@ -158,7 +158,7 @@ app_ui <- function(request) {
           selectInput(
             "d",
             "Convert dollars to a fixed year",
-            choices = c("No", 2000:2019),
+            choices = c("No", 2002:2019),
             selected = "",
             selectize = TRUE,
             width = "100%"

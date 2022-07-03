@@ -1,6 +1,6 @@
 Package: otsshinyvisualize
 Title: Open Trade Statistics Model App
-Version: 2022.07.02
+Version: 2022.07.03
 Authors@R: person('Mauricio', 'Vargas', email = 'mavargas11@uc.cl', role = c('cre', 'aut'))
 Description: Wrappers around gravity models for interactive model building.
   This is meant as a production grade Shiny app and not as end user app.

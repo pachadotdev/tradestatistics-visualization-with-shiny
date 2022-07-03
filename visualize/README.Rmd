@@ -19,11 +19,11 @@ knitr::opts_chunk$set(
 [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 <!-- badges: end -->
 
-The goal of otsshinymodel is to ...
+The goal of otsshinyvisualize is to ...
 
 ## Installation
 
-You can install the development version of otsshinymodel from [GitHub](https://github.com/) with:
+You can install the development version of otsshinyvisualize from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
@@ -35,7 +35,7 @@ devtools::install_github("pachadotdev/tradestatistics-visualization-with-shiny")
 This is a basic example which shows you how to solve a common problem:
 
 ```{r example}
-library(otsshinymodel)
+library(otsshinyvisualize)
 ## basic example code
 ```
 
@@ -57,4 +57,4 @@ In that case, don't forget to commit and push the resulting figure files, so the
 
 ## Code of Conduct
 
-Please note that the otsshinymodel project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
+Please note that the otsshinyvisualize project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.

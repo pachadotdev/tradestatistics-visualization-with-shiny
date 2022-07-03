@@ -253,13 +253,14 @@ od_to_highcharts <- function(d, d2) {
 # PRODUCT TREEMAPS ----
 
 #' Add Percentages to Sections (For Highcharter Visuals)
-#' @importFrom dplyr arrange distinct filter group_by mutate pull select
-#'     summarise ungroup
+#' @importFrom dplyr arrange distinct filter group_by mutate pull rename
+#'     select summarise ungroup
 #' @importFrom purrr map_df
 #' @noRd
 p_fix_section_and_aggregate <- function(d, col, sql_con) {
   d <- d %>%
-    select(!!sym("commodity_code"), trade_value = !!sym(col))
+    select(!!sym("commodity_code"), !!sym(col)) %>%
+    rename(trade_value = !!sym(col))
 
   d <- p_aggregate_products(d, sql_con = sql_con)
 

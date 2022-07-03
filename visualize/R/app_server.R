@@ -152,7 +152,7 @@ app_server <- function(input, output, session) {
 
     d <- d %>% collect()
 
-    if (inp_d() != "No conversion") {
+    if (inp_d() != "No") {
       d <- gdp_deflator_adjustment(d, as.integer(inp_d()), con)
     }
 
@@ -263,8 +263,8 @@ app_server <- function(input, output, session) {
       ) %>%
       collect()
 
-    if (inp_d() != "No conversion") {
-      d <- gdp_deflator_adjustment(d, as.integer(inp_d()))
+    if (inp_d() != "No") {
+      d <- gdp_deflator_adjustment(d, as.integer(inp_d()), con)
     }
 
     d <- d %>%
@@ -286,9 +286,9 @@ app_server <- function(input, output, session) {
     trd_rankings() %>%
       ungroup() %>%
       filter(
-        !!sym("year") == min(inp_y()),
-        !!sym("reporter_iso") == inp_r(),
-        !!sym("partner_iso") == inp_p()
+        !!sym("year") == min(!!inp_y()),
+        !!sym("reporter_iso") == !!inp_r(),
+        !!sym("partner_iso") == !!inp_p()
       ) %>%
       select(!!sym("bal_rank")) %>%
       as.character()
@@ -298,9 +298,9 @@ app_server <- function(input, output, session) {
     trd_rankings() %>%
       ungroup() %>%
       filter(
-        !!sym("year") == max(inp_y()),
-        !!sym("reporter_iso") == inp_r(),
-        !!sym("partner_iso") == inp_p()
+        !!sym("year") == max(!!inp_y()),
+        !!sym("reporter_iso") == !!inp_r(),
+        !!sym("partner_iso") == !!inp_p()
       ) %>%
       select(!!sym("bal_rank")) %>%
       as.character()
@@ -318,9 +318,9 @@ app_server <- function(input, output, session) {
     trd_rankings() %>%
       ungroup() %>%
       filter(
-        !!sym("year") == min(inp_y()),
-        !!sym("reporter_iso") == inp_r(),
-        !!sym("partner_iso") == inp_p()
+        !!sym("year") == min(!!inp_y()),
+        !!sym("reporter_iso") == !!inp_r(),
+        !!sym("partner_iso") == !!inp_p()
       ) %>%
       select(!!sym("exp_share")) %>%
       as.numeric()
@@ -334,9 +334,9 @@ app_server <- function(input, output, session) {
     trd_rankings() %>%
       ungroup() %>%
       filter(
-        !!sym("year") == max(inp_y()),
-        !!sym("reporter_iso") == inp_r(),
-        !!sym("partner_iso") == inp_p()
+        !!sym("year") == max(!!inp_y()),
+        !!sym("reporter_iso") == !!inp_r(),
+        !!sym("partner_iso") == !!inp_p()
       ) %>%
       select(!!sym("exp_share")) %>%
       as.numeric()
@@ -350,9 +350,9 @@ app_server <- function(input, output, session) {
     trd_rankings() %>%
       ungroup() %>%
       filter(
-        !!sym("year") == min(inp_y()),
-        !!sym("reporter_iso") == inp_r(),
-        !!sym("partner_iso") == inp_p()
+        !!sym("year") == min(!!inp_y()),
+        !!sym("reporter_iso") == !!inp_r(),
+        !!sym("partner_iso") == !!inp_p()
       ) %>%
       select(!!sym("imp_share")) %>%
       as.numeric()
@@ -366,9 +366,9 @@ app_server <- function(input, output, session) {
     trd_rankings() %>%
       ungroup() %>%
       filter(
-        !!sym("year") == max(inp_y()),
-        !!sym("reporter_iso") == inp_r(),
-        !!sym("partner_iso") == inp_p()
+        !!sym("year") == max(!!inp_y()),
+        !!sym("reporter_iso") == !!inp_r(),
+        !!sym("partner_iso") == !!inp_p()
       ) %>%
       select(!!sym("imp_share")) %>%
       as.numeric()
@@ -620,6 +620,75 @@ app_server <- function(input, output, session) {
   output$imp_tm_dtl_min_yr <- renderHighchart({imp_tm_dtl_min_yr()})
   output$imp_tt_max_yr <- renderText(imp_tt_max_yr())
   output$imp_tm_dtl_max_yr <- renderHighchart({imp_tm_dtl_max_yr()})
+
+  ## Download ----
+
+  dwn_stl <- eventReactive(input$go, { "Download country data" })
+
+  dwn_txt <- eventReactive(input$go, {
+    "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS) and DTA (Stata)."
+  })
+
+  dwn_fmt <- eventReactive(input$go, {
+    selectInput(
+      "fmt",
+      "Download data as:",
+      choices = available_formats(),
+      selected = NULL,
+      selectize = TRUE
+    )
+  })
+
+  output$dwn_dtl_pre <- downloadHandler(
+    filename = function() {
+      glue("{ inp_r() }_{ inp_p() }_{ min(inp_y()) }_{ max(inp_y()) }_detailed.{ inp_fmt() }")
+    },
+    content = function(filename) {
+      export(df_dtl(), filename)
+    },
+    contentType = "application/zip"
+  )
+
+  output$dwn_agg_pre <- downloadHandler(
+    filename = function() {
+      glue("{ inp_r() }_{ inp_p() }_{ min(inp_y()) }_{ max(inp_y()) }_aggregated.{ inp_fmt() }")
+    },
+    content = function(filename) {
+      export(df_agg(), filename)
+    },
+    contentType = "application/zip"
+  )
+
+  output$dwn_stl <- renderText({ dwn_stl() })
+  output$dwn_txt <- renderText({ dwn_txt() })
+  output$dwn_fmt <- renderUI({ dwn_fmt() })
+
+  output$dwn_dtl <- renderUI({
+    req(input$go)
+    downloadButton('dwn_dtl_pre', label = 'Detailed data')
+  })
+
+  output$dwn_agg <- renderUI({
+    req(input$go)
+    downloadButton('dwn_agg_pre', label = 'Aggregated data')
+  })
+
+  ## Citation ----
+
+  output$citation_stl <- renderUI({
+    req(input$go)
+    h2("Citation")
+  })
+
+  output$citation_text <- renderUI({
+    req(input$go)
+    HTML(cite_text())
+  })
+
+  output$citation_bibtex <- renderUI({
+    req(input$go)
+    pre(cite_bibtex())
+  })
 
   # Footer ----
 

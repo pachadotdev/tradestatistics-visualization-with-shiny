@@ -13,7 +13,7 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # Your application UI logic
     fluidPage(
-      title = "Model + Simulation",
+      title = "Visualize",
       fluidRow(
         useWaitress(),
 
@@ -66,7 +66,7 @@ app_ui <- function(request) {
           selectInput(
             "d",
             "Convert dollars to a fixed year",
-            choices = c("No", 2000:2019),
+            choices = c("No", 2002:2019),
             selected = "",
             selectize = TRUE,
             width = "100%"
