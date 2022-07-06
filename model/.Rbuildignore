@@ -10,4 +10,3 @@ $run_dev.*
 ^codecov\.yml$
 ^app\.R$
 ^rsconnect$
-^serve$
