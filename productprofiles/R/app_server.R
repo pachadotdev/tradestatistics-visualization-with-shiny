@@ -36,9 +36,11 @@ app_server <- function(input, output, session) {
 
   section_name <- eventReactive(input$go, {
     s <- if (nchar(inp_s()) == 2) {
-      gsub(".* -", "", names(sections_to_display[sections_to_display == inp_s()]))
+      gsub(".* -", "", names(otsshinyproductprofiles::sections_to_display[
+        otsshinyproductprofiles::sections_to_display == inp_s()]))
     } else if (nchar(inp_s()) == 4) {
-      gsub(".* - ", "", names(commodities_to_display[commodities_to_display == inp_s()]))
+      gsub(".* - ", "", names(otsshinyproductprofiles::commodities_to_display[
+        otsshinyproductprofiles::commodities_to_display == inp_s()]))
     } else if (inp_s() == "vaccine") {
       "Vaccine Inputs"
     }
@@ -54,15 +56,17 @@ app_server <- function(input, output, session) {
 
   # Visualize ----
 
-  # wt <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
+  wt <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
 
   ## Data ----
 
   df_dtl <- reactive({
+    wt$notify(position = "tr")
+
     d <- tbl(con, "yrpc") %>%
       filter(year %in% !!inp_y())
 
-    # wt$inc(1)
+    wt$inc(1)
 
     if (inp_s() == "vaccine") {
       d <- d %>%
@@ -83,7 +87,7 @@ app_server <- function(input, output, session) {
         filter(!!sym("section_code") == !!inp_s())
     }
 
-    # wt$inc(1)
+    wt$inc(1)
 
     d <- d %>%
       group_by(!!sym("year"), !!sym("reporter_iso"), !!sym("partner_iso")) %>%
@@ -98,7 +102,7 @@ app_server <- function(input, output, session) {
       d <- gdp_deflator_adjustment(d, as.integer(inp_d()), sql_con = con)
     }
 
-    # wt$inc(1)
+    wt$inc(2)
 
     return(d)
   }) %>%
@@ -233,7 +237,7 @@ app_server <- function(input, output, session) {
       ) %>%
       mutate(year = as.character(!!sym("year")))
 
-    # wt$inc(1)
+    wt$inc(2)
 
     hchart(d,
            "column",
@@ -253,116 +257,116 @@ app_server <- function(input, output, session) {
 
   ### Visual elements ----
 
-  # exp_tt_yr <- eventReactive(input$go, {
-  #   glue("Exports of { section_name() } in { min(inp_y()) } and { max(inp_y()) }, by country")
-  # })
-  #
-  # exp_tt_min_yr <- eventReactive(input$go, {
-  #   glue("{ min(inp_y()) }")
-  # })
-  #
-  # exp_tm_dtl_min_yr <- reactive({
-  #   d <- df_dtl() %>%
-  #     filter(year == min(year)) %>%
-  #     od_order_and_add_continent(col = "trade_value_usd_exp")
-  #
-  #   d2 <- od_colors(d)
-  #
-  #   # wt$inc(1)
-  #
-  #   od_to_highcharts(d, d2)
-  # }) %>%
-  #   bindCache(inp_y(), inp_s(), inp_d()) %>%
-  #   bindEvent(input$go)
-  #
-  # exp_tt_max_yr <- eventReactive(input$go, {
-  #   glue("{ max(inp_y()) }")
-  # })
-  #
-  # exp_tm_dtl_max_yr <- reactive({
-  #   d <- df_dtl() %>%
-  #     filter(year == max(year)) %>%
-  #     od_order_and_add_continent(col = "trade_value_usd_exp")
-  #
-  #   d2 <- od_colors(d)
-  #
-  #   # wt$inc(1)
-  #
-  #   od_to_highcharts(d, d2)
-  # }) %>%
-  #   bindCache(inp_y(), inp_s(), inp_d()) %>%
-  #   bindEvent(input$go)
+  exp_tt_yr <- eventReactive(input$go, {
+    glue("Exports of { section_name() } in { min(inp_y()) } and { max(inp_y()) }, by country")
+  })
+
+  exp_tt_min_yr <- eventReactive(input$go, {
+    glue("{ min(inp_y()) }")
+  })
+
+  exp_tm_dtl_min_yr <- reactive({
+    d <- df_dtl() %>%
+      filter(year == min(!!sym("year"))) %>%
+      od_order_and_add_continent(col = "trade_value_usd_exp", sql_con = con)
+
+    d2 <- od_colors(d, sql_con = con)
+
+    wt$inc(1)
+
+    od_to_highcharts(d, d2)
+  }) %>%
+    bindCache(inp_y(), inp_s(), inp_d()) %>%
+    bindEvent(input$go)
+
+  exp_tt_max_yr <- eventReactive(input$go, {
+    glue("{ max(inp_y()) }")
+  })
+
+  exp_tm_dtl_max_yr <- reactive({
+    d <- df_dtl() %>%
+      filter(year == max(!!sym("year"))) %>%
+      od_order_and_add_continent(col = "trade_value_usd_exp", sql_con = con)
+
+    d2 <- od_colors(d, sql_con = con)
+
+    wt$inc(1)
+
+    od_to_highcharts(d, d2)
+  }) %>%
+    bindCache(inp_y(), inp_s(), inp_d()) %>%
+    bindEvent(input$go)
 
   ## Imports ----
 
   ### Visual elements ----
 
-  # imp_tt_yr <- eventReactive(input$go, {
-  #   glue("Imports of { section_name() } in { min(inp_y()) } and { max(inp_y()) }, by country")
-  # })
-  #
-  # imp_tt_min_yr <- eventReactive(input$go, {
-  #   glue("{ min(inp_y()) }")
-  # })
-  #
-  # imp_tm_dtl_min_yr <- reactive({
-  #   d <- df_dtl() %>%
-  #     filter(year == min(year)) %>%
-  #     od_order_and_add_continent(col = "trade_value_usd_imp")
-  #
-  #   d2 <- od_colors(d)
-  #
-  #   # wt$inc(1)
-  #
-  #   od_to_highcharts(d, d2)
-  # }) %>%
-  #   bindCache(inp_y(), inp_s(), inp_d()) %>%
-  #   bindEvent(input$go)
-  #
-  # imp_tt_max_yr <- eventReactive(input$go, {
-  #   glue("{ max(inp_y()) }")
-  # })
-  #
-  # imp_tm_dtl_max_yr <- reactive({
-  #   d <- df_dtl() %>%
-  #     filter(year == max(year)) %>%
-  #     od_order_and_add_continent(col = "trade_value_usd_imp")
-  #
-  #   d2 <- od_colors(d)
-  #
-  #   # wt$inc(1)
-  #
-  #   out <- od_to_highcharts(d, d2)
-  #
-  #   # wt$close()
-  #   return(out)
-  # }) %>%
-  #   bindCache(inp_y(), inp_s(), inp_d()) %>%
-  #   bindEvent(input$go)
+  imp_tt_yr <- eventReactive(input$go, {
+    glue("Imports of { section_name() } in { min(inp_y()) } and { max(inp_y()) }, by country")
+  })
+
+  imp_tt_min_yr <- eventReactive(input$go, {
+    glue("{ min(inp_y()) }")
+  })
+
+  imp_tm_dtl_min_yr <- reactive({
+    d <- df_dtl() %>%
+      filter(year == min(!!sym("year"))) %>%
+      od_order_and_add_continent(col = "trade_value_usd_imp", sql_con = con)
+
+    d2 <- od_colors(d, sql_con = con)
+
+    wt$inc(1)
+
+    od_to_highcharts(d, d2)
+  }) %>%
+    bindCache(inp_y(), inp_s(), inp_d()) %>%
+    bindEvent(input$go)
+
+  imp_tt_max_yr <- eventReactive(input$go, {
+    glue("{ max(inp_y()) }")
+  })
+
+  imp_tm_dtl_max_yr <- reactive({
+    d <- df_dtl() %>%
+      filter(year == max(!!sym("year"))) %>%
+      od_order_and_add_continent(col = "trade_value_usd_imp", sql_con = con)
+
+    d2 <- od_colors(d, sql_con = con)
+
+    wt$inc(1)
+
+    out <- od_to_highcharts(d, d2)
+
+    wt$close()
+    return(out)
+  }) %>%
+    bindCache(inp_y(), inp_s(), inp_d()) %>%
+    bindEvent(input$go)
 
   # Cite ----
 
-  # site_url <- "https://shiny.tradestatistics.io"
-  #
-  # cite_text <- reactive({
-  #   glue(
-  #     "Open Trade Statistics. \"OTS BETA DASHBOARD\". <i>Open Trade Statistics</i>.
-  #       Accessed {months(Sys.Date()) } { day(Sys.Date()) }, { year(Sys.Date()) }. { site_url }/."
-  #   )
-  # })
-  #
-  # cite_bibtex <- reactive({
-  #   glue("@misc{{open_trd_statistics_{year(Sys.Date())},
-  #     title = {{Open Trade Statistics Beta Dashboard}},
-  #     url = {{{site_url}}},
-  #     author = {{Vargas, Mauricio}},
-  #     doi = {{10.5281/zenodo.3738793}},
-  #     publisher = {{Open Trade Statistics}},
-  #     year = {{2022}},
-  #     month = {{Apr}},
-  #     note = {{Accessed: { months(Sys.Date()) } { day(Sys.Date()) }, { year(Sys.Date()) }}}}}"
-  #   )
-  # })
+  site_url <- "https://shiny.tradestatistics.io"
+
+  cite_text <- reactive({
+    glue(
+      "Open Trade Statistics. \"OTS BETA DASHBOARD\". <i>Open Trade Statistics</i>.
+        Accessed {months(Sys.Date()) } { day(Sys.Date()) }, { year(Sys.Date()) }. { site_url }/."
+    )
+  })
+
+  cite_bibtex <- reactive({
+    glue("@misc{{open_trd_statistics_{year(Sys.Date())},
+      title = {{Open Trade Statistics Beta Dashboard}},
+      url = {{{site_url}}},
+      author = {{Vargas, Mauricio}},
+      doi = {{10.5281/zenodo.3738793}},
+      publisher = {{Open Trade Statistics}},
+      year = {{2022}},
+      month = {{Apr}},
+      note = {{Accessed: { months(Sys.Date()) } { day(Sys.Date()) }, { year(Sys.Date()) }}}}}"
+    )
+  })
 
   # Outputs ----
 
@@ -371,10 +375,10 @@ app_server <- function(input, output, session) {
   output$title <- renderText({ title() })
 
   # put here to avoid repetition in UI
-  # legend_txt <- "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
-  #     of restrictions and applicable licenses. These figures do not include services or foreign direct investment."
-  #
-  # output$title_legend <- renderText({ legend_txt })
+  legend_txt <- "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
+      of restrictions and applicable licenses. These figures do not include services or foreign direct investment."
+
+  output$title_legend <- renderText({ legend_txt })
 
   ## Product profile ----
 
@@ -391,80 +395,80 @@ app_server <- function(input, output, session) {
   output$trd_exc_columns_agg <- renderHighchart({ trd_exc_columns_agg() })
 
   # ### Exports ----
-  #
-  # output$exp_tt_yr <- renderText(exp_tt_yr())
-  # output$exp_tt_min_yr <- renderText(exp_tt_min_yr())
-  # output$exp_tm_dtl_min_yr <- renderHighchart({exp_tm_dtl_min_yr()})
-  # output$exp_tt_max_yr <- renderText(exp_tt_max_yr())
-  # output$exp_tm_dtl_max_yr <- renderHighchart({exp_tm_dtl_max_yr()})
-  #
+
+  output$exp_tt_yr <- renderText(exp_tt_yr())
+  output$exp_tt_min_yr <- renderText(exp_tt_min_yr())
+  output$exp_tm_dtl_min_yr <- renderHighchart({exp_tm_dtl_min_yr()})
+  output$exp_tt_max_yr <- renderText(exp_tt_max_yr())
+  output$exp_tm_dtl_max_yr <- renderHighchart({exp_tm_dtl_max_yr()})
+
   # ### Imports ----
-  #
-  # output$imp_tt_yr <- renderText(imp_tt_yr())
-  # output$imp_tt_min_yr <- renderText(imp_tt_min_yr())
-  # output$imp_tm_dtl_min_yr <- renderHighchart({imp_tm_dtl_min_yr()})
-  # output$imp_tt_max_yr <- renderText(imp_tt_max_yr())
-  # output$imp_tm_dtl_max_yr <- renderHighchart({imp_tm_dtl_max_yr()})
-  #
-  # ## Download ----
-  #
-  # dwn_stl <- eventReactive(input$go, { "Download product data" })
-  #
-  # dwn_txt <- eventReactive(input$go, {
-  #   "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS) and DTA (Stata)."
-  # })
-  #
-  # dwn_fmt <- eventReactive(input$go, {
-  #   selectInput(
-  #     "fmt",
-  #     "Download data as:",
-  #     choices = available_formats(),
-  #     selected = NULL,
-  #     selectize = TRUE
-  #   )
-  # })
-  #
-  # output$dwn_dtl_pre <- downloadHandler(
-  #   filename = function() {
-  #     glue("{ inp_s() }_{ min(inp_y()) }_{ max(inp_y()) }_detailed.{ inp_fmt() }")
-  #   },
-  #   content = function(filename) {
-  #     export(df_dtl(), filename)
-  #   },
-  #   contentType = "application/zip"
-  # )
-  #
-  # output$dwn_stl <- renderText({ dwn_stl() })
-  # output$dwn_txt <- renderText({ dwn_txt() })
-  # output$dwn_fmt <- renderUI({ dwn_fmt() })
-  #
-  # output$dwn_dtl <- renderUI({
-  #   req(input$go)
-  #   downloadButton('dwn_dtl_pre', label = 'Detailed data')
-  # })
-  #
+
+  output$imp_tt_yr <- renderText(imp_tt_yr())
+  output$imp_tt_min_yr <- renderText(imp_tt_min_yr())
+  output$imp_tm_dtl_min_yr <- renderHighchart({imp_tm_dtl_min_yr()})
+  output$imp_tt_max_yr <- renderText(imp_tt_max_yr())
+  output$imp_tm_dtl_max_yr <- renderHighchart({imp_tm_dtl_max_yr()})
+
+  ## Download ----
+
+  dwn_stl <- eventReactive(input$go, { "Download product data" })
+
+  dwn_txt <- eventReactive(input$go, {
+    "Select the correct format for your favourite language or software of choice. The dashboard can export to CSV/TSV/XLSX for Excel or any other software, but also to SAV (SPSS) and DTA (Stata)."
+  })
+
+  dwn_fmt <- eventReactive(input$go, {
+    selectInput(
+      "fmt",
+      "Download data as:",
+      choices = available_formats(),
+      selected = NULL,
+      selectize = TRUE
+    )
+  })
+
+  output$dwn_dtl_pre <- downloadHandler(
+    filename = function() {
+      glue("{ inp_s() }_{ min(inp_y()) }_{ max(inp_y()) }_detailed.{ inp_fmt() }")
+    },
+    content = function(filename) {
+      export(df_dtl(), filename)
+    },
+    contentType = "application/zip"
+  )
+
+  output$dwn_stl <- renderText({ dwn_stl() })
+  output$dwn_txt <- renderText({ dwn_txt() })
+  output$dwn_fmt <- renderUI({ dwn_fmt() })
+
+  output$dwn_dtl <- renderUI({
+    req(input$go)
+    downloadButton('dwn_dtl_pre', label = 'Detailed data')
+  })
+
   # ## Citation ----
-  #
-  # output$citation_stl <- renderUI({
-  #   req(input$go)
-  #   h2("Citation")
-  # })
-  #
-  # output$citation_text <- renderUI({
-  #   req(input$go)
-  #   HTML(cite_text())
-  # })
-  #
-  # output$citation_bibtex <- renderUI({
-  #   req(input$go)
-  #   pre(cite_bibtex())
-  # })
-  #
-  # # Footer ----
-  #
-  # output$site_footer <- renderText({
-  #   glue("<center><i>Open Trade Statistics {year(Sys.Date())}.</i></center>")
-  # })
+
+  output$citation_stl <- renderUI({
+    req(input$go)
+    h2("Citation")
+  })
+
+  output$citation_text <- renderUI({
+    req(input$go)
+    HTML(cite_text())
+  })
+
+  output$citation_bibtex <- renderUI({
+    req(input$go)
+    pre(cite_bibtex())
+  })
+
+  # Footer ----
+
+  output$site_footer <- renderText({
+    glue("<center><i>Open Trade Statistics {year(Sys.Date())}.</i></center>")
+  })
 
   # Bookmarking ----
 

@@ -15,7 +15,7 @@ app_ui <- function(request) {
     fluidPage(
       title = "Product Profiles",
       fluidRow(
-        # useWaitress(),
+        useWaitress(),
 
         col_12(
           HTML("<h1>Product Profile</h1>"),
@@ -119,50 +119,50 @@ app_ui <- function(request) {
 
         ## Detailed trade ----
 
-        # col_12(
-        #   htmlOutput("exp_tt_yr", container = tags$h2)
-        # ),
-        #
-        # col_6(
-        #   htmlOutput("exp_tt_min_yr", container = tags$h3),
-        #   highchartOutput("exp_tm_dtl_min_yr", height = "500px")
-        # ),
-        #
-        # col_6(
-        #   htmlOutput("exp_tt_max_yr", container = tags$h3),
-        #   highchartOutput("exp_tm_dtl_max_yr", height = "500px")
-        # ),
-        #
-        # col_12(
-        #   htmlOutput("imp_tt_yr", container = tags$h2)
-        # ),
-        #
-        # col_6(
-        #   htmlOutput("imp_tt_min_yr", container = tags$h3),
-        #   highchartOutput("imp_tm_dtl_min_yr", height = "500px")
-        # ),
-        #
-        # col_6(
-        #   htmlOutput("imp_tt_max_yr", container = tags$h3),
-        #   highchartOutput("imp_tm_dtl_max_yr", height = "500px")
-        # ),
+        col_12(
+          htmlOutput("exp_tt_yr", container = tags$h2)
+        ),
+
+        col_6(
+          htmlOutput("exp_tt_min_yr", container = tags$h3),
+          highchartOutput("exp_tm_dtl_min_yr", height = "500px")
+        ),
+
+        col_6(
+          htmlOutput("exp_tt_max_yr", container = tags$h3),
+          highchartOutput("exp_tm_dtl_max_yr", height = "500px")
+        ),
+
+        col_12(
+          htmlOutput("imp_tt_yr", container = tags$h2)
+        ),
+
+        col_6(
+          htmlOutput("imp_tt_min_yr", container = tags$h3),
+          highchartOutput("imp_tm_dtl_min_yr", height = "500px")
+        ),
+
+        col_6(
+          htmlOutput("imp_tt_max_yr", container = tags$h3),
+          highchartOutput("imp_tm_dtl_max_yr", height = "500px")
+        ),
 
         ## Download ----
 
-        # col_12(
-        #   htmlOutput("dwn_stl", container = tags$h2),
-        #   htmlOutput("dwn_txt", container = tags$p),
-        #   uiOutput("dwn_fmt"),
-        #   uiOutput("dwn_dtl")
-        # ),
+        col_12(
+          htmlOutput("dwn_stl", container = tags$h2),
+          htmlOutput("dwn_txt", container = tags$p),
+          uiOutput("dwn_fmt"),
+          uiOutput("dwn_dtl")
+        ),
 
         # Cite ----
 
-        # col_12(
-        #   uiOutput("citation_stl"),
-        #   uiOutput("citation_text"),
-        #   uiOutput("citation_bibtex")
-        # ),
+        col_12(
+          uiOutput("citation_stl"),
+          uiOutput("citation_text"),
+          uiOutput("citation_bibtex")
+        ),
 
         # Footer ----
 

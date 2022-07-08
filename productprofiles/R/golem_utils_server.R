@@ -127,7 +127,7 @@ data_labels <- function() {
 #' @importFrom dplyr case_when collect filter full_join group_by mutate select
 #'     summarise tbl ungroup
 #' @noRd
-od_order_and_add_continent <- function(d, col = "trade_value_usd_exp") {
+od_order_and_add_continent <- function(d, col = "trade_value_usd_exp", sql_con) {
   d <- d %>%
     select(country_iso = !!sym("reporter_iso"), trade_value = !!sym(col))
 
@@ -180,7 +180,7 @@ od_order_and_add_continent <- function(d, col = "trade_value_usd_exp") {
 #' Origin-Destination Colours (For Highcharter Visuals)
 #' @importFrom dplyr collect distinct filter left_join mutate select tbl
 #' @noRd
-od_colors <- function(d) {
+od_colors <- function(d, sql_con) {
   d %>%
     select(!!sym("continent_name")) %>%
     distinct() %>%
