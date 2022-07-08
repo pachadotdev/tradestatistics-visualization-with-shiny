@@ -13,15 +13,15 @@ available_models <- function() {
 }
 
 available_reporters_iso <- function() {
-  otsshinyvisualize::reporters_to_display
+  otsshinycountryprofiles::reporters_to_display
 }
 
 available_sections_code <- function() {
-  otsshinyvisualize::sections_to_display
+  otsshinycountryprofiles::sections_to_display
 }
 
 available_commodities_code <- function() {
-  otsshinyvisualize::commodities_to_display
+  otsshinycountryprofiles::commodities_to_display
 }
 
 available_vaccine <- function() { c("Vaccine Inputs" = "vaccine") }

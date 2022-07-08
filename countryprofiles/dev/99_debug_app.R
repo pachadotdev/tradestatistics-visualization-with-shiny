@@ -1,6 +1,6 @@
 devtools::load_all()
 
-con = otsshinyvisualize::sql_con()
+con = otsshinycountryprofiles::sql_con()
 
 tbl_dtl = function() "yrc"
 inp_r = function() "can"
