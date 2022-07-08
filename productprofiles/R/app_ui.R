@@ -15,10 +15,10 @@ app_ui <- function(request) {
     fluidPage(
       title = "Product Profiles",
       fluidRow(
-        useWaitress(),
+        # useWaitress(),
 
         col_12(
-            HTML("<h1>Product Profile</h1>"),
+          HTML("<h1>Product Profile</h1>"),
           htmlOutput("title_legend", container = tags$p)
         ),
 
@@ -40,20 +40,19 @@ app_ui <- function(request) {
           )
         ),
 
-        col_4(
+        col_6(
           selectInput(
             "s",
             "Section/Commodity",
             choices = list(
-              "All Products" = available_all(),
               "Custom Selections" = available_vaccine(),
               "HS Sections" = available_sections_code(),
               "HS Commodities" = available_commodities_code()
             ),
-            selected = "all",
+            selected = "vaccine",
             selectize = TRUE,
             width = "100%",
-            multiple = TRUE
+            multiple = FALSE
           ) %>%
             helper(
               type = "inline",
@@ -70,7 +69,7 @@ app_ui <- function(request) {
             )
         ),
 
-        col_4(
+        col_6(
           selectInput(
             "d",
             "Convert dollars to a fixed year",
@@ -104,68 +103,66 @@ app_ui <- function(request) {
         ## Aggregated trade -----
 
         col_12(
-          htmlOutput("trd_stl", container = tags$h2)
+          htmlOutput("trd_stl", container = tags$h3),
         ),
 
         col_3(
-          htmlOutput("trd_stl", container = tags$h3),
           htmlOutput("trd_stl_exp", container = tags$h3),
-          htmlOutput("trd_smr_exp", container = tags$h3),
+          htmlOutput("trd_smr_exp", container = tags$p),
           htmlOutput("trd_stl_imp", container = tags$h3),
           htmlOutput("trd_smr_imp", container = tags$p)
         ),
 
         col_9(
-          highchartOutput("trd_exc_lines_agg", height = "500px")
+          highchartOutput("trd_exc_columns_agg", height = "500px")
         ),
 
         ## Detailed trade ----
 
-        col_12(
-          htmlOutput("exp_tt_yr", container = tags$h2)
-        ),
-
-        col_6(
-          htmlOutput("exp_tt_min_yr", container = tags$h3),
-          highchartOutput("exp_tm_dtl_min_yr", height = "500px")
-        ),
-
-        col_6(
-          htmlOutput("exp_tt_max_yr", container = tags$h3),
-          highchartOutput("exp_tm_dtl_max_yr", height = "500px")
-        ),
-
-        col_12(
-          htmlOutput("imp_tt_yr", container = tags$h2)
-        ),
-
-        col_6(
-          htmlOutput("imp_tt_min_yr", container = tags$h3),
-          highchartOutput("imp_tm_dtl_min_yr", height = "500px")
-        ),
-
-        col_6(
-          htmlOutput("imp_tt_max_yr", container = tags$h3),
-          highchartOutput("imp_tm_dtl_max_yr", height = "500px")
-        ),
+        # col_12(
+        #   htmlOutput("exp_tt_yr", container = tags$h2)
+        # ),
+        #
+        # col_6(
+        #   htmlOutput("exp_tt_min_yr", container = tags$h3),
+        #   highchartOutput("exp_tm_dtl_min_yr", height = "500px")
+        # ),
+        #
+        # col_6(
+        #   htmlOutput("exp_tt_max_yr", container = tags$h3),
+        #   highchartOutput("exp_tm_dtl_max_yr", height = "500px")
+        # ),
+        #
+        # col_12(
+        #   htmlOutput("imp_tt_yr", container = tags$h2)
+        # ),
+        #
+        # col_6(
+        #   htmlOutput("imp_tt_min_yr", container = tags$h3),
+        #   highchartOutput("imp_tm_dtl_min_yr", height = "500px")
+        # ),
+        #
+        # col_6(
+        #   htmlOutput("imp_tt_max_yr", container = tags$h3),
+        #   highchartOutput("imp_tm_dtl_max_yr", height = "500px")
+        # ),
 
         ## Download ----
 
-        col_12(
-          htmlOutput("dwn_stl", container = tags$h2),
-          htmlOutput("dwn_txt", container = tags$p),
-          uiOutput("dwn_fmt"),
-          uiOutput("dwn_agg"),
-          uiOutput("dwn_dtl")
-        ),
+        # col_12(
+        #   htmlOutput("dwn_stl", container = tags$h2),
+        #   htmlOutput("dwn_txt", container = tags$p),
+        #   uiOutput("dwn_fmt"),
+        #   uiOutput("dwn_dtl")
+        # ),
 
         # Cite ----
 
-        col_12(
-          uiOutput("citation_stl"),
-          uiOutput("citation_text"),
-          uiOutput("citation_bibtex")
-        ),
+        # col_12(
+        #   uiOutput("citation_stl"),
+        #   uiOutput("citation_text"),
+        #   uiOutput("citation_bibtex")
+        # ),
 
         # Footer ----
 
