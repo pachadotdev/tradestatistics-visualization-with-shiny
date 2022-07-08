@@ -8,7 +8,7 @@ available_formats <- function() { c("csv", "tsv", "xlsx", "sav", "dta") }
 #' @importFrom RPostgres Postgres
 #' @noRd
 sql_con <- function() {
-  readRenviron("/tradestatistics/visualization-with-shiny")
+  readRenviron("/tradestatistics")
 
   con <- dbPool(
     drv = Postgres(),
