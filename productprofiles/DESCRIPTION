@@ -1,6 +1,6 @@
 Package: otsshinyproductprofiles
 Title: Open Trade Statistics Model App
-Version: 2022.07.08
+Version: 2022.07.09
 Authors@R: person('Mauricio', 'Vargas', email = 'mavargas11@uc.cl', role = c('cre', 'aut'))
 Description: Wrappers around gravity models for interactive model building.
   This is meant as a production grade Shiny app and not as end user app.
@@ -12,28 +12,25 @@ Imports:
     dplyr (>= 1.0.9),
     glue (>= 1.6.2),
     golem (>= 0.3.2),
-    highcharter,
-    lubridate,
+    highcharter (>= 0.9.4),
+    lubridate (>= 1.8.0),
     magrittr (>= 2.0.3),
-    pkgload,
-    pool (>= 0.1.6),
-    purrr,
+    otsshinycommon (>= 2022.07.09),
+    pkgload (>= 1.2.4),
     rio (>= 0.5.29),
     rlang (>= 1.0.2),
-    RPostgres (>= 1.4.4),
     shiny (>= 1.7.1),
     shinyhelper (>= 0.3.2),
     tidyr (>= 1.2.0),
     waiter (>= 0.2.5.9000)
 Suggests: 
-    spelling,
+    spelling (>= 2.2),
     testthat (>= 3.0.0)
 Remotes: 
     pachadotdev/waiter
 Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US
-LazyData: true
 RoxygenNote: 7.2.0
 Depends: 
     R (>= 2.10)

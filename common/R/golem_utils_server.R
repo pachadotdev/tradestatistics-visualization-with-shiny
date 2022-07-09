@@ -1,15 +1,12 @@
 #' Available Server parameters expressed as functions
-#' @importFrom glue glue
-#' @noRd
+#' @export
 available_formats <- function() { c("csv", "tsv", "xlsx", "sav", "dta") }
 
 #' SQL connection
 #' @importFrom pool dbPool
 #' @importFrom RPostgres Postgres
-#' @noRd
+#' @export
 sql_con <- function() {
-  readRenviron("/tradestatistics")
-
   con <- dbPool(
     drv = Postgres(),
     dbname = "tradestatistics",
@@ -22,9 +19,13 @@ sql_con <- function() {
 }
 
 #' Convert dollars from year X to year Y
+#' @param d input dataset
+#' @param reference_year year to convert dollars
+#' @param sql_con SQL connection
 #' @importFrom dplyr distinct last pull tibble
 #' @importFrom purrr map_df
-#' @noRd
+#' @importFrom rlang sym
+#' @export
 gdp_deflator_adjustment <- function(d, reference_year, sql_con) {
   years <- d %>%
     distinct(!!sym("year")) %>%
@@ -100,7 +101,7 @@ lvl_opts <- list(
 
 #' Custom Tooltip (For Highcharter Visuals)
 #' @importFrom highcharter JS
-#' @noRd
+#' @export
 custom_tooltip <- function() {
   JS("function() { return '<b>' + this.name + '</b>' + '<br>' +
                         'Share: ' + Math.round(this.value / this.series.tree.val * 10000)/100 + '%' + '<br>' +
@@ -110,7 +111,7 @@ custom_tooltip <- function() {
 
 #' Custom Short Tooltip (For Highcharter Visuals)
 #' @importFrom highcharter JS
-#' @noRd
+#' @export
 custom_tooltip_short <- function() {
   JS("function() { return '<b>' + this.series.name + '</b>' + ' ' +
      Highcharts.numberFormat(this.y, 0) + ' USD' }")
@@ -118,16 +119,19 @@ custom_tooltip_short <- function() {
 
 #' Custom Data Labels (For Highcharter Visuals)
 #' @importFrom highcharter JS
-#' @noRd
+#' @export
 data_labels <- function() {
   JS("function() { return this.key + '<br>' + Math.round(this.point.value / this.point.series.tree.val * 10000 ) / 100 + '%'}")
 }
 
 #' Origin-Destination Order and Add Continent (For Highcharter Visuals)
+#' @param d input dataset
+#' @param col column to collapse
+#' @param sql_con SQL connection
 #' @importFrom dplyr case_when collect filter full_join group_by mutate select
 #'     summarise tbl ungroup
-#' @noRd
-od_order_and_add_continent <- function(d, col = "trade_value_usd_exp") {
+#' @export
+od_order_and_add_continent <- function(d, col = "trade_value_usd_exp", sql_con) {
   d <- d %>%
     select(country_iso = !!sym("reporter_iso"), trade_value = !!sym(col))
 
@@ -178,9 +182,11 @@ od_order_and_add_continent <- function(d, col = "trade_value_usd_exp") {
 }
 
 #' Origin-Destination Colours (For Highcharter Visuals)
+#' @param d input dataset
+#' @param sql_con SQL connection
 #' @importFrom dplyr collect distinct filter left_join mutate select tbl
-#' @noRd
-od_colors <- function(d) {
+#' @export
+od_colors <- function(d, sql_con) {
   d %>%
     select(!!sym("continent_name")) %>%
     distinct() %>%
@@ -205,9 +211,11 @@ od_colors <- function(d) {
 }
 
 #' Origin-Destination to Highcharter (For Highcharter Visuals)
-#' @importFrom dplyr arrange distinct group_by mutate pull summarise ungroup
+#' @param d input dataset for values
+#' @param d2 input dataset for colours
+#' @importFrom dplyr arrange desc distinct group_by mutate pull summarise ungroup
 #' @importFrom highcharter data_to_hierarchical hchart
-#' @noRd
+#' @export
 od_to_highcharts <- function(d, d2) {
   dd <- d %>%
     mutate(continent_name = factor(!!sym("continent_name"), levels = d2$continent_name)) %>%
@@ -253,10 +261,13 @@ od_to_highcharts <- function(d, d2) {
 # PRODUCT TREEMAPS ----
 
 #' Add Percentages to Sections (For Highcharter Visuals)
+#' @param d input dataset
+#' @param col column to collapse
+#' @param sql_con SQL connection
 #' @importFrom dplyr arrange distinct filter group_by mutate pull rename
 #'     select summarise ungroup
 #' @importFrom purrr map_df
-#' @noRd
+#' @export
 p_fix_section_and_aggregate <- function(d, col, sql_con) {
   d <- d %>%
     select(!!sym("commodity_code"), !!sym(col)) %>%
@@ -293,9 +304,11 @@ p_fix_section_and_aggregate <- function(d, col, sql_con) {
 }
 
 #' Aggregate Products (For Highcharter Visuals)
+#' @param d input dataset
+#' @param sql_con SQL connection
 #' @importFrom dplyr collect filter full_join group_by left_join mutate select
 #'     summarise tbl ungroup
-#' @noRd
+#' @export
 p_aggregate_products <- function(d, sql_con) {
   d %>%
     full_join(
@@ -323,8 +336,10 @@ p_aggregate_products <- function(d, sql_con) {
 }
 
 #' Colorize Products (For Highcharter Visuals)
+#' @param d input dataset
+#' @param sql_con SQL connection
 #' @importFrom dplyr collect distinct inner_join select tbl
-#' @noRd
+#' @export
 p_colors <- function(d, sql_con) {
   d %>%
     select(!!sym("section_name")) %>%
@@ -345,8 +360,10 @@ p_colors <- function(d, sql_con) {
 }
 
 #' Product to Highcharter (For Highcharter Visuals)
+#' @param d input dataset for values
+#' @param d2 input dataset for colours
 #' @importFrom dplyr collect distinct inner_join mutate_if select tbl
-#' @noRd
+#' @export
 p_to_highcharts <- function(d, d2) {
   dd <- d %>%
     mutate(section_name = factor(!!sym("section_name"), levels = d2$section_name)) %>%
@@ -389,10 +406,26 @@ p_to_highcharts <- function(d, d2) {
   )
 }
 
+# MODELS ----
+
+#' Custom error for models
+#' @importFrom fixest feols
+#' @export
+custom_regression_error <- function() {
+  feols(ERROR ~ UNFEASIBLE + ESTIMATION,
+        data = data.frame(
+          ERROR = c(1,0,0),
+          UNFEASIBLE = c(0,1,0),
+          ESTIMATION = c(0,0,1)
+        )
+  )
+}
+
 # FORMAT TEXTS ----
 
 #' Format for Dollars
-#' @noRd
+#' @param x input number
+#' @export
 show_dollars <- function(x) {
   ifelse(x %/% 10e8 >= 1,
          paste0(round(x / 10e8, 2), "B"),
@@ -401,13 +434,17 @@ show_dollars <- function(x) {
 }
 
 #' Format for Percentages
-#' @noRd
+#' @param x inout number
+#' @export
 show_percentage <- function(x) {
   paste0(round(100 * x, 2), "%")
 }
 
 #' Compute Compound Annualized Growth Rate
-#' @noRd
+#' @param p final value
+#' @param q initial value
+#' @param t time period
+#' @export
 growth_rate <- function(p, q, t) {
   (p / q)^(1 / (max(t) - min(t))) - 1
 }

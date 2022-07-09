@@ -2,10 +2,12 @@
 #'
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
+#' @import otsshinycommon
 #' @importFrom dplyr arrange bind_rows case_when collect dense_rank desc
 #'     everything filter group_by inner_join left_join mutate select summarise
-#'     tbl ungroup
-#' @importFrom highcharter hcaes hchart hc_title hc_xAxis hc_yAxis
+#'     tbl tibble ungroup
+#' @importFrom glue glue
+#' @importFrom highcharter hcaes hchart hc_title hc_xAxis hc_yAxis JS
 #'     renderHighchart
 #' @importFrom lubridate day year
 #' @importFrom rio export
@@ -44,13 +46,13 @@ app_server <- function(input, output, session) {
   })
 
   rname <- eventReactive(input$go, {
-    names(otsshinycountryprofiles::reporters_to_display[
-      otsshinycountryprofiles::reporters_to_display == inp_r()])
+    names(otsshinycommon::reporters_to_display[
+      otsshinycommon::reporters_to_display == inp_r()])
   })
 
   pname <- eventReactive(input$go, {
-    names(otsshinycountryprofiles::reporters_to_display[
-      otsshinycountryprofiles::reporters_to_display == inp_p()])
+    names(otsshinycommon::reporters_to_display[
+      otsshinycommon::reporters_to_display == inp_p()])
   })
 
   # Titles ----
@@ -122,7 +124,7 @@ app_server <- function(input, output, session) {
     d <- d %>% collect()
 
     if (inp_d() != "No") {
-      d <- gdp_deflator_adjustment(d, as.integer(inp_d()), con)
+      d <- gdp_deflator_adjustment(d, as.integer(inp_d()), sql_con = con)
     }
 
     wt$inc(2.5)
@@ -153,7 +155,7 @@ app_server <- function(input, output, session) {
     d <- d %>% collect()
 
     if (inp_d() != "No") {
-      d <- gdp_deflator_adjustment(d, as.integer(inp_d()), con)
+      d <- gdp_deflator_adjustment(d, as.integer(inp_d()), sql_con = con)
     }
 
     wt$inc(2.5)
@@ -264,7 +266,7 @@ app_server <- function(input, output, session) {
       collect()
 
     if (inp_d() != "No") {
-      d <- gdp_deflator_adjustment(d, as.integer(inp_d()), con)
+      d <- gdp_deflator_adjustment(d, as.integer(inp_d()), sql_con = con)
     }
 
     d <- d %>%

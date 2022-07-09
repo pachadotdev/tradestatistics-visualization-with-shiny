@@ -28,7 +28,6 @@ reporters_names_out <- reporters_to_display %>%
   pull()
 
 # names(reporters_out) <- glue("{ reporters_out } - { reporters_names_out }")
-names(reporters_out) <- reporters_names_out
 
 reporters_to_display <- reporters_out
 

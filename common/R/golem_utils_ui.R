@@ -1,104 +1,121 @@
 #' Available UI parameters expressed as functions
-#' @noRd
+#' @rdname available
+#' @export
 available_all <- function() { c("All Products" = "all") }
 
+#' @rdname available
+#' @export
 available_logicals <- function() {
   c("Yes" = "yes", "No" = "no")
 }
 
+#' @rdname available
+#' @export
 available_models <- function() {
   c("OLS" = "ols",
     "OLS (Fixed Effects)" = "olsfe",
     "Poisson Pseudo Maximum Likelihood (PPML)" = "ppml")
 }
 
+#' @rdname available
+#' @export
 available_reporters_iso <- function() {
-  otsshinycountryprofiles::reporters_to_display
+  otsshinycommon::reporters_to_display
 }
 
+#' @rdname available
+#' @export
 available_sections_code <- function() {
-  otsshinycountryprofiles::sections_to_display
+  otsshinycommon::sections_to_display
 }
 
+#' @rdname available
+#' @export
 available_commodities_code <- function() {
-  otsshinycountryprofiles::commodities_to_display
+  otsshinycommon::commodities_to_display
 }
 
+#' @rdname available
+#' @export
 available_vaccine <- function() { c("Vaccine Inputs" = "vaccine") }
 
+#' @rdname available
+#' @export
 available_yrs <- function() { 2002:2020 }
 
+#' @rdname available
+#' @export
 available_yrs_min <- function() { min(available_yrs()) }
 
+#' @rdname available
+#' @export
 available_yrs_max <- function() { max(available_yrs()) }
 
 #' Create an url
-#'
 #' @param url the URL
 #' @param text the text to display
-#'
 #' @return an a tag
-#' @noRd
-#'
 #' @examples
 #' enurl("https://www.thinkr.fr", "ThinkR")
 #' @importFrom shiny tags
+#' @export
 enurl <- function(url, text) {
   tags$a(href = url, text)
 }
 
 #' Columns wrappers
-#'
-#' These are convenient wrappers around
-#' `column(12, ...)`, `column(6, ...)`, `column(4, ...)`...
-#'
-#' @noRd
-#'
+#' @param ... additional parameters for a column division
 #' @importFrom shiny column
+#' @rdname cols
+#' @export
 col_12 <- function(...) {
   column(12, ...)
 }
 
-#' @importFrom shiny column
+#' @rdname cols
+#' @export
 col_10 <- function(...) {
   column(10, ...)
 }
 
-#' @importFrom shiny column
+#' @rdname cols
+#' @export
 col_9 <- function(...) {
   column(9, ...)
 }
 
-#' @importFrom shiny column
+#' @rdname cols
+#' @export
 col_8 <- function(...) {
   column(8, ...)
 }
 
-#' @importFrom shiny column
+#' @rdname cols
+#' @export
 col_6 <- function(...) {
   column(6, ...)
 }
 
-
-#' @importFrom shiny column
+#' @rdname cols
+#' @export
 col_4 <- function(...) {
   column(4, ...)
 }
 
-
-#' @importFrom shiny column
+#' @rdname cols
+#' @export
 col_3 <- function(...) {
   column(3, ...)
 }
 
-
-#' @importFrom shiny column
+#' @rdname cols
+#' @export
 col_2 <- function(...) {
   column(2, ...)
 }
 
-
-#' @importFrom shiny column
+#' @rdname cols
+#' @export
 col_1 <- function(...) {
   column(1, ...)
 }

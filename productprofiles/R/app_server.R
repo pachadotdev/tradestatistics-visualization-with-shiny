@@ -2,11 +2,13 @@
 #'
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
+#' @import otsshinycommon
 #' @importFrom dplyr arrange bind_rows case_when collect dense_rank desc
 #'     everything filter group_by inner_join left_join mutate select summarise
-#'     tbl ungroup
-#' @importFrom highcharter hcaes hchart hc_title hc_xAxis hc_yAxis
+#'     tbl tibble ungroup
+#' @importFrom highcharter hcaes hchart hc_title hc_xAxis hc_yAxis JS
 #'     renderHighchart
+#' @importFrom glue glue
 #' @importFrom lubridate day year
 #' @importFrom rio export
 #' @importFrom rlang sym
@@ -36,11 +38,11 @@ app_server <- function(input, output, session) {
 
   section_name <- eventReactive(input$go, {
     s <- if (nchar(inp_s()) == 2) {
-      gsub(".* -", "", names(otsshinyproductprofiles::sections_to_display[
-        otsshinyproductprofiles::sections_to_display == inp_s()]))
+      gsub(".* -", "", names(otsshinycommon::sections_to_display[
+        otsshinycommon::sections_to_display == inp_s()]))
     } else if (nchar(inp_s()) == 4) {
-      gsub(".* - ", "", names(otsshinyproductprofiles::commodities_to_display[
-        otsshinyproductprofiles::commodities_to_display == inp_s()]))
+      gsub(".* - ", "", names(otsshinycommon::commodities_to_display[
+        otsshinycommon::commodities_to_display == inp_s()]))
     } else if (inp_s() == "vaccine") {
       "Vaccine Inputs"
     }
@@ -62,6 +64,8 @@ app_server <- function(input, output, session) {
 
   df_dtl <- reactive({
     wt$notify(position = "tr")
+
+    wt$inc(1)
 
     d <- tbl(con, "yrpc") %>%
       filter(year %in% !!inp_y())
@@ -237,7 +241,7 @@ app_server <- function(input, output, session) {
       ) %>%
       mutate(year = as.character(!!sym("year")))
 
-    wt$inc(2)
+    wt$inc(1)
 
     hchart(d,
            "column",
