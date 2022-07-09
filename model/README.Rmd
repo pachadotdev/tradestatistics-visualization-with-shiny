@@ -23,7 +23,7 @@ for different countries. This is a part of [https://tradestatistics.io](tradesta
 
 ## Installation
 
-You can install the development version of otsshinycountryprofiles from [GitHub](https://github.com/) with:
+You can install the development version of otsshinymodel from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("remotes")

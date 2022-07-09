@@ -3,10 +3,12 @@
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
 #' @import shiny ggplot2
+#' @import otsshinycommon
 #' @importFrom broom glance tidy
 #' @importFrom dplyr arrange bind_rows case_when collect everything filter
 #'     group_by inner_join left_join mutate select summarise tbl ungroup
 #' @importFrom fixest feols feglm
+#' @importFrom glue glue
 #' @importFrom janitor clean_names
 #' @importFrom lubridate day year
 #' @importFrom rio import export
@@ -277,7 +279,7 @@ app_server <- function(input, output, session) {
     ### 3.7. convert dollars in time ----
 
     if (inp_d() != "No") {
-      d <- gdp_deflator_adjustment(d, as.integer(inp_d()), con)
+      d <- gdp_deflator_adjustment_model(d, as.integer(inp_d()), sql_con = con)
     }
 
     ### 3.8. add MFN data ----

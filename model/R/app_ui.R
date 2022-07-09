@@ -3,6 +3,7 @@
 #' @param request Internal parameter for `{shiny}`.
 #'     DO NOT REMOVE.
 #' @import shiny
+#' @import otsshinycommon
 #' @importFrom shinyhelper helper
 #' @importFrom waiter useWaitress
 #' @noRd

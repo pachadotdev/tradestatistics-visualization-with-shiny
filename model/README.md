@@ -12,7 +12,7 @@ different countries. This is a part of
 
 ## Installation
 
-You can install the development version of otsshinycountryprofiles from
+You can install the development version of otsshinymodel from
 [GitHub](https://github.com/) with:
 
 ``` r

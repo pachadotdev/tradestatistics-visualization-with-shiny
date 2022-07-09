@@ -68,6 +68,83 @@ gdp_deflator_adjustment <- function(d, reference_year, sql_con) {
   return(d)
 }
 
+#' Convert dollars from year X to year Y
+#' @param d input dataset
+#' @param reference_year year to convert dollars
+#' @param sql_con SQL connection
+#' @importFrom dplyr distinct last tibble
+#' @importFrom purrr map_df
+#' @export
+gdp_deflator_adjustment_model <- function(d, reference_year, sql_con) {
+  # Filter year conversion rates and join data ------------------------------
+  years <- d %>%
+    distinct(!!sym("year")) %>%
+    pull()
+
+  dd <- map_df(
+    years,
+    function(year) {
+      if (year < reference_year) {
+        tbl(sql_con, "gdp_deflator") %>%
+          filter(!!sym("year_to") <= reference_year &
+                   !!sym("year_to") > year &
+                   !!sym("country_iso") == "wld") %>%
+          collect() %>%
+          summarise(gdp_deflator = last(cumprod(!!sym("gdp_deflator")))) %>%
+          mutate(year = year, conversion_year = reference_year)
+      } else if (year > reference_year) {
+        tbl(sql_con, "gdp_deflator") %>%
+          filter(!!sym("year_from") >= reference_year &
+                   !!sym("year_from") < year &
+                   !!sym("country_iso") == "wld") %>%
+          collect() %>%
+          summarise(gdp_deflator = 1 / last(cumprod(!!sym("gdp_deflator")))) %>%
+          mutate(year = year, conversion_year = reference_year)
+      } else if (year == reference_year) {
+        tibble(
+          year = year, conversion_year = year, gdp_deflator = 1
+        )
+      }
+    }
+  )
+
+  d <- d %>%
+    left_join(dd, by = "year") %>%
+    mutate(
+      trade = round(!!sym("trade") * !!sym("gdp_deflator"), 0)
+    )
+
+  if (any(colnames(d) %in% c("gdp_exporter"))) {
+    d <- d %>%
+      mutate(
+        gdp_exporter = round(!!sym("gdp_exporter") * !!sym("gdp_deflator"), 0)
+      )
+  }
+
+  if (any(colnames(d) %in% c("gdp_exporter_percap"))) {
+    d <- d %>%
+      mutate(
+        gdp_exporter_percap = round(!!sym("gdp_exporter_percap") * !!sym("gdp_deflator"), 0)
+      )
+  }
+
+  if (any(colnames(d) %in% c("gdp_importer"))) {
+    d <- d %>%
+      mutate(
+        gdp_importer = round(!!sym("gdp_importer") * !!sym("gdp_deflator"), 0)
+      )
+  }
+
+  if (any(colnames(d) %in% c("gdp_importer_percap"))) {
+    d <- d %>%
+      mutate(
+        gdp_importer_percap = round(!!sym("gdp_importer_percap") * !!sym("gdp_deflator"), 0)
+      )
+  }
+
+  return(d)
+}
+
 # ORIGIN/DESTINATION TREEMAPS -----
 
 lvl_opts <- list(
@@ -448,3 +525,14 @@ show_percentage <- function(x) {
 growth_rate <- function(p, q, t) {
   (p / q)^(1 / (max(t) - min(t))) - 1
 }
+
+#' Typing reactiveValues is too long
+#' @inheritParams reactiveValues
+#' @inheritParams reactiveValuesToList
+#' @rdname reactives
+#' @export
+rv <- function(...) shiny::reactiveValues(...)
+
+#' @rdname reactives
+#' @export
+rvtl <- function(...) shiny::reactiveValuesToList(...)
