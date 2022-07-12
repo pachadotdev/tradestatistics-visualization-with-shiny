@@ -2,7 +2,7 @@
 #'
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
-#' @import shiny ggplot2
+#' @import shiny
 #' @import otsshinycommon
 #' @importFrom broom glance tidy
 #' @importFrom dplyr arrange bind_rows case_when collect everything filter
@@ -447,10 +447,10 @@ app_server <- function(input, output, session) {
 
   ## 5. Simulate ----
 
-  pred_trade_plot <- reactive({
+  pred_trade_table <- reactive({
     d <- df_dtl_2() %>%
       filter(
-        !!sym("exporter") %in% !!inp_rc()
+        !!sym("importer") %in% unique(!!inp_rc(), !!inp_mc())
       )
 
     d <- d %>% mutate(`UNFEASIBLE` = NA_real_, `ESTIMATION` = NA_real_)
@@ -458,9 +458,9 @@ app_server <- function(input, output, session) {
     d <- d %>%
       mutate(predicted_trade = predict(fit(), newdata = d)) %>%
       ungroup() %>%
-      select(!!sym("year"), !!sym("exporter"), !!sym("trade"),
+      select(!!sym("year"), !!sym("importer"), !!sym("trade"),
              !!sym("predicted_trade")) %>%
-      group_by(!!sym("year"), !!sym("exporter")) %>%
+      group_by(!!sym("year"), !!sym("importer")) %>%
       summarise(
         trade = sum(!!sym("trade"), na.rm = T),
         predicted_trade = sum(!!sym("predicted_trade"), na.rm = T)
@@ -480,19 +480,18 @@ app_server <- function(input, output, session) {
 
     d2 <- df_dtl_2() %>%
       filter(
-        !!sym("exporter") %in% !!inp_rc()
+        !!sym("importer") %in% unique(!!inp_rc(), !!inp_mc())
       ) %>%
       mutate(
         rta = case_when(
-          !!sym("year") >= !!inp_ry() ~ as.integer(!!inp_rm()),
+          !!sym("year") >= !!inp_ry() &
+            !!sym("importer") %in% !!inp_rc()  ~ as.integer(!!inp_rm()),
           TRUE ~ !!sym("rta")
-        )
-      )
-
-    d2 <- d2 %>%
-      mutate(
+        ),
         mfn = case_when(
-          !!sym("year") >= !!inp_my() ~ as.integer(!!inp_mm() / 10)
+          !!sym("year") >= !!inp_my() &
+            !!sym("importer") %in% !!inp_mc() ~ as.integer(!!inp_mm()) / 100,
+          TRUE ~ !!sym("mfn")
         )
       )
 
@@ -500,8 +499,8 @@ app_server <- function(input, output, session) {
 
     d2 <- d2 %>%
       mutate(predicted_trade = predict(fit(), newdata = d2)) %>%
-      select(!!sym("year"), !!sym("exporter"), !!sym("predicted_trade")) %>%
-      group_by(!!sym("year"), !!sym("exporter")) %>%
+      select(!!sym("year"), !!sym("importer"), !!sym("predicted_trade")) %>%
+      group_by(!!sym("year"), !!sym("importer")) %>%
       summarise(
         predicted_trade = sum(!!sym("predicted_trade"), na.rm = T)
       )
@@ -511,33 +510,19 @@ app_server <- function(input, output, session) {
                    names_to = "variable", values_to = "value")
 
     d2 <- d2 %>%
-      mutate(variable = "Predicted trade (altered RTA and MFN rate)")
+      mutate(variable = "Predicted trade (altered RTA and MFN)")
 
-    d <- d %>% bind_rows(d2); rm(d2)
+    d <- d %>% bind_rows(d2) %>% arrange(!!sym("year"), !!sym("importer")); rm(d2)
 
     d$variable <- factor(d$variable,
       levels = c("Observed trade",
                  "Predicted trade",
-                 "Predicted trade (altered RTA and MFN rate)"))
+                 "Predicted trade (altered RTA and MFN)"))
 
     wt$inc(1)
 
-    g <- ggplot(d) +
-      geom_col(aes(x = as.factor(!!sym("year")),
-                   y = !!sym("value") / 1000000000,
-                   fill = !!sym("variable")),
-               position = "dodge2") +
-      facet_wrap(~exporter, scales = "free_y") +
-      scale_fill_viridis_d() +
-      theme_minimal() +
-      labs(
-        x = "Year",
-        y = "USD billion",
-        title = "Aggregated effect on exports for the selected countries"
-      )
-
     wt$close()
-    return(g)
+    return(d)
   }) %>%
     bindCache(
       inp_y(), inp_r(), inp_p(), inp_t(), inp_z(),
@@ -676,7 +661,7 @@ app_server <- function(input, output, session) {
   output$fit_stl2 <- renderText({ fit_stl2() })
   output$fit_cat <- renderPrint({ fit() })
   output$pred_stl <- renderText({ pred_stl() })
-  output$pred_trade_plot <- renderPlot({ pred_trade_plot() })
+  output$pred_trade_table <- renderTable({ pred_trade_table() })
 
   ## Download ----
 

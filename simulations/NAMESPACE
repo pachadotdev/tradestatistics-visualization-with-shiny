@@ -2,7 +2,6 @@
 
 export("%>%")
 export(run_app)
-import(ggplot2)
 import(otsshinycommon)
 import(shiny)
 importFrom(broom,glance)

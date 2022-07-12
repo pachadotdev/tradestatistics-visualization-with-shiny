@@ -19,7 +19,7 @@ app_ui <- function(request) {
 
         column(
           12,
-          HTML("<h1>Model + Simulation</h1>"),
+          HTML("<h1>Simulations</h1>"),
           htmlOutput("title_legend", container = tags$p)
         ),
 
@@ -456,7 +456,7 @@ app_ui <- function(request) {
           htmlOutput("fit_stl2", container = tags$h2),
           verbatimTextOutput("fit_cat"),
           htmlOutput("pred_stl", container = tags$h2),
-          plotOutput("pred_trade_plot")
+          tableOutput("pred_trade_table")
         ),
 
         # Download ----
