@@ -51,7 +51,7 @@ golem::use_recommended_tests()
 
 ## Favicon ----
 # If you want to change the favicon (default is golem's one)
-golem::use_favicon("https://shiny.tradestatistics.io/favicon.ico") # path = "path/to/ico". Can be an online file.
+golem::use_favicon("https://shiny.tradestatistics.io/images/favicon.ico") # path = "path/to/ico". Can be an online file.
 # golem::remove_favicon() # Uncomment to remove the default favicon
 
 ## Add helper functions ----
