@@ -492,7 +492,7 @@ app_server <- function(input, output, session) {
     d2 <- d2 %>%
       mutate(
         mfn = case_when(
-          !!sym("year") >= !!inp_my() ~ as.integer(!!inp_mm() / 100)
+          !!sym("year") >= !!inp_my() ~ as.integer(!!inp_mm() / 10)
         )
       )
 
@@ -518,7 +518,7 @@ app_server <- function(input, output, session) {
     d$variable <- factor(d$variable,
       levels = c("Observed trade",
                  "Predicted trade",
-                 "Predicted trade (altered RTA)"))
+                 "Predicted trade\n(altered RTA and MFN rate)"))
 
     wt$inc(1)
 
