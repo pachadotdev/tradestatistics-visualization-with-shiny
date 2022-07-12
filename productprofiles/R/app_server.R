@@ -38,11 +38,11 @@ app_server <- function(input, output, session) {
 
   section_name <- eventReactive(input$go, {
     s <- if (nchar(inp_s()) == 2) {
-      gsub(".* -", "", names(otsshinycommon::sections_to_display[
-        otsshinycommon::sections_to_display == inp_s()]))
+      gsub(".* -", "", names(otsshinycommon::sections_display[
+        otsshinycommon::sections_display == inp_s()]))
     } else if (nchar(inp_s()) == 4) {
-      gsub(".* - ", "", names(otsshinycommon::commodities_to_display[
-        otsshinycommon::commodities_to_display == inp_s()]))
+      gsub(".* - ", "", names(otsshinycommon::commodities_short_display[
+        otsshinycommon::commodities_short_display == inp_s()]))
     } else if (inp_s() == "vaccine") {
       "Vaccine Inputs"
     }
