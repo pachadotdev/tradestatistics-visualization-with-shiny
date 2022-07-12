@@ -13,7 +13,7 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # Your application UI logic
     fluidPage(
-      title = "Model + Simulation",
+      title = "Simulations",
       fluidRow(
         useWaitress(),
 
@@ -512,7 +512,7 @@ golem_add_external_resources <- function() {
     favicon(),
     bundle_resources(
       path = app_sys("app/www"),
-      app_title = "Model - Open Trade Statistics"
+      app_title = "Simulations - Open Trade Statistics"
     )
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
