@@ -13,20 +13,20 @@ knitr::opts_chunk$set(
 )
 ```
 
-# otsshinymodel
+# otsshinysimulations
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of otsshinymodel is to model international trade flows
-for different countries. This is a part of [https://tradestatistics.io](tradestatistics.io).
+The goal of otsshinysimulations is to simulate the effect of policy variables 
+over international trade flows for different countries. This is a part of [https://tradestatistics.io](tradestatistics.io).
 
 ## Installation
 
-You can install the development version of otsshinymodel from [GitHub](https://github.com/) with:
+You can install the development version of otsshinysimulations from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("remotes")
 remotes::install_github("tradestatistics/visualization-with-shiny",
-    subdir = "model")
+    subdir = "simulations")
 ```

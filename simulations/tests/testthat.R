@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/reference/test_package.html#special-files
 
 library(testthat)
-library(otsshinymodel)
+library(otsshinysimulations)
 
-test_check("otsshinymodel")
+test_check("otsshinysimulations")

@@ -75,7 +75,7 @@ app_ui <- function(request) {
             "r",
             "Importer",
             choices = available_reporters_iso(),
-            selected = "all",
+            selected = c("can", "mex", "usa"),
             selectize = TRUE,
             width = "100%",
             multiple = TRUE
@@ -203,13 +203,8 @@ app_ui <- function(request) {
           selectInput(
             "s",
             "Section/Commodity",
-            choices = list(
-              "All Products" = available_all(),
-              "Custom Selections" = available_vaccine(),
-              "HS Sections" = available_sections_code(),
-              "HS Commodities" = available_commodities_code()
-            ),
-            selected = "all",
+            choices = NULL,
+            selected = NULL,
             selectize = TRUE,
             width = "100%",
             multiple = TRUE
@@ -307,36 +302,15 @@ app_ui <- function(request) {
             )
         ),
 
+        ## RTA changes ----
+
         col_12(
           hr(),
-          h2("RTA change simulation")
+          h2("RTA modification")
         ),
 
         col_4(
-          selectInput(
-            "rc",
-            "Alter RTAs situation for",
-            choices = available_reporters_iso(),
-            selected = c("can", "usa", "mex"),
-            selectize = TRUE,
-            width = "100%",
-            multiple = TRUE
-          ) %>%
-            helper(
-              type = "inline",
-              title = "Alter RTAs situation for",
-              content = c("This corresponds to a 'what if' situation, for example, what would have happened (according
-                              to the model) if the countries you've chosen dropped or subscribed their RTA starting in
-                              a certain year (i.e. what if Chile and Chile would have subscribed their RTA back in 2002
-                              instead of 2006).",
-                          "",
-                          "<b>References</b>",
-                          "Yotov, Y. V., Piermartini, R., and Larch, M. <i><a href='https://www.wto.org/english/res_e/publications_e/advancedguide2016_e.htm'>An Advanced Guide to Trade Policy Analysis: The Structural Gravity Model</a></i>. WTO iLibrary, 2016."),
-              buttonLabel = "Got it!",
-              easyClose = FALSE,
-              fade = TRUE,
-              size = "s"
-            )
+          uiOutput("rc")
         ),
 
         col_4(
@@ -354,7 +328,7 @@ app_ui <- function(request) {
               title = "RTA action",
               content = c("This corresponds to a 'what if' situation, for example, what would have happened (according
                               to the model) if the countries you've chosen dropped or subscribed their RTA starting in
-                              a certain year (i.e. what if Chile and Chile would have subscribed their RTA back in 2002
+                              a certain year (i.e. what if Chile and China would have subscribed their RTA back in 2002
                               instead of 2006).",
                           "",
                           "<b>References</b>",
@@ -383,8 +357,74 @@ app_ui <- function(request) {
               title = "Since year",
               content = c("This corresponds to a 'what if' situation, for example, what would have happened (according
                               to the model) if the countries you've chosen dropped or subscribed their RTA starting in
-                              a certain year (i.e. what if Chile and Chile would have subscribed their RTA back in 2002
+                              a certain year (i.e. what if Chile and China would have subscribed their RTA back in 2002
                               instead of 2006).",
+                          "",
+                          "<b>References</b>",
+                          "Yotov, Y. V., Piermartini, R., and Larch, M. <i><a href='https://www.wto.org/english/res_e/publications_e/advancedguide2016_e.htm'>An Advanced Guide to Trade Policy Analysis: The Structural Gravity Model</a></i>. WTO iLibrary, 2016."),
+              buttonLabel = "Got it!",
+              easyClose = FALSE,
+              fade = TRUE,
+              size = "s"
+            )
+        ),
+
+        ## MFN changes ----
+
+        col_12(
+          hr(),
+          h2("MFN modification")
+        ),
+
+        col_4(
+          uiOutput("mc")
+        ),
+
+        col_4(
+          sliderInput(
+            "mm",
+            "MFN rate modification (%)",
+            min = 0,
+            max = 30,
+            value = 10,
+            width = "100%"
+          ) %>%
+            helper(
+              type = "inline",
+              title = "Alter MFNs situation for",
+              content = c("This corresponds to a 'what if' situation, for example, what would have happened (according
+                              to the model) if the countries you've chosen increased/decreased their MFN avg rate starting in
+                              a certain year (i.e. what if Chile would have increased their MFN rates to an avg
+                              of 25% since 2020).",
+                          "",
+                          "<b>References</b>",
+                          "Yotov, Y. V., Piermartini, R., and Larch, M. <i><a href='https://www.wto.org/english/res_e/publications_e/advancedguide2016_e.htm'>An Advanced Guide to Trade Policy Analysis: The Structural Gravity Model</a></i>. WTO iLibrary, 2016."),
+              buttonLabel = "Got it!",
+              easyClose = FALSE,
+              fade = TRUE,
+              size = "s"
+            )
+        ),
+
+        col_4(
+          sliderInput(
+            "my",
+            "Since year",
+            min = available_yrs_min(),
+            max = available_yrs_max(),
+            value = 2002,
+            sep = "",
+            step = 1,
+            ticks = FALSE,
+            width = "100%"
+          ) %>%
+            helper(
+              type = "inline",
+              title = "Alter MFNs situation for",
+              content = c("This corresponds to a 'what if' situation, for example, what would have happened (according
+                              to the model) if the countries you've chosen increased/decreased their MFN avg rate starting in
+                              a certain year (i.e. what if Chile would have increased their MFN rates to an avg
+                              of 25% since 2020).",
                           "",
                           "<b>References</b>",
                           "Yotov, Y. V., Piermartini, R., and Larch, M. <i><a href='https://www.wto.org/english/res_e/publications_e/advancedguide2016_e.htm'>An Advanced Guide to Trade Policy Analysis: The Structural Gravity Model</a></i>. WTO iLibrary, 2016."),

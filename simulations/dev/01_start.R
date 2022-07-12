@@ -19,9 +19,9 @@
 ## to change the name in the app_sys() function in app_config.R /!\
 ##
 golem::fill_desc(
-  pkg_name = "otsshinymodel", # The Name of the package containing the App
+  pkg_name = "otsshinysimulations", # The Name of the package containing the App
   pkg_title = "Open Trade Statistics Model App", # The Title of the package containing the App
-  pkg_description = "Wrappers around gravity models for interactive model building.
+  pkg_description = "Wrappers around gravity models for interactive simulation building.
   This is meant as a production grade Shiny app and not as end user app.", # The Description of the package containing the App
   author_first_name = "Mauricio", # Your First Name
   author_last_name = "Vargas", # Your Last Name

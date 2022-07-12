@@ -14,7 +14,7 @@
 #' @importFrom rio import export
 #' @importFrom rlang sym
 #' @importFrom stats as.formula predict quasipoisson weighted.mean
-#' @importFrom shinyhelper observe_helpers
+#' @importFrom shinyhelper helper observe_helpers
 #' @importFrom tidyr pivot_longer
 #' @importFrom utils head
 #' @importFrom waiter Waitress
@@ -49,7 +49,11 @@ app_server <- function(input, output, session) {
   inp_rm <- reactive({ input$rm }) # rta modification
   inp_ry <- reactive({ input$ry }) # rta year
 
-  # Model + Simulation ----
+  inp_mc <- reactive({ input$mc }) # mfa action
+  inp_mm <- reactive({ input$mm }) # mfa modification
+  inp_my <- reactive({ input$my }) # mfa year
+
+  # Simulation ----
 
   wt <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
 
@@ -443,7 +447,7 @@ app_server <- function(input, output, session) {
 
   ## 5. Simulate ----
 
-  pred_trade_plot <- eventReactive(input$go, {
+  pred_trade_plot <- reactive({
     d <- df_dtl_2() %>%
       filter(
         !!sym("exporter") %in% !!inp_rc()
@@ -482,6 +486,13 @@ app_server <- function(input, output, session) {
         rta = case_when(
           !!sym("year") >= !!inp_ry() ~ as.integer(!!inp_rm()),
           TRUE ~ !!sym("rta")
+        )
+      )
+
+    d2 <- d2 %>%
+      mutate(
+        mfn = case_when(
+          !!sym("year") >= !!inp_my() ~ as.integer(!!inp_mm() / 100)
         )
       )
 
@@ -527,7 +538,15 @@ app_server <- function(input, output, session) {
 
     wt$close()
     return(g)
-  })
+  }) %>%
+    bindCache(
+      inp_y(), inp_r(), inp_p(), inp_t(), inp_z(),
+      inp_d(), inp_c(), inp_s(),
+      fml(), lhs(), rhs(), raw_lhs(), raw_rhs(),
+      inp_rc(), inp_rm(), inp_ry(),
+      inp_mc(), inp_mm(), inp_my()
+    ) %>%
+    bindEvent(input$go)
 
   # Cite ----
 
@@ -555,6 +574,8 @@ app_server <- function(input, output, session) {
 
   # Outputs ----
 
+  ## Titles / texts ----
+
   output$title_legend <- renderText({
     "The information displayed here is based on
     <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read
@@ -562,6 +583,85 @@ app_server <- function(input, output, session) {
     for a full description of restrictions and applicable licenses. These
     figures do not include services or foreign direct investment."
   })
+
+  ## Dynamic / Server side selectors ----
+
+  updateSelectizeInput(session, "s",
+                       choices = list(
+                         "All Products" = available_all(),
+                         "Custom Selections" = available_vaccine(),
+                         "HS Sections" = available_sections_code(),
+                         "HS Commodities" = available_commodities_code()
+                       ),
+                       selected = "all",
+                       server = TRUE
+  )
+
+  output$rc <- renderUI({
+    # here we update the RTA modification selection after inp_r+inp_p
+    rp <- unique(as.character(inp_r()), as.character(inp_p()))
+    if (any(rp == "all")) { rp <- rp[rp != "all"] }
+    if (length(rp) == 0) { rp <- "all" }
+
+    selectInput(
+      "rc",
+      "Alter RTAs situation for",
+      choices = available_reporters_iso(),
+      selected = rp,
+      selectize = TRUE,
+      width = "100%",
+      multiple = TRUE
+    ) %>%
+      helper(
+        type = "inline",
+        title = "Alter RTAs situation for",
+        content = c("This corresponds to a 'what if' situation, for example, what would have happened (according
+                              to the model) if the countries you've chosen dropped or subscribed their RTA starting in
+                              a certain year (i.e. what if Chile and China would have subscribed their RTA back in 2002
+                              instead of 2006).",
+                    "",
+                    "<b>References</b>",
+                    "Yotov, Y. V., Piermartini, R., and Larch, M. <i><a href='https://www.wto.org/english/res_e/publications_e/advancedguide2016_e.htm'>An Advanced Guide to Trade Policy Analysis: The Structural Gravity Model</a></i>. WTO iLibrary, 2016."),
+        buttonLabel = "Got it!",
+        easyClose = FALSE,
+        fade = TRUE,
+        size = "s"
+      )
+  })
+
+  output$mc <- renderUI({
+    # here we update the MFA modification selection after inp_r+inp_p
+    rp <- unique(as.character(inp_r()), as.character(inp_p()))
+    if (any(rp == "all")) { rp <- rp[rp != "all"] }
+    if (length(rp) == 0) { rp <- "all" }
+
+    selectInput(
+      "mc",
+      "Alter MFNs situation for",
+      choices = available_reporters_iso(),
+      selected = rp,
+      selectize = TRUE,
+      width = "100%",
+      multiple = TRUE
+    ) %>%
+      helper(
+        type = "inline",
+        title = "Alter MFNs situation for",
+        content = c("This corresponds to a 'what if' situation, for example, what would have happened (according
+                              to the model) if the countries you've chosen increased/decreased their MFN avg rate starting in
+                              a certain year (i.e. what if Chile would have increased their MFN rates to an avg
+                              of 25% since 2020).",
+                    "",
+                    "<b>References</b>",
+                    "Yotov, Y. V., Piermartini, R., and Larch, M. <i><a href='https://www.wto.org/english/res_e/publications_e/advancedguide2016_e.htm'>An Advanced Guide to Trade Policy Analysis: The Structural Gravity Model</a></i>. WTO iLibrary, 2016."),
+        buttonLabel = "Got it!",
+        easyClose = FALSE,
+        fade = TRUE,
+        size = "s"
+      )
+  })
+
+  ## Model ----
 
   hdata_stl <- eventReactive(input$go, { "Data preview" })
   fit_stl1 <- eventReactive(input$go, { "Model summary" })
