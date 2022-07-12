@@ -40,7 +40,28 @@ app_server <- function(input, output, session) {
   inp_z <- reactive({ input$z }) # drop zeros
   inp_d <- reactive({ input$d }) # adjust dollar
   inp_c <- reactive({ input$c }) # cluste
-  inp_s <- reactive({ input$s }) # section/commodity
+  inp_s <- reactive({
+    s <- input$s
+
+    s2 <- s[nchar(s) == 2]
+
+    s4 <- commodities %>%
+      filter(
+        !(!!sym("section_code") %in% s2),
+        !!sym("section_code") %in% s[nchar(s) == 4]
+      ) %>%
+      pull(!!sym("commodity_code"))
+
+    s6 <- commodities %>%
+      filter(
+        !(!!sym("section_code") %in% s2),
+        !(!!sym("section_code") %in% s[nchar(s) == 4]),
+        !!sym("section_code") %in% s[nchar(s) == 6]
+      ) %>%
+      pull(!!sym("commodity_code"))
+
+    return(c(s2, s4, s6))
+  }) # section/commodity
 
   inp_fml <- reactive({ input$fml })
   inp_fmt <- reactive({ input$fmt })
@@ -157,13 +178,17 @@ app_server <- function(input, output, session) {
     }
 
     if (any(inp_s() != "all")) {
-      if (any(nchar(inp_s()) == 4)) {
-        d <- d %>%
-          filter(substr(!!sym("commodity_code"), 1, 4) %in% !!inp_s())
-      } else {
-        d <- d %>%
-          filter(!!sym("section_code") %in% !!inp_s())
-      }
+      sfull <- inp_s()
+      s2 <- sfull[nchar(sfull) == 2]
+      s4 <- sfull[nchar(sfull) == 4]
+      s6 <- sfull[nchar(sfull) == 6]
+
+      d <- d %>%
+        filter(
+            !!sym("section_code") %in% s2 |
+            substr(!!sym("commodity_code"), 1, 4) %in% s4 |
+            !!sym("commodity_code") %in% s6
+        )
     }
 
     wt$inc(1)
@@ -576,7 +601,8 @@ app_server <- function(input, output, session) {
                          "All Products" = available_all(),
                          "Custom Selections" = available_vaccine(),
                          "HS Sections" = available_sections_code(),
-                         "HS Commodities" = available_commodities_code()
+                         "HS Commodities (4-digits)" = available_commodities_short_code(),
+                         "HS Commodities (6-digits)" = available_commodities_code()
                        ),
                        selected = "all",
                        server = TRUE

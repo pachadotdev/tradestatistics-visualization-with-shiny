@@ -260,7 +260,7 @@ app_ui <- function(request) {
           textInput(
             "fml",
             "Model formula",
-            "trade ~ log(dist) + log(gdp_exporter) + rta + colony + comlang_off + contig",
+            "trade ~ log(dist) + log(gdp_exporter) + colony + comlang_off + contig + rta + mfn",
             width = "100%",
             placeholder = "Any valid R formula"
           ) %>%
