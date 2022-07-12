@@ -7,6 +7,7 @@
 \alias{available_reporters_iso}
 \alias{available_sections_code}
 \alias{available_commodities_code}
+\alias{available_commodities_short_code}
 \alias{available_vaccine}
 \alias{available_yrs}
 \alias{available_yrs_min}
@@ -24,6 +25,8 @@ available_reporters_iso()
 available_sections_code()
 
 available_commodities_code()
+
+available_commodities_short_code()
 
 available_vaccine()
 

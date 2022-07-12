@@ -3,6 +3,7 @@
 export("%>%")
 export(available_all)
 export(available_commodities_code)
+export(available_commodities_short_code)
 export(available_formats)
 export(available_logicals)
 export(available_models)

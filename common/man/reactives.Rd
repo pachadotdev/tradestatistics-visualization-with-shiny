@@ -9,6 +9,9 @@ rv(...)
 
 rvtl(...)
 }
+\arguments{
+\item{...}{elements to pass to the function}
+}
 \description{
 Typing reactiveValues is too long
 }

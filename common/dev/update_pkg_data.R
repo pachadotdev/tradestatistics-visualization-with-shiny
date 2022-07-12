@@ -15,63 +15,89 @@ con <- dbConnect(
 
 # reporters ----
 
-reporters_to_display <- tbl(con, "countries") %>%
+reporters_display <- tbl(con, "countries") %>%
   select(!!sym("country_iso"), !!sym("country_name_english")) %>%
   collect()
 
-reporters_out <- reporters_to_display %>%
+reporters_out <- reporters_display %>%
   select(!!sym("country_iso")) %>%
   pull()
 
-reporters_names_out <- reporters_to_display %>%
+reporters_names_out <- reporters_display %>%
   select(!!sym("country_name_english")) %>%
   pull()
 
 # names(reporters_out) <- glue("{ reporters_out } - { reporters_names_out }")
 
-reporters_to_display <- reporters_out
+reporters_display <- reporters_out
 
 # sections ----
 
-sections_to_display <- tbl(con, "sections") %>%
+sections_display <- tbl(con, "sections") %>%
   collect()
 
-sections_out <- sections_to_display %>%
+sections_out <- sections_display %>%
   select(!!sym("section_code")) %>%
   pull()
 
-sections_names_out <- sections_to_display %>%
+sections_names_out <- sections_display %>%
   select(!!sym("section_fullname_english")) %>%
   pull()
 
 names(sections_out) <- glue("{ sections_out } - { sections_names_out }")
 
-sections_to_display <- sections_out
+sections_display <- sections_out
 
-# commodities ----
+# commodities short ----
 
-commodities_to_display <- tbl(con, "commodities_short") %>%
+commodities_short_display <- tbl(con, "commodities_short") %>%
   select(commodity_code, commodity_fullname_english) %>%
   collect()
 
-commodities_out <- commodities_to_display %>%
+commodities_short_out <- commodities_short_display %>%
   select(!!sym("commodity_code")) %>%
   pull()
 
-commodities_names_out <- commodities_to_display %>%
+commodities_short_names_out <- commodities_short_display %>%
+  select(!!sym("commodity_fullname_english")) %>%
+  pull()
+
+names(commodities_short_out) <- glue("{ commodities_short_out } - { commodities_short_names_out }")
+
+commodities_short_display <- commodities_short_out
+
+# commodities ----
+
+commodities <- tbl(con, "commodities") %>%
+  select(section_code, commodity_code) %>%
+  collect()
+
+commodities_display <- tbl(con, "commodities") %>%
+  select(commodity_code, commodity_fullname_english) %>%
+  collect()
+
+commodities_out <- commodities_display %>%
+  select(!!sym("commodity_code")) %>%
+  pull()
+
+commodities_names_out <- commodities_display %>%
   select(!!sym("commodity_fullname_english")) %>%
   pull()
 
 names(commodities_out) <- glue("{ commodities_out } - { commodities_names_out }")
 
-commodities_to_display <- commodities_out
+commodities_display <- commodities_out
 
 # output ----
 
-usethis::use_data(reporters_to_display, overwrite = T)
+usethis::use_data(reporters_display, overwrite = T)
 
-usethis::use_data(sections_to_display, overwrite = T)
+usethis::use_data(sections_display, overwrite = T)
 
-usethis::use_data(commodities_to_display, overwrite = T)
+usethis::use_data(commodities, overwrite = T)
+
+usethis::use_data(commodities_short_display, overwrite = T)
+
+usethis::use_data(commodities_display, overwrite = T)
 
 DBI::dbDisconnect(con)

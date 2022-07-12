@@ -20,19 +20,25 @@ available_models <- function() {
 #' @rdname available
 #' @export
 available_reporters_iso <- function() {
-  otsshinycommon::reporters_to_display
+  otsshinycommon::reporters_display
 }
 
 #' @rdname available
 #' @export
 available_sections_code <- function() {
-  otsshinycommon::sections_to_display
+  otsshinycommon::sections_display
 }
 
 #' @rdname available
 #' @export
 available_commodities_code <- function() {
-  otsshinycommon::commodities_to_display
+  otsshinycommon::commodities_display
+}
+
+#' @rdname available
+#' @export
+available_commodities_short_code <- function() {
+  otsshinycommon::commodities_short_display
 }
 
 #' @rdname available
