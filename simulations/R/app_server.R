@@ -511,14 +511,14 @@ app_server <- function(input, output, session) {
                    names_to = "variable", values_to = "value")
 
     d2 <- d2 %>%
-      mutate(variable = "Predicted trade (altered RTA)")
+      mutate(variable = "Predicted trade (altered RTA and MFN rate)")
 
     d <- d %>% bind_rows(d2); rm(d2)
 
     d$variable <- factor(d$variable,
       levels = c("Observed trade",
                  "Predicted trade",
-                 "Predicted trade\n(altered RTA and MFN rate)"))
+                 "Predicted trade (altered RTA and MFN rate)"))
 
     wt$inc(1)
 
@@ -760,7 +760,7 @@ app_server <- function(input, output, session) {
     # strip shiny related URL parameters
     rvtl(input)
     setBookmarkExclude(c(
-      "shinyhelper-modal_params", "own"
+      "shinyhelper-modal_params", "own", "fmt"
     ))
     session$doBookmark()
   })
