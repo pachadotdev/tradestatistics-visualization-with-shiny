@@ -527,14 +527,11 @@ growth_rate <- function(p, q, t) {
 }
 
 #' Typing reactiveValues is too long
-#' @inheritParams reactiveValues
-#' @inheritParams reactiveValuesToList
 #' @param ... elements to pass to the function
 #' @rdname reactives
 #' @export
 rv <- function(...) shiny::reactiveValues(...)
 
 #' @rdname reactives
-#' @param ... elements to pass to the function
 #' @export
 rvtl <- function(...) shiny::reactiveValuesToList(...)

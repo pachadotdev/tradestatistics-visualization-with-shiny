@@ -46,13 +46,13 @@ app_server <- function(input, output, session) {
   })
 
   rname <- eventReactive(input$go, {
-    names(otsshinycommon::reporters_to_display[
-      otsshinycommon::reporters_to_display == inp_r()])
+    names(otsshinycommon::reporters_display[
+      otsshinycommon::reporters_display == inp_r()])
   })
 
   pname <- eventReactive(input$go, {
-    names(otsshinycommon::reporters_to_display[
-      otsshinycommon::reporters_to_display == inp_p()])
+    names(otsshinycommon::reporters_display[
+      otsshinycommon::reporters_display == inp_p()])
   })
 
   # Titles ----

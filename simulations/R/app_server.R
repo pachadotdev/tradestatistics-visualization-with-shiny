@@ -6,7 +6,7 @@
 #' @import otsshinycommon
 #' @importFrom broom glance tidy
 #' @importFrom dplyr arrange bind_rows case_when collect everything filter
-#'     group_by inner_join left_join mutate select summarise tbl ungroup
+#'     group_by inner_join left_join mutate pull select summarise tbl ungroup
 #' @importFrom fixest feols feglm
 #' @importFrom glue glue
 #' @importFrom janitor clean_names
@@ -45,14 +45,14 @@ app_server <- function(input, output, session) {
 
     s2 <- s[nchar(s) == 2]
 
-    s4 <- commodities %>%
+    s4 <- otsshinycommon::commodities %>%
       filter(
         !(!!sym("section_code") %in% s2),
         !!sym("section_code") %in% s[nchar(s) == 4]
       ) %>%
       pull(!!sym("commodity_code"))
 
-    s6 <- commodities %>%
+    s6 <- otsshinycommon::commodities %>%
       filter(
         !(!!sym("section_code") %in% s2),
         !(!!sym("section_code") %in% s[nchar(s) == 4]),
@@ -599,7 +599,7 @@ app_server <- function(input, output, session) {
   updateSelectizeInput(session, "s",
                        choices = list(
                          "All Products" = available_all(),
-                         "Custom Selections" = available_vaccine(),
+                         "Vaccine Inputs" = available_vaccine(),
                          "HS Sections" = available_sections_code(),
                          "HS Commodities (4-digits)" = available_commodities_short_code(),
                          "HS Commodities (6-digits)" = available_commodities_code()

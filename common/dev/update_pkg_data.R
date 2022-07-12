@@ -27,7 +27,7 @@ reporters_names_out <- reporters_display %>%
   select(!!sym("country_name_english")) %>%
   pull()
 
-# names(reporters_out) <- glue("{ reporters_out } - { reporters_names_out }")
+names(reporters_out) <- reporters_names_out
 
 reporters_display <- reporters_out
 
