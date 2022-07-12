@@ -374,7 +374,7 @@ app_server <- function(input, output, session) {
 
   # Outputs ----
 
-  ## Titles ----
+  ## Titles / texts ----
 
   output$title <- renderText({ title() })
 
@@ -383,6 +383,19 @@ app_server <- function(input, output, session) {
       of restrictions and applicable licenses. These figures do not include services or foreign direct investment."
 
   output$title_legend <- renderText({ legend_txt })
+
+  ## Dynamic / server side selectors ----
+
+  updateSelectizeInput(session, "s",
+                       choices = list(
+                         "All Products" = available_all(),
+                         "Vaccine Inputs" = available_vaccine(),
+                         "HS Sections" = available_sections_code(),
+                         "HS Commodities" = available_commodities_code()
+                       ),
+                       selected = "vaccine",
+                       server = TRUE
+  )
 
   ## Product profile ----
 

@@ -45,12 +45,8 @@ app_ui <- function(request) {
           selectInput(
             "s",
             "Section/Commodity",
-            choices = list(
-              "Custom Selections" = available_vaccine(),
-              "HS Sections" = available_sections_code(),
-              "HS Commodities" = available_commodities_code()
-            ),
-            selected = "vaccine",
+            choices = NULL,
+            selected = NULL,
             selectize = TRUE,
             width = "100%",
             multiple = FALSE
