@@ -13,6 +13,7 @@ BugReports:
 Depends: 
     R (>= 2.10)
 Imports: 
+    cachem,
     config (>= 0.3.1),
     dplyr (>= 1.0.9),
     glue (>= 1.6.2),
@@ -26,14 +27,15 @@ Imports:
     shiny (>= 1.7.1),
     shinydashboard,
     shinyhelper (>= 0.3.2),
+    shinyjs,
     tidyr (>= 1.2.0),
     waiter (>= 0.2.5.9000)
 Suggests: 
     spelling (>= 2.2),
     testthat (>= 3.0.0)
 Remotes: 
-    pachadotdev/waiter,
-    pachadotdev/shinydashboard
+    pachadotdev/shinydashboard,
+    pachadotdev/waiter
 Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US

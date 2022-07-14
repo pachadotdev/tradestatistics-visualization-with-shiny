@@ -7,6 +7,7 @@
 #' @import otsshinycommon
 #' @importFrom highcharter highchartOutput
 #' @importFrom shinyhelper helper
+#' @importFrom shinyjs useShinyjs
 #' @importFrom waiter useWaitress
 #' @noRd
 app_ui <- function(request) {
@@ -21,6 +22,8 @@ app_ui <- function(request) {
       dashboardHeader(title = "Open Trade Statistics"),
 
       dashboardSidebar(
+        useShinyjs(),
+        useWaitress(),
         sidebarMenu(
           menuItem("Visualize", tabName = "visualize"),
           menuItem("Download", tabName = "download"),
@@ -29,8 +32,6 @@ app_ui <- function(request) {
       ),
 
       dashboardBody(
-        useWaitress(),
-
         fluidRow(
           col_12(
             HTML("<h1>Country Profiles</h1>"),
@@ -46,6 +47,8 @@ app_ui <- function(request) {
           tabItem(
             tabName = "visualize",
             fluidRow(
+              # Filter -----
+
               col_12(
                 h2("Filter")
               ),
@@ -113,55 +116,65 @@ app_ui <- function(request) {
                              class = "btn-primary")
               ),
 
+              # Trade ----
+
               col_12(
                 htmlOutput("title", container = tags$h2)
               ),
 
               ## Aggregated trade -----
 
-              col_12(
-                htmlOutput("trd_stl", container = tags$h3)
-              ),
+              div(
+                id = "aggregated_trade",
 
-              col_3(
-                htmlOutput("trd_stl_exp", container = tags$h4),
-                htmlOutput("trd_smr_exp", container = tags$p),
-                htmlOutput("trd_stl_imp", container = tags$h4),
-                htmlOutput("trd_smr_imp", container = tags$p)
-              ),
+                col_12(
+                  htmlOutput("trd_stl", container = tags$h3)
+                ),
 
-              col_9(
-                highchartOutput("trd_exc_lines_agg", height = "500px")
+                col_3(
+                  htmlOutput("trd_stl_exp", container = tags$h4),
+                  htmlOutput("trd_smr_exp", container = tags$p),
+                  htmlOutput("trd_stl_imp", container = tags$h4),
+                  htmlOutput("trd_smr_imp", container = tags$p)
+                ),
+
+                col_9(
+                  highchartOutput("trd_exc_lines_agg", height = "500px")
+                )
               ),
 
               ## Detailed trade ----
 
-              col_12(
-                htmlOutput("exp_tt_yr", container = tags$h3)
-              ),
+              div(
+                id = "detailed_trade",
 
-              col_6(
-                htmlOutput("exp_tt_min_yr", container = tags$h4),
-                highchartOutput("exp_tm_dtl_min_yr", height = "500px")
-              ),
+                col_12(
+                  htmlOutput("exp_tt_yr", container = tags$h3)
+                ),
 
-              col_6(
-                htmlOutput("exp_tt_max_yr", container = tags$h4),
-                highchartOutput("exp_tm_dtl_max_yr", height = "500px")
-              ),
+                col_6(
+                  htmlOutput("exp_tt_min_yr", container = tags$h4),
+                  highchartOutput("exp_tm_dtl_min_yr", height = "500px")
+                ),
 
-              col_12(
-                htmlOutput("imp_tt_yr", container = tags$h3)
-              ),
+                col_6(
+                  htmlOutput("exp_tt_max_yr", container = tags$h4),
+                  highchartOutput("exp_tm_dtl_max_yr", height = "500px")
+                ),
 
-              col_6(
-                htmlOutput("imp_tt_min_yr", container = tags$h4),
-                highchartOutput("imp_tm_dtl_min_yr", height = "500px")
-              ),
+                col_12(
+                  htmlOutput("imp_tt_yr", container = tags$h3)
+                ),
 
-              col_6(
-                htmlOutput("imp_tt_max_yr", container = tags$h4),
-                highchartOutput("imp_tm_dtl_max_yr", height = "500px")
+                col_6(
+                  htmlOutput("imp_tt_min_yr", container = tags$h4),
+                  highchartOutput("imp_tm_dtl_min_yr", height = "500px")
+                ),
+
+                col_6(
+                  htmlOutput("imp_tt_max_yr", container = tags$h4),
+                  highchartOutput("imp_tm_dtl_max_yr", height = "500px")
+                )
               )
             )
           ),

@@ -49,3 +49,7 @@ body {
   font-size: 11px;
   line-height: 1.333;
 }
+
+.progressjs-theme-blueOverlayRadiusWithPercentBar .progressjs-inner {
+  background-color: #2e87c8!important;
+}

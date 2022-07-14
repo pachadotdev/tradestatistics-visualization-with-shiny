@@ -13,6 +13,7 @@
 #' @importFrom rio export
 #' @importFrom rlang sym
 #' @importFrom shinyhelper observe_helpers
+#' @importFrom shinyjs hide show
 #' @importFrom tidyr pivot_longer
 #' @importFrom waiter Waitress
 #' @noRd
@@ -673,6 +674,19 @@ app_server <- function(input, output, session) {
     )
   })
 
+  # Hide boxes until viz is ready ----
+
+  ## observe the button being pressed
+  observeEvent(input$go, {
+    if (input$go > 0) {
+      show(id = "aggregated_trade")
+      show(id = "detailed_trade")
+    } else {
+      hide(id = "aggregated_trade")
+      hide(id = "detailed_trade")
+    }
+  })
+
   # Footer ----
 
   output$site_footer <- renderText({
@@ -686,7 +700,7 @@ app_server <- function(input, output, session) {
     # strip shiny related URL parameters
     rvtl(input)
     setBookmarkExclude(c(
-      "shinyhelper-modal_params", "own"
+      "shinyhelper-modal_params", "own", "sidebarCollapsed", "sidebarItemExpanded"
     ))
     session$doBookmark()
   })

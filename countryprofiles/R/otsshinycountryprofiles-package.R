@@ -9,7 +9,7 @@ styles <- list(
                 "css/ion.rangeSlider.min.css")
 )
 
-shinyOptions(
+shiny::shinyOptions(
   cache = cachem::cache_disk(
     dir = "/tradestatistics/countryprofile_cache"
     # logfile = "/tradestatistics/log/countryprofile_cache.log"
