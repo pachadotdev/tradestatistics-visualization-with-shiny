@@ -582,7 +582,7 @@ app_server <- function(input, output, session) {
   output$title <- renderText({ title() })
 
   # put here to avoid repetition in UI
-  legend_txt <- "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
+  legend_txt <- "<i>By Open Trade Statistics.</i> The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
       of restrictions and applicable licenses. These figures do not include services or foreign direct investment."
 
   output$title_legend <- renderText({ legend_txt })
@@ -634,7 +634,7 @@ app_server <- function(input, output, session) {
   dwn_fmt <- eventReactive(input$go, {
     selectInput(
       "fmt",
-      "Download data as:",
+      "Format",
       choices = available_formats(),
       selected = NULL,
       selectize = TRUE

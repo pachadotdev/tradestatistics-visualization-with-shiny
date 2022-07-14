@@ -27,7 +27,7 @@ app_ui <- function(request) {
           h2("Filter")
         ),
 
-        col_12(
+        col_3(
           sliderInput(
             "y",
             "Years",
@@ -41,7 +41,7 @@ app_ui <- function(request) {
           )
         ),
 
-        col_4(
+        col_3(
           selectInput(
             "r",
             "Reporter",
@@ -52,7 +52,7 @@ app_ui <- function(request) {
           )
         ),
 
-        col_4(
+        col_3(
           selectInput(
             "p",
             "Partner",
@@ -63,7 +63,7 @@ app_ui <- function(request) {
           )
         ),
 
-        col_4(
+        col_3(
           selectInput(
             "d",
             "Convert dollars to a fixed year",
@@ -91,19 +91,19 @@ app_ui <- function(request) {
         ),
 
         col_12(
-          htmlOutput("title", container = tags$h1)
+          htmlOutput("title", container = tags$h2)
         ),
 
         ## Aggregated trade -----
 
         col_12(
-          htmlOutput("trd_stl", container = tags$h2)
+          htmlOutput("trd_stl", container = tags$h3)
         ),
 
         col_3(
-          htmlOutput("trd_stl_exp", container = tags$h3),
+          htmlOutput("trd_stl_exp", container = tags$h4),
           htmlOutput("trd_smr_exp", container = tags$p),
-          htmlOutput("trd_stl_imp", container = tags$h3),
+          htmlOutput("trd_stl_imp", container = tags$h4),
           htmlOutput("trd_smr_imp", container = tags$p)
         ),
 
@@ -114,37 +114,37 @@ app_ui <- function(request) {
         ## Detailed trade ----
 
         col_12(
-          htmlOutput("exp_tt_yr", container = tags$h2)
+          htmlOutput("exp_tt_yr", container = tags$h3)
         ),
 
         col_6(
-          htmlOutput("exp_tt_min_yr", container = tags$h3),
+          htmlOutput("exp_tt_min_yr", container = tags$h4),
           highchartOutput("exp_tm_dtl_min_yr", height = "500px")
         ),
 
         col_6(
-          htmlOutput("exp_tt_max_yr", container = tags$h3),
+          htmlOutput("exp_tt_max_yr", container = tags$h4),
           highchartOutput("exp_tm_dtl_max_yr", height = "500px")
         ),
 
         col_12(
-          htmlOutput("imp_tt_yr", container = tags$h2)
+          htmlOutput("imp_tt_yr", container = tags$h3)
         ),
 
         col_6(
-          htmlOutput("imp_tt_min_yr", container = tags$h3),
+          htmlOutput("imp_tt_min_yr", container = tags$h4),
           highchartOutput("imp_tm_dtl_min_yr", height = "500px")
         ),
 
         col_6(
-          htmlOutput("imp_tt_max_yr", container = tags$h3),
+          htmlOutput("imp_tt_max_yr", container = tags$h4),
           highchartOutput("imp_tm_dtl_max_yr", height = "500px")
         ),
 
         ## Download ----
 
         col_12(
-          htmlOutput("dwn_stl", container = tags$h2),
+          htmlOutput("dwn_stl", container = tags$h3),
           htmlOutput("dwn_txt", container = tags$p),
           uiOutput("dwn_fmt"),
           uiOutput("dwn_agg"),

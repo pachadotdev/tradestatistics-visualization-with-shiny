@@ -4,31 +4,28 @@
 
 * {
   font-family: 'Roboto', sans-serif;
+  color: #212529;
 }
 
 /* H1 - H6 font */
 
 h1, h2, .h1, .h2 {
   font-family: 'Roboto Slab', sans-serif;
-  color: #2e87c8;
 }
 
-h3,
-h4,
-h5,
-h6,
-.h3,
-.h4,
-.h5,
-.h6 {
+h1, .h1 {
+  color: #2e87c8;
+  border-bottom: 2px solid rgba(46,135,200,.7)
+}
+
+h3, h4, h5, h6, .h3, .h4, .h5, .h6 {
   font-family: 'Roboto Slab', sans-serif;
-  color: #333333;
 }
 
 /* Background */
 
 body {
-  background-color: #f2f2f2;
+  background-color: #fafafa;
 }
 
 /* Sliders */
