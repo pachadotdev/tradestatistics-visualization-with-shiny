@@ -551,41 +551,11 @@ app_server <- function(input, output, session) {
     bindCache(inp_y(), inp_r(), inp_p(), inp_d()) %>%
     bindEvent(input$go)
 
-  # Cite ----
-
-  site_url <- "https://shiny.tradestatistics.io"
-
-  cite_text <- reactive({
-    glue(
-      "Open Trade Statistics. \"OTS BETA DASHBOARD\". <i>Open Trade Statistics</i>.
-        Accessed {months(Sys.Date()) } { day(Sys.Date()) }, { year(Sys.Date()) }. { site_url }/."
-    )
-  })
-
-  cite_bibtex <- reactive({
-    glue("@misc{{open_trd_statistics_{year(Sys.Date())},
-      title = {{Open Trade Statistics Beta Dashboard}},
-      url = {{{site_url}}},
-      author = {{Vargas, Mauricio}},
-      doi = {{10.5281/zenodo.3738793}},
-      publisher = {{Open Trade Statistics}},
-      year = {{2022}},
-      month = {{Apr}},
-      note = {{Accessed: { months(Sys.Date()) } { day(Sys.Date()) }, { year(Sys.Date()) }}}}}"
-    )
-  })
-
   # Outputs ----
 
   ## Titles ----
 
   output$title <- renderText({ title() })
-
-  # put here to avoid repetition in UI
-  legend_txt <- "<i>By Open Trade Statistics.</i> The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
-      of restrictions and applicable licenses. These figures do not include services or foreign direct investment."
-
-  output$title_legend <- renderText({ legend_txt })
 
   ## Country profile ----
 
@@ -675,21 +645,32 @@ app_server <- function(input, output, session) {
     downloadButton('dwn_agg_pre', label = 'Aggregated data')
   })
 
-  ## Citation ----
+  ## Cite ----
 
-  output$citation_stl <- renderUI({
-    req(input$go)
-    h2("Citation")
-  })
+  site_url <- "https://shiny.tradestatistics.io"
 
   output$citation_text <- renderUI({
-    req(input$go)
-    HTML(cite_text())
+    HTML(
+      glue(
+        "Open Trade Statistics. \"OTS BETA DASHBOARD\". <i>Open Trade Statistics</i>.
+        Accessed {months(Sys.Date()) } { day(Sys.Date()) }, { year(Sys.Date()) }. { site_url }/."
+      )
+    )
   })
 
   output$citation_bibtex <- renderUI({
-    req(input$go)
-    pre(cite_bibtex())
+    pre(
+      glue("@misc{{open_trd_statistics_{year(Sys.Date())},
+      title = {{Open Trade Statistics Beta Dashboard}},
+      url = {{{site_url}}},
+      author = {{Vargas, Mauricio}},
+      doi = {{10.5281/zenodo.3738793}},
+      publisher = {{Open Trade Statistics}},
+      year = {{2022}},
+      month = {{Apr}},
+      note = {{Accessed: { months(Sys.Date()) } { day(Sys.Date()) }, { year(Sys.Date()) }}}}}"
+      )
+    )
   })
 
   # Footer ----
