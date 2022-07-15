@@ -451,7 +451,9 @@ app_server <- function(input, output, session) {
            )) %>%
       hc_xAxis(title = list(text = "Year")) %>%
       hc_yAxis(title = list(text = "USD billion"),
-               labels = list(formatter = JS("function() { return this.value / 1000000000 }"))) %>%
+               labels = list(
+                 formatter = JS("function() { return this.value / 1000000000 }")
+              )) %>%
       hc_title(text = trd_exc_lines_title())
   }) %>%
     bindCache(inp_y(), inp_r(), inp_p(), inp_d()) %>%
@@ -469,8 +471,40 @@ app_server <- function(input, output, session) {
     )
   })
 
+  exp_col_dtl_yr <- reactive({
+    d <- df_dtl() %>%
+      filter(!!sym("year") == min(inp_y())) %>%
+      p_fix_section_and_aggregate(col = "trade_value_usd_exp", sql_con = con) %>%
+      group_by(!!sym("section_name")) %>%
+      summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
+      mutate(year = min(inp_y())) %>%
+      bind_rows(
+        df_dtl() %>%
+          filter(!!sym("year") == max(inp_y())) %>%
+          p_fix_section_and_aggregate(col = "trade_value_usd_exp", sql_con = con) %>%
+          group_by(!!sym("section_name")) %>%
+          summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
+          mutate(year = max(inp_y()))
+      )
+
+    hchart(d,
+           "column",
+           hcaes(x = "section_name", y = "trade_value", group = "year"),
+           tooltip = list(
+             pointFormatter = custom_tooltip_short()
+           )) %>%
+      hc_xAxis(title = list(text = "Product")) %>%
+      hc_yAxis(title = list(text = "USD billion"),
+               labels = list(
+                 formatter = JS("function() { return this.value / 1000000000 }")
+               )) %>%
+      hc_title(text = glue("Exports in { min(inp_y()) } and { max(inp_y()) }"))
+  }) %>%
+    bindCache(inp_y(), inp_r(), inp_p(), inp_d()) %>%
+    bindEvent(input$go)
+
   exp_tt_min_yr <- eventReactive(input$go, {
-    glue("{ min(inp_y()) }")
+    glue("Exports in { min(inp_y()) }")
   })
 
   exp_tm_dtl_min_yr <- reactive({
@@ -486,7 +520,7 @@ app_server <- function(input, output, session) {
     bindEvent(input$go)
 
   exp_tt_max_yr <- eventReactive(input$go, {
-    glue("{ max(inp_y()) }")
+    glue("Exports in { max(inp_y()) }")
   })
 
   exp_tm_dtl_max_yr <- reactive({
@@ -516,8 +550,40 @@ app_server <- function(input, output, session) {
   })
 
   imp_tt_min_yr <- eventReactive(input$go, {
-    glue("{ min(inp_y()) }")
+    glue("Imports in { min(inp_y()) }")
   })
+
+  imp_col_dtl_yr <- reactive({
+    d <- df_dtl() %>%
+      filter(!!sym("year") == min(inp_y())) %>%
+      p_fix_section_and_aggregate(col = "trade_value_usd_imp", sql_con = con) %>%
+      group_by(!!sym("section_name")) %>%
+      summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
+      mutate(year = min(inp_y())) %>%
+      bind_rows(
+        df_dtl() %>%
+          filter(!!sym("year") == max(inp_y())) %>%
+          p_fix_section_and_aggregate(col = "trade_value_usd_imp", sql_con = con) %>%
+          group_by(!!sym("section_name")) %>%
+          summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
+          mutate(year = max(inp_y()))
+      )
+
+    hchart(d,
+           "column",
+           hcaes(x = "section_name", y = "trade_value", group = "year"),
+           tooltip = list(
+             pointFormatter = custom_tooltip_short()
+           )) %>%
+      hc_xAxis(title = list(text = "Product")) %>%
+      hc_yAxis(title = list(text = "USD billion"),
+               labels = list(
+                 formatter = JS("function() { return this.value / 1000000000 }")
+               )) %>%
+      hc_title(text = glue("Imports in { min(inp_y()) } and { max(inp_y()) }"))
+  }) %>%
+    bindCache(inp_y(), inp_r(), inp_p(), inp_d()) %>%
+    bindEvent(input$go)
 
   imp_tm_dtl_min_yr <- reactive({
     d <- df_dtl() %>%
@@ -532,7 +598,7 @@ app_server <- function(input, output, session) {
     bindEvent(input$go)
 
   imp_tt_max_yr <- eventReactive(input$go, {
-    glue("{ max(inp_y()) }")
+    glue("Imports in { max(inp_y()) }")
   })
 
   imp_tm_dtl_max_yr <- reactive({
@@ -581,6 +647,7 @@ app_server <- function(input, output, session) {
   ### Exports ----
 
   output$exp_tt_yr <- renderText(exp_tt_yr())
+  output$exp_col_dtl_yr <- renderHighchart({exp_col_dtl_yr()})
   output$exp_tt_min_yr <- renderText(exp_tt_min_yr())
   output$exp_tm_dtl_min_yr <- renderHighchart({exp_tm_dtl_min_yr()})
   output$exp_tt_max_yr <- renderText(exp_tt_max_yr())
@@ -589,6 +656,7 @@ app_server <- function(input, output, session) {
   ### Imports ----
 
   output$imp_tt_yr <- renderText(imp_tt_yr())
+  output$imp_col_dtl_yr <- renderHighchart({imp_col_dtl_yr()})
   output$imp_tt_min_yr <- renderText(imp_tt_min_yr())
   output$imp_tm_dtl_min_yr <- renderHighchart({imp_tm_dtl_min_yr()})
   output$imp_tt_max_yr <- renderText(imp_tt_max_yr())

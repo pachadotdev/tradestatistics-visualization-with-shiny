@@ -149,7 +149,8 @@ app_ui <- function(request) {
                 id = "detailed_trade",
 
                 col_12(
-                  htmlOutput("exp_tt_yr", container = tags$h3)
+                  htmlOutput("exp_tt_yr", container = tags$h3),
+                  highchartOutput("exp_col_dtl_yr", height = "500px")
                 ),
 
                 col_6(
@@ -163,7 +164,8 @@ app_ui <- function(request) {
                 ),
 
                 col_12(
-                  htmlOutput("imp_tt_yr", container = tags$h3)
+                  htmlOutput("imp_tt_yr", container = tags$h3),
+                  highchartOutput("imp_col_dtl_yr", height = "500px")
                 ),
 
                 col_6(
