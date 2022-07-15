@@ -1,55 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700&family=Roboto:wght@400;700&display=swap');
-
-/* Global font (including highcharter) */
-
-* {
-  font-family: 'Roboto', sans-serif;
-  color: #212529;
-}
-
-/* H1 - H6 font */
-
-h1, h2, .h1, .h2 {
-  font-family: 'Roboto Slab', sans-serif;
-}
-
-h1, .h1 {
-  color: #2e87c8;
-  border-bottom: 2px solid rgba(46,135,200,.7)
-}
-
-h3, h4, h5, h6, .h3, .h4, .h5, .h6 {
-  font-family: 'Roboto Slab', sans-serif;
-}
-
-/* Background */
-
-body {
-  background-color: #fafafa;
-}
-
-/* Sliders */
-
-.irs--shiny .irs-bar {
-  top: 25px;
-  height: 8px;
-  border-top: 1px solid #020b3b;
-  border-bottom: 1px solid #020b3b;
-  background: #020b3b;
-}
-
-.irs--shiny .irs-from,
-.irs--shiny .irs-to,
-.irs--shiny .irs-single {
-  color: #fff;
-  text-shadow: none;
-  padding: 1px 3px;
-  background-color: #020b3b;
-  border-radius: 3px;
-  font-size: 11px;
-  line-height: 1.333;
-}
-
-.progressjs-theme-blueOverlayRadiusWithPercentBar .progressjs-inner {
-  background-color: #2e87c8!important;
-}
+* {font-family: 'Source Sans Pro', sans-serif; font-size: 16px!important; font-weight: 400;}
+h4 {font-size: 20px!important; font-weight: 700;}
+h3 {font-size: 24px!important; font-weight: 700;}
+h2 {font-size: 28px!important; font-weight: 700;}
+h1 {font-size: 32px!important; font-weight: 700;}
+.irs--shiny .irs-min, .irs--shiny .irs-max,
+.irs--shiny .irs-from, .irs--shiny .irs-to, .irs--shiny .irs-single {font-size: 10px!important;}

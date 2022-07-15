@@ -103,7 +103,7 @@ app_server <- function(input, output, session) {
   ## Data ----
 
   df_agg <- reactive({
-    wt$notify(position = "tr")
+    wt$notify(position = "br")
 
     d <- tbl(con, tbl_agg())
 
@@ -542,11 +542,11 @@ app_server <- function(input, output, session) {
 
     d2 <- p_colors(d, sql_con = con)
 
-    wt$inc(2)
+    wt$inc(3)
 
     out <- p_to_highcharts(d, d2)
 
-    wt$close()
+    # wt$close()
     return(out)
   }) %>%
     bindCache(inp_y(), inp_r(), inp_p(), inp_d()) %>%
