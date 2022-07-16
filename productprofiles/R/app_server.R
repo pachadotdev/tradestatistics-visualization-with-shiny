@@ -65,7 +65,7 @@ app_server <- function(input, output, session) {
   ## Data ----
 
   df_dtl <- reactive({
-    wt$notify(position = "tr")
+    wt$notify(position = "br")
 
     wt$inc(1)
 
@@ -480,12 +480,12 @@ app_server <- function(input, output, session) {
 
   updateSelectizeInput(session, "s",
                        choices = list(
-                         "All Products" = available_all(),
+                         # "All Products" = available_all(),
                          "Vaccine Inputs" = available_vaccine(),
                          "HS Sections" = available_sections_code(),
                          "HS Commodities" = available_commodities_code()
                        ),
-                       selected = "all",
+                       selected = "01",
                        server = TRUE
   )
 
