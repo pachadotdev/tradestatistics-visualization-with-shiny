@@ -16,6 +16,7 @@ Imports:
     cachem (>= 1.0.6),
     config (>= 0.3.1),
     dplyr (>= 1.0.9),
+    forcats (>= 0.5.1),
     glue (>= 1.6.2),
     golem (>= 0.3.2),
     highcharter (>= 0.9.4),
