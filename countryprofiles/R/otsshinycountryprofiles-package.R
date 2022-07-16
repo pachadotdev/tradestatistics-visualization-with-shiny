@@ -3,7 +3,7 @@
 
 styles <- list(
   skin_color = "blue",
-  css_files = "homogeneous_font.css"
+  css_files = "custom.css"
 )
 
 shiny::shinyOptions(

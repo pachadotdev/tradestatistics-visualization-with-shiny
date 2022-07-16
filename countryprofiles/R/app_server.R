@@ -714,7 +714,7 @@ app_server <- function(input, output, session) {
     downloadButton('dwn_agg_pre', label = 'Aggregated data')
   })
 
-  ## Cite ----
+  ## Citation ----
 
   site_url <- "https://shiny.tradestatistics.io"
 

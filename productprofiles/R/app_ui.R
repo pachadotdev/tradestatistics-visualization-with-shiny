@@ -3,9 +3,11 @@
 #' @param request Internal parameter for `{shiny}`.
 #'     DO NOT REMOVE.
 #' @import shiny
+#' @import shinydashboard
 #' @import otsshinycommon
 #' @importFrom highcharter highchartOutput
 #' @importFrom shinyhelper helper
+#' @importFrom shinyjs useShinyjs
 #' @importFrom waiter useWaitress
 #' @noRd
 app_ui <- function(request) {
@@ -13,159 +15,209 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
-    fluidPage(
-      title = "Product Profiles",
-      fluidRow(
+    dashboardPage(
+      skin = styles$skin_color,
+      theme = styles$css_files,
+
+      dashboardHeader(title = "Open Trade Statistics"),
+
+      dashboardSidebar(
+        useShinyjs(),
         useWaitress(),
+        sidebarMenu(
+          menuItem("Visualize", tabName = "visualize"),
+          menuItem("Download", tabName = "download"),
+          menuItem("Cite", tabName = "cite")
+        )
+      ),
 
-        col_12(
-          HTML("<h1>Product Profile</h1>"),
-          htmlOutput("title_legend", container = tags$p)
-        ),
-
-        col_12(
-          h2("Filter")
-        ),
-
-        col_12(
-          sliderInput(
-            "y",
-            "Years",
-            min = available_yrs_min(),
-            max = available_yrs_max(),
-            value = c(2002, 2014),
-            sep = "",
-            step = 1,
-            ticks = FALSE,
-            width = "100%"
+      dashboardBody(
+        fluidRow(
+          col_12(
+            HTML("<h1>Product Profile</h1>"),
+            HTML("<p><i>By Open Trade Statistics.</i> The information displayed here is based on
+            <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our
+            <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a>
+            for a full description of restrictions and applicable licenses. These figures do not
+            include services or foreign direct investment.</p>")
           )
         ),
 
-        col_6(
-          selectInput(
-            "s",
-            "Section/Commodity",
-            choices = NULL,
-            selected = NULL,
-            selectize = TRUE,
-            width = "100%",
-            multiple = FALSE
-          ) %>%
-            helper(
-              type = "inline",
-              title = "Section/Commodity",
-              content = c("Subset the data for a custom category (i.e. vaccine inputs is our own subset),
+        tabItems(
+          tabItem(
+            tabName = "visualize",
+            fluidRow(
+              # Filter -----
+              col_12(
+                h2("Filter")
+              ),
+
+              col_12(
+                sliderInput(
+                  "y",
+                  "Years",
+                  min = available_yrs_min(),
+                  max = available_yrs_max(),
+                  value = c(2015, 2019),
+                  sep = "",
+                  step = 1,
+                  ticks = FALSE,
+                  width = "100%"
+                )
+              ),
+
+              col_6(
+                selectInput(
+                  "s",
+                  "Section/Commodity",
+                  choices = NULL,
+                  selected = NULL,
+                  selectize = TRUE,
+                  width = "100%",
+                  multiple = FALSE
+                ) %>%
+                  helper(
+                    type = "inline",
+                    title = "Section/Commodity",
+                    content = c("Subset the data for a custom category (i.e. vaccine inputs is our own subset),
                               or for any official section or commodity in the Harmonised System.",
-                          "",
-                          "<b>References</b>",
-                          "Hossain, K. and Nyirongo, V.<i><a href='https://unstats.un.org/wiki/display/comtrade/HS+2002+Classification+by+Section'>HS 2002 Classification by Section</a></i>. UN Stats Wiki, 2021."),
-              buttonLabel = "Got it!",
-              easyClose = FALSE,
-              fade = TRUE,
-              size = "s"
-            )
-        ),
+                                "",
+                                "<b>References</b>",
+                                "Hossain, K. and Nyirongo, V.<i><a href='https://unstats.un.org/wiki/display/comtrade/HS+2002+Classification+by+Section'>HS 2002 Classification by Section</a></i>. UN Stats Wiki, 2021."),
+                    buttonLabel = "Got it!",
+                    easyClose = FALSE,
+                    fade = TRUE,
+                    size = "s"
+                  )
+              ),
 
-        col_6(
-          selectInput(
-            "d",
-            "Convert dollars to a fixed year",
-            choices = c("No", 2002:2019),
-            selected = "",
-            selectize = TRUE,
-            width = "100%"
-          ) %>%
-            helper(
-              type = "inline",
-              title = "Convert to dollars of the year",
-              content = c("Uses present value and/or future value equations to adjust money value
+              col_6(
+                selectInput(
+                  "d",
+                  "Convert dollars to a fixed year",
+                  choices = c("No", 2002:2019),
+                  selected = "",
+                  selectize = TRUE,
+                  width = "100%"
+                ) %>%
+                  helper(
+                    type = "inline",
+                    title = "Convert to dollars of the year",
+                    content = c("Uses present value and/or future value equations to adjust money value
                               by yearly changes in GDP deflator. The source for the GDP deflator data is The World Bank."),
-              buttonLabel = "Got it!",
-              easyClose = FALSE,
-              fade = TRUE,
-              size = "s"
+                    buttonLabel = "Got it!",
+                    easyClose = FALSE,
+                    fade = TRUE,
+                    size = "s"
+                  )
+              ),
+
+              col_12(
+                align="center",
+                actionButton("go", "Give me the product profile",
+                             class = "btn-primary")
+              ),
+
+              # Trade ----
+
+              col_12(
+                htmlOutput("title", container = tags$h1)
+              ),
+
+              ## Aggregated trade -----
+
+              div(
+                id = "aggregated_trade",
+
+                col_12(
+                  htmlOutput("trd_stl", container = tags$h3),
+                ),
+
+                col_3(
+                  htmlOutput("trd_stl_exp", container = tags$h3),
+                  htmlOutput("trd_smr_exp", container = tags$p),
+                  htmlOutput("trd_stl_imp", container = tags$h3),
+                  htmlOutput("trd_smr_imp", container = tags$p)
+                ),
+
+                col_9(
+                  highchartOutput("trd_exc_columns_agg", height = "500px")
+                )
+              ),
+
+              ## Detailed trade ----
+
+              div(
+                id = "detailed_trade",
+
+                col_12(
+                  htmlOutput("exp_tt_yr", container = tags$h2),
+                  highchartOutput("exp_col_dtl_yr", height = "500px")
+                ),
+
+                col_6(
+                  htmlOutput("exp_tt_min_yr", container = tags$h3),
+                  highchartOutput("exp_tm_dtl_min_yr", height = "500px")
+                ),
+
+                col_6(
+                  htmlOutput("exp_tt_max_yr", container = tags$h3),
+                  highchartOutput("exp_tm_dtl_max_yr", height = "500px")
+                ),
+
+                col_12(
+                  htmlOutput("imp_tt_yr", container = tags$h2),
+                  highchartOutput("imp_col_dtl_yr", height = "500px")
+                ),
+
+                col_6(
+                  htmlOutput("imp_tt_min_yr", container = tags$h3),
+                  highchartOutput("imp_tm_dtl_min_yr", height = "500px")
+                ),
+
+                col_6(
+                  htmlOutput("imp_tt_max_yr", container = tags$h3),
+                  highchartOutput("imp_tm_dtl_max_yr", height = "500px")
+                )
+              )
             )
-        ),
+          ),
 
-        col_12(
-          align="center",
-          actionButton("go", "Give me the product profile",
-                       class = "btn-primary")
-        ),
+          ## Download ----
 
-        col_12(
-          htmlOutput("title", container = tags$h1)
-        ),
+          tabItem(
+            tabName = "download",
+            fluidRow(
+              col_12(
+                htmlOutput("dwn_stl", container = tags$h2),
+                htmlOutput("dwn_txt", container = tags$p),
+                uiOutput("dwn_fmt"),
+                uiOutput("dwn_dtl")
+              )
+            )
+          ),
 
-        ## Aggregated trade -----
+          # Cite ----
 
-        col_12(
-          htmlOutput("trd_stl", container = tags$h3),
-        ),
-
-        col_3(
-          htmlOutput("trd_stl_exp", container = tags$h3),
-          htmlOutput("trd_smr_exp", container = tags$p),
-          htmlOutput("trd_stl_imp", container = tags$h3),
-          htmlOutput("trd_smr_imp", container = tags$p)
-        ),
-
-        col_9(
-          highchartOutput("trd_exc_columns_agg", height = "500px")
-        ),
-
-        ## Detailed trade ----
-
-        col_12(
-          htmlOutput("exp_tt_yr", container = tags$h2)
-        ),
-
-        col_6(
-          htmlOutput("exp_tt_min_yr", container = tags$h3),
-          highchartOutput("exp_tm_dtl_min_yr", height = "500px")
-        ),
-
-        col_6(
-          htmlOutput("exp_tt_max_yr", container = tags$h3),
-          highchartOutput("exp_tm_dtl_max_yr", height = "500px")
-        ),
-
-        col_12(
-          htmlOutput("imp_tt_yr", container = tags$h2)
-        ),
-
-        col_6(
-          htmlOutput("imp_tt_min_yr", container = tags$h3),
-          highchartOutput("imp_tm_dtl_min_yr", height = "500px")
-        ),
-
-        col_6(
-          htmlOutput("imp_tt_max_yr", container = tags$h3),
-          highchartOutput("imp_tm_dtl_max_yr", height = "500px")
-        ),
-
-        ## Download ----
-
-        col_12(
-          htmlOutput("dwn_stl", container = tags$h2),
-          htmlOutput("dwn_txt", container = tags$p),
-          uiOutput("dwn_fmt"),
-          uiOutput("dwn_dtl")
-        ),
-
-        # Cite ----
-
-        col_12(
-          uiOutput("citation_stl"),
-          uiOutput("citation_text"),
-          uiOutput("citation_bibtex")
+          tabItem(
+            tabName = "cite",
+            fluidRow(
+              col_12(
+                h2("Cite"),
+                uiOutput("citation_text"),
+                uiOutput("citation_bibtex")
+              )
+            )
+          )
         ),
 
         # Footer ----
 
-        col_12(
-          hr(),
-          htmlOutput("site_footer", container = tags$p)
+        fluidRow(
+          col_12(
+            hr(),
+            htmlOutput("site_footer", container = tags$p)
+          )
         )
       ),
 

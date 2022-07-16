@@ -6,6 +6,7 @@
 #' @importFrom dplyr arrange bind_rows case_when collect dense_rank desc
 #'     everything filter group_by inner_join left_join mutate select summarise
 #'     tbl tibble ungroup
+#' @importFrom forcats fct_lump_n
 #' @importFrom highcharter hcaes hchart hc_title hc_xAxis hc_yAxis JS
 #'     renderHighchart
 #' @importFrom glue glue
@@ -13,6 +14,7 @@
 #' @importFrom rio export
 #' @importFrom rlang sym
 #' @importFrom shinyhelper observe_helpers
+#' @importFrom shinyjs hide show
 #' @importFrom tidyr pivot_longer
 #' @importFrom waiter Waitress
 #' @noRd
@@ -265,8 +267,54 @@ app_server <- function(input, output, session) {
     glue("Exports of { section_name() } in { min(inp_y()) } and { max(inp_y()) }, by country")
   })
 
+  exp_col_dtl_yr <- reactive({
+    d <- df_dtl() %>%
+      filter(year == min(!!sym("year"))) %>%
+      od_order_and_add_continent(col = "trade_value_usd_exp", sql_con = con) %>%
+      group_by(!!sym("country_name")) %>%
+      summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
+      mutate(year = min(inp_y())) %>%
+      filter(!!sym("trade_value") > 0) %>%
+      mutate(country_name = fct_lump_n(f = !!sym("country_name"),
+                                       n = 10,
+                                       w = !!sym("trade_value"),
+                                       other_level = "Rest of the World")) %>%
+      group_by(!!sym("year"), !!sym("country_name")) %>%
+      summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
+      bind_rows(
+        df_dtl() %>%
+          filter(year == max(!!sym("year"))) %>%
+          od_order_and_add_continent(col = "trade_value_usd_exp", sql_con = con) %>%
+          group_by(!!sym("country_name")) %>%
+          summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
+          mutate(year = max(inp_y())) %>%
+          filter(!!sym("trade_value") > 0) %>%
+          mutate(country_name = fct_lump_n(f = !!sym("country_name"),
+                                           n = 10,
+                                           w = !!sym("trade_value"),
+                                           other_level = "Rest of the World")) %>%
+          group_by(!!sym("year"), !!sym("country_name")) %>%
+          summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE))
+      )
+
+    hchart(d,
+           "column",
+           hcaes(x = "country_name", y = "trade_value", group = "year"),
+           tooltip = list(
+             pointFormatter = custom_tooltip_short()
+           )) %>%
+      hc_xAxis(title = list(text = "Country")) %>%
+      hc_yAxis(title = list(text = "USD billion"),
+               labels = list(
+                 formatter = JS("function() { return this.value / 1000000000 }")
+               )) %>%
+      hc_title(text = glue("Exports in { min(inp_y()) } and { max(inp_y()) }"))
+  }) %>%
+    bindCache(inp_y(), inp_s(), inp_d()) %>%
+    bindEvent(input$go)
+
   exp_tt_min_yr <- eventReactive(input$go, {
-    glue("{ min(inp_y()) }")
+    glue("Exports in { min(inp_y()) }")
   })
 
   exp_tm_dtl_min_yr <- reactive({
@@ -284,7 +332,7 @@ app_server <- function(input, output, session) {
     bindEvent(input$go)
 
   exp_tt_max_yr <- eventReactive(input$go, {
-    glue("{ max(inp_y()) }")
+    glue("Exports in { max(inp_y()) }")
   })
 
   exp_tm_dtl_max_yr <- reactive({
@@ -309,8 +357,54 @@ app_server <- function(input, output, session) {
     glue("Imports of { section_name() } in { min(inp_y()) } and { max(inp_y()) }, by country")
   })
 
+  imp_col_dtl_yr <- reactive({
+    d <- df_dtl() %>%
+      filter(year == min(!!sym("year"))) %>%
+      od_order_and_add_continent(col = "trade_value_usd_imp", sql_con = con) %>%
+      group_by(!!sym("country_name")) %>%
+      summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
+      mutate(year = min(inp_y())) %>%
+      filter(!!sym("trade_value") > 0) %>%
+      mutate(country_name = fct_lump_n(f = !!sym("country_name"),
+                                       n = 10,
+                                       w = !!sym("trade_value"),
+                                       other_level = "Rest of the World")) %>%
+      group_by(!!sym("year"), !!sym("country_name")) %>%
+      summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
+      bind_rows(
+        df_dtl() %>%
+          filter(year == max(!!sym("year"))) %>%
+          od_order_and_add_continent(col = "trade_value_usd_imp", sql_con = con) %>%
+          group_by(!!sym("country_name")) %>%
+          summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
+          mutate(year = max(inp_y())) %>%
+          filter(!!sym("trade_value") > 0) %>%
+          mutate(country_name = fct_lump_n(f = !!sym("country_name"),
+                                           n = 10,
+                                           w = !!sym("trade_value"),
+                                           other_level = "Rest of the World")) %>%
+          group_by(!!sym("year"), !!sym("country_name")) %>%
+          summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE))
+      )
+
+    hchart(d,
+           "column",
+           hcaes(x = "country_name", y = "trade_value", group = "year"),
+           tooltip = list(
+             pointFormatter = custom_tooltip_short()
+           )) %>%
+      hc_xAxis(title = list(text = "Country")) %>%
+      hc_yAxis(title = list(text = "USD billion"),
+               labels = list(
+                 formatter = JS("function() { return this.value / 1000000000 }")
+               )) %>%
+      hc_title(text = glue("Imports in { min(inp_y()) } and { max(inp_y()) }"))
+  }) %>%
+    bindCache(inp_y(), inp_s(), inp_d()) %>%
+    bindEvent(input$go)
+
   imp_tt_min_yr <- eventReactive(input$go, {
-    glue("{ min(inp_y()) }")
+    glue("Imports in { min(inp_y()) }")
   })
 
   imp_tm_dtl_min_yr <- reactive({
@@ -328,7 +422,7 @@ app_server <- function(input, output, session) {
     bindEvent(input$go)
 
   imp_tt_max_yr <- eventReactive(input$go, {
-    glue("{ max(inp_y()) }")
+    glue("Imports in { max(inp_y()) }")
   })
 
   imp_tm_dtl_max_yr <- reactive({
@@ -382,8 +476,6 @@ app_server <- function(input, output, session) {
   legend_txt <- "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
       of restrictions and applicable licenses. These figures do not include services or foreign direct investment."
 
-  output$title_legend <- renderText({ legend_txt })
-
   ## Dynamic / server side selectors ----
 
   updateSelectizeInput(session, "s",
@@ -414,6 +506,7 @@ app_server <- function(input, output, session) {
   # ### Exports ----
 
   output$exp_tt_yr <- renderText(exp_tt_yr())
+  output$exp_col_dtl_yr <- renderHighchart({exp_col_dtl_yr()})
   output$exp_tt_min_yr <- renderText(exp_tt_min_yr())
   output$exp_tm_dtl_min_yr <- renderHighchart({exp_tm_dtl_min_yr()})
   output$exp_tt_max_yr <- renderText(exp_tt_max_yr())
@@ -423,6 +516,7 @@ app_server <- function(input, output, session) {
 
   output$imp_tt_yr <- renderText(imp_tt_yr())
   output$imp_tt_min_yr <- renderText(imp_tt_min_yr())
+  output$imp_col_dtl_yr <- renderHighchart({imp_col_dtl_yr()})
   output$imp_tm_dtl_min_yr <- renderHighchart({imp_tm_dtl_min_yr()})
   output$imp_tt_max_yr <- renderText(imp_tt_max_yr())
   output$imp_tm_dtl_max_yr <- renderHighchart({imp_tm_dtl_max_yr()})
@@ -464,12 +558,7 @@ app_server <- function(input, output, session) {
     downloadButton('dwn_dtl_pre', label = 'Detailed data')
   })
 
-  # ## Citation ----
-
-  output$citation_stl <- renderUI({
-    req(input$go)
-    h2("Citation")
-  })
+  ## Citation ----
 
   output$citation_text <- renderUI({
     req(input$go)
@@ -479,6 +568,19 @@ app_server <- function(input, output, session) {
   output$citation_bibtex <- renderUI({
     req(input$go)
     pre(cite_bibtex())
+  })
+
+  # Hide boxes until viz is ready ----
+
+  ## observe the button being pressed
+  observeEvent(input$go, {
+    if (input$go > 0) {
+      show(id = "aggregated_trade")
+      show(id = "detailed_trade")
+    } else {
+      hide(id = "aggregated_trade")
+      hide(id = "detailed_trade")
+    }
   })
 
   # Footer ----
@@ -494,7 +596,7 @@ app_server <- function(input, output, session) {
     # strip shiny related URL parameters
     rvtl(input)
     setBookmarkExclude(c(
-      "shinyhelper-modal_params", "own"
+      "shinyhelper-modal_params", "own", "sidebarCollapsed", "sidebarItemExpanded"
     ))
     session$doBookmark()
   })

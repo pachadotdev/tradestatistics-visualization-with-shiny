@@ -158,7 +158,8 @@ lvl_opts <- list(
       align = "left",
       verticalAlign = "top",
       style = list(
-        fontSize = "12px",
+        fontSize = "14px",
+        fontWeight = "600",
         textOutline = FALSE
       )
     )
@@ -170,7 +171,8 @@ lvl_opts <- list(
     colorVariation = list(key = "brightness", to = 1),
     dataLabels = list(enabled = FALSE),
     style = list(
-      fontSize = "12px",
+      fontSize = "14px",
+      fontWeight = "600",
       textOutline = FALSE
     )
   )

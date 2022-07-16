@@ -1,6 +1,6 @@
 Package: otsshinyproductprofiles
 Title: Open Trade Statistics Model App
-Version: 2022.07.12
+Version: 2022.07.16
 Authors@R: 
     person("Mauricio", "Vargas", , "mavargas11@uc.cl", role = c("cre", "aut"))
 Description: Wrappers around gravity models for interactive model
@@ -13,8 +13,10 @@ BugReports:
 Depends: 
     R (>= 2.10)
 Imports: 
+    cachem (>= 1.0.6),
     config (>= 0.3.1),
     dplyr (>= 1.0.9),
+    forcats (>= 0.5.1),
     glue (>= 1.6.2),
     golem (>= 0.3.2),
     highcharter (>= 0.9.4),
@@ -24,13 +26,16 @@ Imports:
     rio (>= 0.5.29),
     rlang (>= 1.0.2),
     shiny (>= 1.7.1),
+    shinydashboard (>= 0.7.2),
     shinyhelper (>= 0.3.2),
+    shinyjs (>= 2.1.0),
     tidyr (>= 1.2.0),
     waiter (>= 0.2.5.9000)
 Suggests: 
     spelling (>= 2.2),
     testthat (>= 3.0.0)
 Remotes: 
+    pachadotdev/shinydashboard,
     pachadotdev/waiter
 Config/testthat/edition: 3
 Encoding: UTF-8

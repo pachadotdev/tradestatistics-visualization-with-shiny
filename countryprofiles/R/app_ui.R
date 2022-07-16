@@ -59,7 +59,7 @@ app_ui <- function(request) {
                   "Years",
                   min = available_yrs_min(),
                   max = available_yrs_max(),
-                  value = c(2015, 2019),
+                  value = c(2016, 2020),
                   sep = "",
                   step = 1,
                   ticks = FALSE,
