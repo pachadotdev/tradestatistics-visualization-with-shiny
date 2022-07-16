@@ -52,13 +52,13 @@ app_ui <- function(request) {
                 h2("Filter")
               ),
 
-              col_12(
+              col_4(
                 sliderInput(
                   "y",
                   "Years",
                   min = available_yrs_min(),
                   max = available_yrs_max(),
-                  value = c(2015, 2019),
+                  value = c(2016, 2020),
                   sep = "",
                   step = 1,
                   ticks = FALSE,
@@ -66,7 +66,7 @@ app_ui <- function(request) {
                 )
               ),
 
-              col_6(
+              col_4(
                 selectInput(
                   "s",
                   "Section/Commodity",
@@ -91,7 +91,7 @@ app_ui <- function(request) {
                   )
               ),
 
-              col_6(
+              col_4(
                 selectInput(
                   "d",
                   "Convert dollars to a fixed year",
