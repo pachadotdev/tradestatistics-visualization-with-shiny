@@ -575,13 +575,27 @@ app_server <- function(input, output, session) {
       group_by(!!sym("section_name")) %>%
       summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
       mutate(year = min(inp_y())) %>%
+      filter(!!sym("trade_value") > 0) %>%
+      mutate(country_name = fct_lump_n(f = !!sym("country_name"),
+                                       n = 10,
+                                       w = !!sym("trade_value"),
+                                       other_level = "Other products")) %>%
+      group_by(!!sym("year"), !!sym("country_name")) %>%
+      summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
       bind_rows(
         df_dtl() %>%
           filter(!!sym("year") == max(inp_y())) %>%
           p_fix_section_and_aggregate(col = "trade_value_usd_imp", sql_con = con) %>%
           group_by(!!sym("section_name")) %>%
           summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
-          mutate(year = max(inp_y()))
+          mutate(year = max(inp_y())) %>%
+          filter(!!sym("trade_value") > 0) %>%
+          mutate(country_name = fct_lump_n(f = !!sym("country_name"),
+                                           n = 10,
+                                           w = !!sym("trade_value"),
+                                           other_level = "Other products")) %>%
+          group_by(!!sym("year"), !!sym("country_name")) %>%
+          summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE))
       )
 
     hchart(d,
