@@ -480,11 +480,11 @@ app_server <- function(input, output, session) {
       summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
       mutate(year = min(inp_y())) %>%
       filter(!!sym("trade_value") > 0) %>%
-      mutate(country_name = fct_lump_n(f = !!sym("country_name"),
+      mutate(section_name = fct_lump_n(f = !!sym("section_name"),
                                        n = 10,
                                        w = !!sym("trade_value"),
                                        other_level = "Other products")) %>%
-      group_by(!!sym("year"), !!sym("country_name")) %>%
+      group_by(!!sym("year"), !!sym("section_name")) %>%
       summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
       bind_rows(
         df_dtl() %>%
@@ -494,11 +494,11 @@ app_server <- function(input, output, session) {
           summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
           mutate(year = max(inp_y())) %>%
           filter(!!sym("trade_value") > 0) %>%
-          mutate(country_name = fct_lump_n(f = !!sym("country_name"),
+          mutate(section_name = fct_lump_n(f = !!sym("section_name"),
                                            n = 10,
                                            w = !!sym("trade_value"),
                                            other_level = "Other products")) %>%
-          group_by(!!sym("year"), !!sym("country_name")) %>%
+          group_by(!!sym("year"), !!sym("section_name")) %>%
           summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE))
       )
 
@@ -576,11 +576,11 @@ app_server <- function(input, output, session) {
       summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
       mutate(year = min(inp_y())) %>%
       filter(!!sym("trade_value") > 0) %>%
-      mutate(country_name = fct_lump_n(f = !!sym("country_name"),
+      mutate(section_name = fct_lump_n(f = !!sym("section_name"),
                                        n = 10,
                                        w = !!sym("trade_value"),
                                        other_level = "Other products")) %>%
-      group_by(!!sym("year"), !!sym("country_name")) %>%
+      group_by(!!sym("year"), !!sym("section_name")) %>%
       summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
       bind_rows(
         df_dtl() %>%
@@ -590,11 +590,11 @@ app_server <- function(input, output, session) {
           summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
           mutate(year = max(inp_y())) %>%
           filter(!!sym("trade_value") > 0) %>%
-          mutate(country_name = fct_lump_n(f = !!sym("country_name"),
+          mutate(section_name = fct_lump_n(f = !!sym("section_name"),
                                            n = 10,
                                            w = !!sym("trade_value"),
                                            other_level = "Other products")) %>%
-          group_by(!!sym("year"), !!sym("country_name")) %>%
+          group_by(!!sym("year"), !!sym("section_name")) %>%
           summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE))
       )
 
