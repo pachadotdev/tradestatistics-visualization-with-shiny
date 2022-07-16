@@ -485,7 +485,7 @@ app_server <- function(input, output, session) {
                          "HS Sections" = available_sections_code(),
                          "HS Commodities" = available_commodities_code()
                        ),
-                       selected = "vaccine",
+                       selected = "all",
                        server = TRUE
   )
 

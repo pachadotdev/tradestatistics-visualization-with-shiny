@@ -34,7 +34,7 @@ app_ui <- function(request) {
       dashboardBody(
         fluidRow(
           col_12(
-            HTML("<h1>Product Profile</h1>"),
+            HTML("<h1>Product Profiles</h1>"),
             HTML("<p><i>By Open Trade Statistics.</i> The information displayed here is based on
             <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our
             <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a>
@@ -248,7 +248,7 @@ golem_add_external_resources <- function() {
     favicon(),
     bundle_resources(
       path = app_sys("app/www"),
-      app_title = "Country Profiles - Open Trade Statistics"
+      app_title = "Product Profiles - Open Trade Statistics"
     )
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
