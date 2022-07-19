@@ -8,8 +8,8 @@
 #'     tbl tibble ungroup
 #' @importFrom forcats fct_lump_n
 #' @importFrom glue glue
-#' @importFrom highcharter hcaes hchart hc_title hc_xAxis hc_yAxis JS
-#'     renderHighchart
+#' @importFrom highcharter hcaes hchart hc_plotOptions hc_title hc_xAxis
+#'     hc_yAxis JS renderHighchart hc_legend
 #' @importFrom lubridate day year
 #' @importFrom rio export
 #' @importFrom rlang sym
@@ -504,7 +504,7 @@ app_server <- function(input, output, session) {
 
     hchart(d,
            "column",
-           hcaes(x = "section_name", y = "trade_value", group = "year"),
+           hcaes(x = "year", y = "trade_value", group = "section_name"),
            tooltip = list(
              pointFormatter = custom_tooltip_short()
            )) %>%
@@ -598,9 +598,23 @@ app_server <- function(input, output, session) {
           summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE))
       )
 
+    d <- d %>%
+      left_join(
+        p_colors(d, sql_con = con)
+      ) %>%
+      mutate(
+        section_color = case_when(
+          is.na(!!sym("section_color")) ~ "#333333",
+          TRUE ~ !!sym("section_color")
+        )
+      )
+
+    print(d)
+
     hchart(d,
            "column",
-           hcaes(x = "section_name", y = "trade_value", group = "year"),
+           hcaes(x = "year", y = "trade_value", group = "section_name",
+                 color = "section_color"),
            tooltip = list(
              pointFormatter = custom_tooltip_short()
            )) %>%
@@ -609,7 +623,10 @@ app_server <- function(input, output, session) {
                labels = list(
                  formatter = JS("function() { return this.value / 1000000000 }")
                )) %>%
-      hc_title(text = glue("Imports in { min(inp_y()) } and { max(inp_y()) }"))
+      hc_title(text = glue("Imports in { min(inp_y()) } and { max(inp_y()) }")) %>%
+      hc_plotOptions(series = list(stacking = TRUE)) %>%
+      hc_legend(align = "right", verticalAlign = "top", layout = "vertical",
+                x = 0, y = 100)
   }) %>%
     bindCache(inp_y(), inp_r(), inp_p(), inp_d()) %>%
     bindEvent(input$go)
