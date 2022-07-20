@@ -8,7 +8,7 @@
 #'     tbl tibble ungroup
 #' @importFrom forcats fct_lump_n
 #' @importFrom glue glue
-#' @importFrom highcharter hcaes hchart hc_plotOptions hc_title hc_xAxis
+#' @importFrom highcharter hcaes hchart hc_title hc_xAxis
 #'     hc_yAxis JS renderHighchart hc_legend
 #' @importFrom lubridate day year
 #' @importFrom rio export
@@ -502,9 +502,25 @@ app_server <- function(input, output, session) {
           summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE))
       )
 
+    d <- d %>%
+      left_join(
+        p_colors(d, sql_con = con)
+      ) %>%
+      mutate(
+        section_color = case_when(
+          is.na(!!sym("section_color")) ~ "#434348",
+          TRUE ~ !!sym("section_color")
+        )
+      )
+
+    d <- d %>%
+      mutate(section_name = ifelse(nchar(section_name) <= 30, section_name,
+                                   paste0(sub("^(\\S*\\s+\\S+\\S*\\s+\\S+\\S*\\s+\\S+\\S*\\s+\\S+).*", "\\1", section_name), "...")))
+
     hchart(d,
            "column",
-           hcaes(x = "year", y = "trade_value", group = "section_name"),
+           hcaes(x = "section_name", y = "trade_value", group = "year",
+                 color = "section_color"),
            tooltip = list(
              pointFormatter = custom_tooltip_short()
            )) %>%
@@ -513,7 +529,8 @@ app_server <- function(input, output, session) {
                labels = list(
                  formatter = JS("function() { return this.value / 1000000000 }")
                )) %>%
-      hc_title(text = glue("Exports in { min(inp_y()) } and { max(inp_y()) }"))
+      hc_title(text = glue("Imports in { min(inp_y()) } and { max(inp_y()) }")) %>%
+      hc_legend(enabled = FALSE)
   }) %>%
     bindCache(inp_y(), inp_r(), inp_p(), inp_d()) %>%
     bindEvent(input$go)
@@ -604,16 +621,18 @@ app_server <- function(input, output, session) {
       ) %>%
       mutate(
         section_color = case_when(
-          is.na(!!sym("section_color")) ~ "#333333",
+          is.na(!!sym("section_color")) ~ "#434348",
           TRUE ~ !!sym("section_color")
         )
       )
 
-    print(d)
+    d <- d %>%
+      mutate(section_name = ifelse(nchar(section_name) <= 30, section_name,
+                                   paste0(sub("^(\\S*\\s+\\S+\\S*\\s+\\S+\\S*\\s+\\S+\\S*\\s+\\S+).*", "\\1", section_name), "...")))
 
     hchart(d,
            "column",
-           hcaes(x = "year", y = "trade_value", group = "section_name",
+           hcaes(x = "section_name", y = "trade_value", group = "year",
                  color = "section_color"),
            tooltip = list(
              pointFormatter = custom_tooltip_short()
@@ -624,9 +643,7 @@ app_server <- function(input, output, session) {
                  formatter = JS("function() { return this.value / 1000000000 }")
                )) %>%
       hc_title(text = glue("Imports in { min(inp_y()) } and { max(inp_y()) }")) %>%
-      hc_plotOptions(series = list(stacking = TRUE)) %>%
-      hc_legend(align = "right", verticalAlign = "top", layout = "vertical",
-                x = 0, y = 100)
+      hc_legend(enabled = FALSE)
   }) %>%
     bindCache(inp_y(), inp_r(), inp_p(), inp_d()) %>%
     bindEvent(input$go)
