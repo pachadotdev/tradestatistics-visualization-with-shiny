@@ -483,7 +483,7 @@ app_server <- function(input, output, session) {
                          # "All Products" = available_all(),
                          "Vaccine Inputs" = available_vaccine(),
                          "HS Sections" = available_sections_code(),
-                         "HS Commodities" = available_commodities_code()
+                         "HS Commodities" = available_commodities_short_code()
                        ),
                        selected = "01",
                        server = TRUE
