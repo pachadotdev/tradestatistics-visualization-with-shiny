@@ -99,9 +99,9 @@ app_server <- function(input, output, session) {
 
   # Visualize ----
 
-  wt <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
-
   ## Data ----
+
+  wt <- Waitress$new(theme = "overlay-percent", min = 0, max = 10)
 
   df_agg <- reactive({
     wt$notify(position = "br")
@@ -281,7 +281,8 @@ app_server <- function(input, output, session) {
         bal_rank = dense_rank(desc(!!sym("trd_value_usd_bal"))),
         exp_share = !!sym("trade_value_usd_exp") / sum(!!sym("trade_value_usd_exp")),
         imp_share = !!sym("trade_value_usd_imp") / sum(!!sym("trade_value_usd_imp"))
-      )
+      ) %>%
+      ungroup()
 
     return(d)
   })
@@ -486,6 +487,7 @@ app_server <- function(input, output, session) {
                                        other_level = "Other products")) %>%
       group_by(!!sym("year"), !!sym("section_name")) %>%
       summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
+      ungroup() %>%
       bind_rows(
         df_dtl() %>%
           filter(!!sym("year") == max(inp_y())) %>%
@@ -499,7 +501,8 @@ app_server <- function(input, output, session) {
                                            w = !!sym("trade_value"),
                                            other_level = "Other products")) %>%
           group_by(!!sym("year"), !!sym("section_name")) %>%
-          summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE))
+          summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
+          ungroup()
       )
 
     d <- d %>%
@@ -599,6 +602,7 @@ app_server <- function(input, output, session) {
                                        other_level = "Other products")) %>%
       group_by(!!sym("year"), !!sym("section_name")) %>%
       summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
+      ungroup() %>%
       bind_rows(
         df_dtl() %>%
           filter(!!sym("year") == max(inp_y())) %>%
@@ -612,7 +616,8 @@ app_server <- function(input, output, session) {
                                            w = !!sym("trade_value"),
                                            other_level = "Other products")) %>%
           group_by(!!sym("year"), !!sym("section_name")) %>%
-          summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE))
+          summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
+          ungroup()
       )
 
     d <- d %>%
@@ -675,7 +680,7 @@ app_server <- function(input, output, session) {
 
     out <- p_to_highcharts(d, d2)
 
-    # wt$close()
+    wt$close()
     return(out)
   }) %>%
     bindCache(inp_y(), inp_r(), inp_p(), inp_d()) %>%
