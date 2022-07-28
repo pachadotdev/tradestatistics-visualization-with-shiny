@@ -71,7 +71,8 @@ app_ui <- function(request) {
                 selectInput(
                   "r",
                   "Reporter",
-                  choices = available_reporters_iso()[available_reporters_iso() != "all"],
+                  choices = sort(available_reporters_iso()[
+                    available_reporters_iso() != "all"]),
                   selected = "can",
                   selectize = TRUE,
                   width = "100%"
@@ -82,8 +83,8 @@ app_ui <- function(request) {
                 selectInput(
                   "p",
                   "Partner",
-                  choices = available_reporters_iso(),
-                  selected = "all",
+                  choices = NULL,
+                  selected = NULL,
                   selectize = TRUE,
                   width = "100%"
                 )

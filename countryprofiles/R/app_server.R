@@ -33,8 +33,8 @@ app_server <- function(input, output, session) {
     return(y)
   })
 
-  inp_r <- reactive({ sort(input$r) }) # reporter
-  inp_p <- reactive({ sort(input$p) }) # partner
+  inp_r <- reactive({ input$r }) # reporter
+  inp_p <- reactive({ input$p }) # partner
   inp_d <- reactive({ input$d }) # adjust dollar
 
   inp_fmt <- reactive({ input$fmt }) # format
@@ -686,6 +686,18 @@ app_server <- function(input, output, session) {
   ## Titles ----
 
   output$title <- renderText({ title() })
+
+  ## Dynamic / server side selectors ----
+
+  observeEvent(input$r, {
+    updateSelectizeInput(session, "p",
+                         choices = sort(available_reporters_iso()[
+                           available_reporters_iso() != input$r
+                         ]),
+                         selected = "all",
+                         server = TRUE
+    )
+  })
 
   ## Country profile ----
 
