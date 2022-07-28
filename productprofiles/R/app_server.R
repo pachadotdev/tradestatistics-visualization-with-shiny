@@ -472,10 +472,6 @@ app_server <- function(input, output, session) {
 
   output$title <- renderText({ title() })
 
-  # put here to avoid repetition in UI
-  legend_txt <- "The information displayed here is based on <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a> for a full description
-      of restrictions and applicable licenses. These figures do not include services or foreign direct investment."
-
   ## Dynamic / server side selectors ----
 
   updateSelectizeInput(session, "s",
