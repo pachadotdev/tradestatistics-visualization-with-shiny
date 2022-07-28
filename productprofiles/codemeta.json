@@ -7,7 +7,7 @@
   "codeRepository": "https://github.com/tradestatistics/visualization-with-shiny",
   "issueTracker": "\n    https://github.com/tradestatistics/visualization-with-shiny/issues",
   "license": "Apache License 2",
-  "version": "2022.7.20",
+  "version": "2022.7.28",
   "programmingLanguage": {
     "@type": "ComputerLanguage",
     "name": "R",
@@ -294,7 +294,7 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "41.816KB",
+  "fileSize": "42.19KB",
   "releaseNotes": "https://github.com/tradestatistics/visualization-with-shiny/blob/master/NEWS.md",
   "readme": "https://github.com/tradestatistics/visualization-with-shiny/blob/master/README.md"
 }

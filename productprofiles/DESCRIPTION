@@ -1,6 +1,6 @@
 Package: otsshinyproductprofiles
 Title: Open Trade Statistics Model App
-Version: 2022.07.20
+Version: 2022.07.28
 Authors@R: 
     person("Mauricio", "Vargas", , "mavargas11@uc.cl", role = c("cre", "aut"))
 Description: Wrappers around gravity models for interactive model
