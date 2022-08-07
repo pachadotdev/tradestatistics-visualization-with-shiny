@@ -140,7 +140,7 @@ app_ui <- function(request) {
                 ),
 
                 col_9(
-                  highchartOutput("trd_exc_lines_agg", height = "500px")
+                  highchartOutput("trd_exc_columns_agg", height = "500px")
                 )
               ),
 

@@ -28,8 +28,7 @@ app_server <- function(input, output, session) {
   observe_helpers()
 
   inp_y <- reactive({
-    y <- (min(input$y[1], input$y[2])):(max(input$y[1], input$y[2]))
-    y <- seq(min(y), max(y), by = ifelse(max(y) - min(y) >= 10, 2, 1))
+    y <- c(min(input$y[1], input$y[2]), max(input$y[1], input$y[2]))
     return(y)
   })
 
@@ -419,14 +418,14 @@ app_server <- function(input, output, session) {
     )
   })
 
-  trd_exc_lines_title <- eventReactive(input$go, {
+  trd_exc_columns_title <- eventReactive(input$go, {
     switch(tbl_agg(),
            "yr" = glue("{ r_add_upp_the() } { rname() } multilateral trade between { min(inp_y()) } and { max(inp_y()) }"),
            "yrp" = glue("{ r_add_upp_the() } { rname() } and { p_add_the() } { pname() } exchange between { min(inp_y()) } and { max(inp_y()) }")
     )
   })
 
-  trd_exc_lines_agg <- reactive({
+  trd_exc_columns_agg <- reactive({
     d <- tr_tbl_agg()
 
     d <- tibble(
@@ -446,7 +445,7 @@ app_server <- function(input, output, session) {
     wt$inc(1)
 
     hchart(d,
-           "line",
+           "column",
            hcaes(x = "year", y = "trade", group = "flow"),
            tooltip = list(
              pointFormatter = custom_tooltip_short()
@@ -456,7 +455,7 @@ app_server <- function(input, output, session) {
                labels = list(
                  formatter = JS("function() { return this.value / 1000000000 }")
               )) %>%
-      hc_title(text = trd_exc_lines_title())
+      hc_title(text = trd_exc_columns_title())
   }) %>%
     bindCache(inp_y(), inp_r(), inp_p(), inp_d()) %>%
     bindEvent(input$go)
@@ -722,7 +721,7 @@ app_server <- function(input, output, session) {
   output$trd_smr_exp <- renderText(trd_smr_txt_exp())
   output$trd_smr_imp <- renderText(trd_smr_txt_imp())
 
-  output$trd_exc_lines_agg <- renderHighchart({ trd_exc_lines_agg() })
+  output$trd_exc_columns_agg <- renderHighchart({ trd_exc_columns_agg() })
 
   ### Exports ----
 
