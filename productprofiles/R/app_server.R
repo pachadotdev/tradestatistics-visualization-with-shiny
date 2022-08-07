@@ -28,8 +28,7 @@ app_server <- function(input, output, session) {
   observe_helpers()
 
   inp_y <- reactive({
-    y <- (min(input$y[1], input$y[2])):(max(input$y[1], input$y[2]))
-    y <- seq(min(y), max(y), by = ifelse(max(y) - min(y) >= 10, 2, 1))
+    y <- c(min(input$y[1], input$y[2]), max(input$y[1], input$y[2]))
     return(y)
   })
 
