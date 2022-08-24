@@ -25,30 +25,39 @@ app_ui <- function(request) {
         useShinyjs(),
         useWaitress(),
         sidebarMenu(
+          menuItem("Welcome", tabName = "welcome"),
           menuItem("Visualize", tabName = "visualize"),
-          menuItem("Download", tabName = "download"),
           menuItem("Cite", tabName = "cite")
         )
       ),
 
       dashboardBody(
-        fluidRow(
-          col_12(
-            HTML("<h1>Country Profiles</h1>"),
-            HTML("<p><i>By Open Trade Statistics.</i> The information displayed here is based on
-            <a href='https://comtrade.un.org/'>UN Comtrade</a> datasets. Please read our
-            <a href='https://docs.tradestatistics.io/index.html#code-of-conduct'>Code of Conduct</a>
-            for a full description of restrictions and applicable licenses. These figures do not
-            include services or foreign direct investment.</p>")
-          )
-        ),
-
         tabItems(
+          # Welcome -----
+
+          tabItem(
+            tabName = "welcome",
+            HTML('
+              <img src="https://shiny.tradestatistics.io/images/ots_logo_transparent.svg" alt="Open Trade Statistics" class="img-fluid mb-4"/>
+              <p>Open Trade Statistics started as a visualization project back in 2017. Due to the multiple
+              aspects of the COVID-19 outbreak, this project evolved into a tool that serves
+              policymakers to easily explore and analyze UN COMTRADE to develop trade policy incorporating
+              emerging issues in the "new normal" during the ongoing COVID-19 pandemic.
+              </p>
+              <p>The information displayed here is based on <a href="https://comtrade.un.org/">UN Comtrade</a> datasets. Please read our
+              <a href="https://docs.tradestatistics.io/index.html#code-of-conduct">Code of Conduct</a>
+              for a full description of restrictions and applicable licenses. These figures do not
+              include services or foreign direct investment.</p>
+              <a type="button" target="_blank" class="btn btn-primary" href="https://shiny.tradestatistics.io/countryprofiles">Country Profiles (this site)</a>
+              <a type="button" target="_blank" class="btn btn-primary" href="https://shiny.tradestatistics.io/productprofiles">Product Profiles</a>
+              <a type="button" target="_blank" class="btn btn-primary" href="https://github.com/ropensci/tradestatistics">R package</a>
+            ')
+          ),
+
           tabItem(
             tabName = "visualize",
             fluidRow(
               # Filter -----
-
               col_12(
                 h2("Filter")
               ),
@@ -177,22 +186,15 @@ app_ui <- function(request) {
                 col_6(
                   htmlOutput("imp_tt_max_yr", container = tags$h4),
                   highchartOutput("imp_tm_dtl_max_yr", height = "500px")
+                ),
+
+                col_12(
+                  htmlOutput("dwn_stl", container = tags$h3),
+                  htmlOutput("dwn_txt", container = tags$p),
+                  uiOutput("dwn_fmt"),
+                  uiOutput("dwn_agg"),
+                  uiOutput("dwn_dtl")
                 )
-              )
-            )
-          ),
-
-          ## Download ----
-
-          tabItem(
-            tabName = "download",
-            fluidRow(
-              col_12(
-                htmlOutput("dwn_stl", container = tags$h3),
-                htmlOutput("dwn_txt", container = tags$p),
-                uiOutput("dwn_fmt"),
-                uiOutput("dwn_agg"),
-                uiOutput("dwn_dtl")
               )
             )
           ),

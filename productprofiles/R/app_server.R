@@ -556,12 +556,10 @@ app_server <- function(input, output, session) {
   ## Citation ----
 
   output$citation_text <- renderUI({
-    req(input$go)
     HTML(cite_text())
   })
 
   output$citation_bibtex <- renderUI({
-    req(input$go)
     pre(cite_bibtex())
   })
 
