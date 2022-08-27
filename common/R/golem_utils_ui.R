@@ -13,7 +13,6 @@ available_logicals <- function() {
 #' @export
 available_models <- function() {
   c("OLS" = "ols",
-    "OLS (Fixed Effects)" = "olsfe",
     "Poisson Pseudo Maximum Likelihood (PPML)" = "ppml")
 }
 
