@@ -531,7 +531,7 @@ app_server <- function(input, output, session) {
                labels = list(
                  formatter = JS("function() { return this.value / 1000000000 }")
                )) %>%
-      hc_title(text = glue("Imports in { min(inp_y()) } and { max(inp_y()) }")) %>%
+      hc_title(text = glue("Exports in { min(inp_y()) } and { max(inp_y()) }")) %>%
       hc_legend(enabled = FALSE)
   }) %>%
     bindCache(inp_y(), inp_r(), inp_p(), inp_d()) %>%
