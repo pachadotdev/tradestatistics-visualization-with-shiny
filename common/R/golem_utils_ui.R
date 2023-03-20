@@ -12,8 +12,10 @@ available_logicals <- function() {
 #' @rdname available
 #' @export
 available_models <- function() {
-  c("OLS" = "ols",
-    "Poisson Pseudo Maximum Likelihood (PPML)" = "ppml")
+  c(
+    "Poisson Pseudo Maximum Likelihood (PPML)" = "ppml",
+    "Ordinary Least Squares (OLS) [Not Recommended]" = "ols"
+  )
 }
 
 #' @rdname available
