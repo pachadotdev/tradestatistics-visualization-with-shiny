@@ -10,6 +10,7 @@
 \alias{available_commodities_short_code}
 \alias{available_vaccine}
 \alias{available_yrs}
+\alias{available_yrs_deflator}
 \alias{available_yrs_min}
 \alias{available_yrs_max}
 \title{Available UI parameters expressed as functions}
@@ -31,6 +32,8 @@ available_commodities_short_code()
 available_vaccine()
 
 available_yrs()
+
+available_yrs_deflator()
 
 available_yrs_min()
 

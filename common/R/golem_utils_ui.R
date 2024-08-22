@@ -48,7 +48,11 @@ available_vaccine <- function() { c("Vaccine Inputs" = "vaccine") }
 
 #' @rdname available
 #' @export
-available_yrs <- function() { 2002:2020 }
+available_yrs <- function() { 1980L:2021L }
+
+#' @rdname available
+#' @export
+available_yrs_deflator <- function() { 1981L:2021L }
 
 #' @rdname available
 #' @export

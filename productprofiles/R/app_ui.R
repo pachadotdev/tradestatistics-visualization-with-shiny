@@ -89,11 +89,10 @@ app_ui <- function(request) {
                   helper(
                     type = "inline",
                     title = "Section/Commodity",
-                    content = c("Subset the data for a custom category (i.e. vaccine inputs is our own subset),
-                              or for any official section or commodity in the Harmonised System.",
+                    content = c("Subset the data for for any official section or commodity in the Harmonised System.",
                                 "",
                                 "<b>References</b>",
-                                "Hossain, K. and Nyirongo, V.<i><a href='https://unstats.un.org/wiki/display/comtrade/HS+2002+Classification+by+Section'>HS 2002 Classification by Section</a></i>. UN Stats Wiki, 2021."),
+                                "Hossain, K. and Nyirongo, V.<i><a href='https://unstats.un.org/wiki/display/comtrade/HS+2012+Classification+by+Section'>HS 2012 Classification by Section</a></i>. UN Stats Wiki, 2021."),
                     buttonLabel = "Got it!",
                     easyClose = FALSE,
                     fade = TRUE,
@@ -105,7 +104,7 @@ app_ui <- function(request) {
                 selectInput(
                   "d",
                   "Convert dollars to a fixed year",
-                  choices = c("No", 2002:2019),
+                  choices = c("No", available_yrs_deflator()),
                   selected = "",
                   selectize = TRUE,
                   width = "100%"
