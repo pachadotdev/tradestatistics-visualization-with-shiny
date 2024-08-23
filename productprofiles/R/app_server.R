@@ -104,7 +104,7 @@ app_server <- function(input, output, session) {
       collect()
 
     if (inp_d() != "No") {
-      d <- gdp_deflator_adjustment(d, as.integer(inp_d()), sql_con = con)
+      d <- gdp_deflator_adjustment(d, as.integer(inp_d()), con = con)
     }
 
     wt$inc(2)
@@ -269,7 +269,7 @@ app_server <- function(input, output, session) {
   exp_col_dtl_yr <- reactive({
     d <- df_dtl() %>%
       filter(year == min(!!sym("year"))) %>%
-      od_order_and_add_continent(col = "trade_value_usd_exp", sql_con = con) %>%
+      od_order_and_add_continent(col = "trade_value_usd_exp", con = con) %>%
       group_by(!!sym("country_name")) %>%
       summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
       mutate(year = min(inp_y())) %>%
@@ -283,7 +283,7 @@ app_server <- function(input, output, session) {
       bind_rows(
         df_dtl() %>%
           filter(year == max(!!sym("year"))) %>%
-          od_order_and_add_continent(col = "trade_value_usd_exp", sql_con = con) %>%
+          od_order_and_add_continent(col = "trade_value_usd_exp", con = con) %>%
           group_by(!!sym("country_name")) %>%
           summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
           mutate(year = max(inp_y())) %>%
@@ -319,9 +319,9 @@ app_server <- function(input, output, session) {
   exp_tm_dtl_min_yr <- reactive({
     d <- df_dtl() %>%
       filter(year == min(!!sym("year"))) %>%
-      od_order_and_add_continent(col = "trade_value_usd_exp", sql_con = con)
+      od_order_and_add_continent(col = "trade_value_usd_exp", con = con)
 
-    d2 <- od_colors(d, sql_con = con)
+    d2 <- od_colors(d, con = con)
 
     wt$inc(1)
 
@@ -337,9 +337,9 @@ app_server <- function(input, output, session) {
   exp_tm_dtl_max_yr <- reactive({
     d <- df_dtl() %>%
       filter(year == max(!!sym("year"))) %>%
-      od_order_and_add_continent(col = "trade_value_usd_exp", sql_con = con)
+      od_order_and_add_continent(col = "trade_value_usd_exp", con = con)
 
-    d2 <- od_colors(d, sql_con = con)
+    d2 <- od_colors(d, con = con)
 
     wt$inc(1)
 
@@ -359,7 +359,7 @@ app_server <- function(input, output, session) {
   imp_col_dtl_yr <- reactive({
     d <- df_dtl() %>%
       filter(year == min(!!sym("year"))) %>%
-      od_order_and_add_continent(col = "trade_value_usd_imp", sql_con = con) %>%
+      od_order_and_add_continent(col = "trade_value_usd_imp", con = con) %>%
       group_by(!!sym("country_name")) %>%
       summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
       mutate(year = min(inp_y())) %>%
@@ -373,7 +373,7 @@ app_server <- function(input, output, session) {
       bind_rows(
         df_dtl() %>%
           filter(year == max(!!sym("year"))) %>%
-          od_order_and_add_continent(col = "trade_value_usd_imp", sql_con = con) %>%
+          od_order_and_add_continent(col = "trade_value_usd_imp", con = con) %>%
           group_by(!!sym("country_name")) %>%
           summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE)) %>%
           mutate(year = max(inp_y())) %>%
@@ -409,9 +409,9 @@ app_server <- function(input, output, session) {
   imp_tm_dtl_min_yr <- reactive({
     d <- df_dtl() %>%
       filter(year == min(!!sym("year"))) %>%
-      od_order_and_add_continent(col = "trade_value_usd_imp", sql_con = con)
+      od_order_and_add_continent(col = "trade_value_usd_imp", con = con)
 
-    d2 <- od_colors(d, sql_con = con)
+    d2 <- od_colors(d, con = con)
 
     wt$inc(1)
 
@@ -427,9 +427,9 @@ app_server <- function(input, output, session) {
   imp_tm_dtl_max_yr <- reactive({
     d <- df_dtl() %>%
       filter(year == max(!!sym("year"))) %>%
-      od_order_and_add_continent(col = "trade_value_usd_imp", sql_con = con)
+      od_order_and_add_continent(col = "trade_value_usd_imp", con = con)
 
-    d2 <- od_colors(d, sql_con = con)
+    d2 <- od_colors(d, con = con)
 
     wt$inc(1)
 

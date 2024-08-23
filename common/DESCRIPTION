@@ -1,6 +1,6 @@
 Package: otsshinycommon
 Title: Open Trade Statistics Helpers and Common Functions/Data
-Version: 2023.05.05
+Version: 2024.08.22
 Authors@R: person('Mauricio', 'Vargas', email = 'mavargas11@uc.cl', role = c('cre', 'aut'))
 Description: Functions and data shared across the different Shiny apps that
     create tradestatistics.io.

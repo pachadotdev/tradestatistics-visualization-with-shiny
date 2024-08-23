@@ -4,14 +4,14 @@
 \alias{gdp_deflator_adjustment}
 \title{Convert dollars from year X to year Y}
 \usage{
-gdp_deflator_adjustment(d, reference_year, sql_con)
+gdp_deflator_adjustment(d, reference_year, con)
 }
 \arguments{
 \item{d}{input dataset}
 
 \item{reference_year}{year to convert dollars}
 
-\item{sql_con}{SQL connection}
+\item{con}{SQL connection}
 }
 \description{
 Convert dollars from year X to year Y

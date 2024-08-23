@@ -4,12 +4,12 @@
 \alias{p_aggregate_products}
 \title{Aggregate Products (For Highcharter Visuals)}
 \usage{
-p_aggregate_products(d, sql_con)
+p_aggregate_products(d, con)
 }
 \arguments{
 \item{d}{input dataset}
 
-\item{sql_con}{SQL connection}
+\item{con}{SQL connection}
 }
 \description{
 Aggregate Products (For Highcharter Visuals)

@@ -4,12 +4,12 @@
 \alias{od_colors}
 \title{Origin-Destination Colours (For Highcharter Visuals)}
 \usage{
-od_colors(d, sql_con)
+od_colors(d, con)
 }
 \arguments{
 \item{d}{input dataset}
 
-\item{sql_con}{SQL connection}
+\item{con}{SQL connection}
 }
 \description{
 Origin-Destination Colours (For Highcharter Visuals)

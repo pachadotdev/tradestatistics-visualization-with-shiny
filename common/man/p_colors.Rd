@@ -4,12 +4,12 @@
 \alias{p_colors}
 \title{Colorize Products (For Highcharter Visuals)}
 \usage{
-p_colors(d, sql_con)
+p_colors(d, con)
 }
 \arguments{
 \item{d}{input dataset}
 
-\item{sql_con}{SQL connection}
+\item{con}{SQL connection}
 }
 \description{
 Colorize Products (For Highcharter Visuals)

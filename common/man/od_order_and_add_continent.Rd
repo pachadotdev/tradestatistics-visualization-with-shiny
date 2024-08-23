@@ -4,14 +4,14 @@
 \alias{od_order_and_add_continent}
 \title{Origin-Destination Order and Add Continent (For Highcharter Visuals)}
 \usage{
-od_order_and_add_continent(d, col = "trade_value_usd_exp", sql_con)
+od_order_and_add_continent(d, col = "trade_value_usd_exp", con)
 }
 \arguments{
 \item{d}{input dataset}
 
 \item{col}{column to collapse}
 
-\item{sql_con}{SQL connection}
+\item{con}{SQL connection}
 }
 \description{
 Origin-Destination Order and Add Continent (For Highcharter Visuals)

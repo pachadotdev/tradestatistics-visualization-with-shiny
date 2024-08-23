@@ -1,6 +1,8 @@
 #' Available Server parameters expressed as functions
 #' @export
-available_formats <- function() { c("csv", "tsv", "xlsx", "sav", "dta") }
+available_formats <- function() {
+  c("csv", "tsv", "xlsx", "sav", "dta")
+}
 
 #' SQL connection
 #' @importFrom pool dbPool
@@ -21,12 +23,12 @@ sql_con <- function() {
 #' Convert dollars from year X to year Y
 #' @param d input dataset
 #' @param reference_year year to convert dollars
-#' @param sql_con SQL connection
+#' @param con SQL connection
 #' @importFrom dplyr distinct last pull tibble
 #' @importFrom purrr map_df
 #' @importFrom rlang sym
 #' @export
-gdp_deflator_adjustment <- function(d, reference_year, sql_con) {
+gdp_deflator_adjustment <- function(d, reference_year, con) {
   years <- d %>%
     distinct(!!sym("year")) %>%
     pull()
@@ -35,18 +37,18 @@ gdp_deflator_adjustment <- function(d, reference_year, sql_con) {
     years,
     function(year) {
       if (year < reference_year) {
-        tbl(sql_con, "gdp_deflator") %>%
+        tbl(con, "gdp_deflator") %>%
           filter(!!sym("year_to") <= reference_year &
-                   !!sym("year_to") > !!sym("year") &
-                   !!sym("country_iso") == "wld") %>%
+            !!sym("year_to") > !!sym("year") &
+            !!sym("country_iso") == "wld") %>%
           collect() %>%
           summarise(gdp_deflator = last(cumprod(!!sym("gdp_deflator")))) %>%
           mutate(year = year, conversion_year = reference_year)
       } else if (year > reference_year) {
-        tbl(sql_con, "gdp_deflator") %>%
+        tbl(con, "gdp_deflator") %>%
           filter(!!sym("year_from") >= reference_year &
-                   !!sym("year_from") < !!sym("year") &
-                   !!sym("country_iso") == "wld") %>%
+            !!sym("year_from") < !!sym("year") &
+            !!sym("country_iso") == "wld") %>%
           collect() %>%
           summarise(gdp_deflator = 1 / last(cumprod(!!sym("gdp_deflator")))) %>%
           mutate(year = year, conversion_year = reference_year)
@@ -71,11 +73,11 @@ gdp_deflator_adjustment <- function(d, reference_year, sql_con) {
 #' Convert dollars from year X to year Y
 #' @param d input dataset
 #' @param reference_year year to convert dollars
-#' @param sql_con SQL connection
+#' @param con SQL connection
 #' @importFrom dplyr distinct last tibble
 #' @importFrom purrr map_df
 #' @export
-gdp_deflator_adjustment_model <- function(d, reference_year, sql_con) {
+gdp_deflator_adjustment_model <- function(d, reference_year, con) {
   # Filter year conversion rates and join data ------------------------------
   years <- d %>%
     distinct(!!sym("year")) %>%
@@ -85,18 +87,18 @@ gdp_deflator_adjustment_model <- function(d, reference_year, sql_con) {
     years,
     function(year) {
       if (year < reference_year) {
-        tbl(sql_con, "gdp_deflator") %>%
+        tbl(con, "gdp_deflator") %>%
           filter(!!sym("year_to") <= reference_year &
-                   !!sym("year_to") > year &
-                   !!sym("country_iso") == "wld") %>%
+            !!sym("year_to") > year &
+            !!sym("country_iso") == "wld") %>%
           collect() %>%
           summarise(gdp_deflator = last(cumprod(!!sym("gdp_deflator")))) %>%
           mutate(year = year, conversion_year = reference_year)
       } else if (year > reference_year) {
-        tbl(sql_con, "gdp_deflator") %>%
+        tbl(con, "gdp_deflator") %>%
           filter(!!sym("year_from") >= reference_year &
-                   !!sym("year_from") < year &
-                   !!sym("country_iso") == "wld") %>%
+            !!sym("year_from") < year &
+            !!sym("country_iso") == "wld") %>%
           collect() %>%
           summarise(gdp_deflator = 1 / last(cumprod(!!sym("gdp_deflator")))) %>%
           mutate(year = year, conversion_year = reference_year)
@@ -206,35 +208,33 @@ data_labels <- function() {
 #' Origin-Destination Order and Add Continent (For Highcharter Visuals)
 #' @param d input dataset
 #' @param col column to collapse
-#' @param sql_con SQL connection
-#' @importFrom dplyr case_when collect filter full_join group_by mutate select
+#' @param con SQL connection
+#' @importFrom dplyr case_when collect filter group_by mutate select
 #'     summarise tbl ungroup
 #' @export
-od_order_and_add_continent <- function(d, col = "trade_value_usd_exp", sql_con) {
+od_order_and_add_continent <- function(d, col = "trade_value_usd_exp", con) {
   d <- d %>%
     select(country_iso = !!sym("reporter_iso"), trade_value = !!sym(col))
 
   d <- d %>%
-
-    full_join(
-      tbl(sql_con, "countries") %>%
-        select(!!sym("country_iso"), country_name = !!sym("country_name_english"),
-               continent_name = !!sym("continent_name_english")) %>%
+    inner_join(
+      tbl(con, "countries") %>%
+        select(!!sym("country_iso"),
+          country_name = !!sym("country_name_english"),
+          continent_name = !!sym("continent_name_english")
+        ) %>%
         collect() %>%
-        filter(!grepl("c-|all", !!sym("country_iso")))
+        filter(!!sym("country_iso") != "all")
     ) %>%
-
     mutate(
       continent_name = case_when(
         is.na(!!sym("continent_name")) ~ !!sym("country_name"),
         TRUE ~ !!sym("continent_name")
       )
     ) %>%
-
     group_by(!!sym("country_iso"), !!sym("country_name"), !!sym("continent_name")) %>%
     summarise(trade_value = sum(!!sym("trade_value"), na.rm = T)) %>%
     ungroup() %>%
-
     select(-!!sym("country_iso"))
 
   d <- d %>%
@@ -262,30 +262,31 @@ od_order_and_add_continent <- function(d, col = "trade_value_usd_exp", sql_con) 
 
 #' Origin-Destination Colours (For Highcharter Visuals)
 #' @param d input dataset
-#' @param sql_con SQL connection
+#' @param con SQL connection
 #' @importFrom dplyr collect distinct filter left_join mutate select tbl
 #' @export
-od_colors <- function(d, sql_con) {
+od_colors <- function(d, con) {
   d %>%
     select(!!sym("continent_name")) %>%
     distinct() %>%
-
     inner_join(
-      tbl(sql_con, "countries") %>%
-        select(!!sym("country_iso"), continent_name = !!sym("continent_name_english"),
-               !!sym("country_name_english")) %>%
+      tbl(con, "countries") %>%
+        select(!!sym("country_iso"),
+          continent_name = !!sym("continent_name_english"),
+          !!sym("country_name_english")
+        ) %>%
         collect() %>%
         filter(grepl("c-|e-536|e-837|e-838|e-839|e-899", !!sym("country_iso"))) %>%
         mutate(continent_name = ifelse(is.na(!!sym("continent_name")),
-                                       !!sym("country_name_english"), !!sym("continent_name"))) %>%
+          !!sym("country_name_english"), !!sym("continent_name")
+        )) %>%
         select(-!!sym("country_name_english")) %>%
         left_join(
-          tbl(sql_con, "countries_colors") %>%
+          tbl(con, "countries_colors") %>%
             select(!!("country_iso"), !!("country_color")) %>%
             collect()
         )
     ) %>%
-
     select(-!!sym("country_iso"))
 }
 
@@ -311,12 +312,14 @@ od_to_highcharts <- function(d, d2) {
 
   new_colors <- d2 %>%
     mutate(continent_name = factor(!!sym("continent_name"),
-                                   levels = new_lvls)) %>%
+      levels = new_lvls
+    )) %>%
     arrange(!!sym("continent_name")) %>%
     pull(!!sym("country_color"))
 
   els <- data_to_hierarchical(dd, c("continent_name", "country_name"), "trade_value",
-                              colors = new_colors)
+    colors = new_colors
+  )
 
   lopts <- getOption("highcharter.lang")
   lopts$thousandsSep <- ","
@@ -342,17 +345,17 @@ od_to_highcharts <- function(d, d2) {
 #' Add Percentages to Sections (For Highcharter Visuals)
 #' @param d input dataset
 #' @param col column to collapse
-#' @param sql_con SQL connection
+#' @param con SQL connection
 #' @importFrom dplyr arrange distinct filter group_by mutate pull rename
 #'     select summarise ungroup
 #' @importFrom purrr map_df
 #' @export
-p_fix_section_and_aggregate <- function(d, col, sql_con) {
+p_aggregate_by_section <- function(d, col, con) {
   d <- d %>%
-    select(!!sym("commodity_code"), !!sym(col)) %>%
+    select(!!sym("commodity_code"), !!sym("section_code"), !!sym(col)) %>%
     rename(trade_value = !!sym(col))
 
-  d <- p_aggregate_products(d, sql_con = sql_con)
+  d <- p_aggregate_products(d, con = con)
 
   d <- d %>%
     group_by(!!sym("section_name"), !!sym("commodity_name")) %>%
@@ -384,56 +387,63 @@ p_fix_section_and_aggregate <- function(d, col, sql_con) {
 
 #' Aggregate Products (For Highcharter Visuals)
 #' @param d input dataset
-#' @param sql_con SQL connection
-#' @importFrom dplyr collect filter full_join group_by left_join mutate select
+#' @param con SQL connection
+#' @importFrom dplyr collect filter group_by left_join mutate select
 #'     summarise tbl ungroup
 #' @export
-p_aggregate_products <- function(d, sql_con) {
+p_aggregate_products <- function(d, con) {
   d %>%
-    full_join(
-      tbl(sql_con, "commodities") %>%
+    inner_join(
+      tbl(con, "commodities") %>%
         select(
-          !!sym("commodity_code"), !!sym("section_code"),
-          section_name = !!sym("section_fullname_english")
+          !!sym("commodity_code"),
+          !!sym("section_code")
         ) %>%
         filter(nchar(!!sym("commodity_code")) == 6) %>%
+        inner_join(
+          tbl(con, "sections") %>%
+            select(
+              !!sym("section_code"),
+              section_name = !!sym("section_fullname_english")
+            )
+        ) %>%
         collect()
     ) %>%
-
     mutate(commodity_code = substr(!!sym("commodity_code"), 1, 4)) %>%
-    group_by(!!sym("commodity_code"), !!sym("section_code"),
-             !!sym("section_name")) %>%
+    group_by(
+      !!sym("commodity_code"), !!sym("section_code"),
+      !!sym("section_name")
+    ) %>%
     summarise(trade_value = sum(!!sym("trade_value"), na.rm = T)) %>%
     ungroup() %>%
-
     left_join(
-      tbl(sql_con, "commodities_short") %>%
+      tbl(con, "commodities_short") %>%
         select(!!sym("commodity_code"),
-               commodity_name = !!sym("commodity_fullname_english")) %>%
+          commodity_name = !!sym("commodity_fullname_english")
+        ) %>%
         collect()
     )
 }
 
 #' Colorize Products (For Highcharter Visuals)
 #' @param d input dataset
-#' @param sql_con SQL connection
+#' @param con SQL connection
 #' @importFrom dplyr collect distinct inner_join select tbl
 #' @export
-p_colors <- function(d, sql_con) {
+p_colors <- function(d, con) {
   d %>%
     select(!!sym("section_name")) %>%
     distinct() %>%
-
     inner_join(
-      tbl(sql_con, "sections") %>%
-        select(section_name = !!sym("section_fullname_english"),
-               !!sym("section_code")) %>%
-        collect() %>%
-
-        inner_join(
-          tbl(sql_con, "sections_colors") %>%
-            collect()
+      tbl(con, "sections") %>%
+        select(
+          !!sym("section_code"),
+          section_name = !!sym("section_fullname_english")
         ) %>%
+        inner_join(
+          tbl(con, "sections_colors")
+        ) %>%
+        collect() %>%
         select(-!!sym("section_code"))
     )
 }
@@ -450,8 +460,10 @@ p_to_highcharts <- function(d, d2) {
 
   new_lvls <- dd %>%
     group_by(!!sym("section_name"), !!sym("commodity_name")) %>%
-    summarise(trade_value = sum(!!sym("trade_value"), na.rm = TRUE),
-              .groups = "drop") %>%
+    summarise(
+      trade_value = sum(!!sym("trade_value"), na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
     ungroup() %>%
     mutate_if(is.factor, as.character) %>%
     arrange(desc(!!sym("trade_value"))) %>%
@@ -464,7 +476,8 @@ p_to_highcharts <- function(d, d2) {
     pull(!!sym("section_color"))
 
   els <- data_to_hierarchical(dd, c("section_name", "commodity_name"), "trade_value",
-                              colors = new_colors)
+    colors = new_colors
+  )
 
   lopts <- getOption("highcharter.lang")
   lopts$thousandsSep <- ","
@@ -492,11 +505,11 @@ p_to_highcharts <- function(d, d2) {
 #' @export
 custom_regression_error <- function() {
   feols(ERROR ~ UNFEASIBLE + ESTIMATION,
-        data = data.frame(
-          ERROR = c(1,0,0),
-          UNFEASIBLE = c(0,1,0),
-          ESTIMATION = c(0,0,1)
-        )
+    data = data.frame(
+      ERROR = c(1, 0, 0),
+      UNFEASIBLE = c(0, 1, 0),
+      ESTIMATION = c(0, 0, 1)
+    )
   )
 }
 
@@ -507,8 +520,8 @@ custom_regression_error <- function() {
 #' @export
 show_dollars <- function(x) {
   ifelse(x %/% 10e8 >= 1,
-         paste0(round(x / 10e8, 2), "B"),
-         paste0(round(x / 10e5, 2), "M")
+    paste0(round(x / 10e8, 2), "B"),
+    paste0(round(x / 10e5, 2), "M")
   )
 }
 

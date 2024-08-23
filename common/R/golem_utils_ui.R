@@ -1,7 +1,9 @@
 #' Available UI parameters expressed as functions
 #' @rdname available
 #' @export
-available_all <- function() { c("All Products" = "all") }
+available_all <- function() {
+  c("All Products" = "all")
+}
 
 #' @rdname available
 #' @export
@@ -44,23 +46,33 @@ available_commodities_short_code <- function() {
 
 #' @rdname available
 #' @export
-available_vaccine <- function() { c("Vaccine Inputs" = "vaccine") }
+available_vaccine <- function() {
+  c("Vaccine Inputs" = "vaccine")
+}
 
 #' @rdname available
 #' @export
-available_yrs <- function() { 1980L:2021L }
+available_yrs <- function() {
+  1980L:2021L
+}
 
 #' @rdname available
 #' @export
-available_yrs_deflator <- function() { 1981L:2021L }
+available_yrs_deflator <- function() {
+  1981L:2021L
+}
 
 #' @rdname available
 #' @export
-available_yrs_min <- function() { min(available_yrs()) }
+available_yrs_min <- function() {
+  min(available_yrs())
+}
 
 #' @rdname available
 #' @export
-available_yrs_max <- function() { max(available_yrs()) }
+available_yrs_max <- function() {
+  max(available_yrs())
+}
 
 #' Create an url
 #' @param url the URL

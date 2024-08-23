@@ -18,9 +18,7 @@ app_ui <- function(request) {
     dashboardPage(
       skin = styles$skin_color,
       theme = styles$css_files,
-
       dashboardHeader(title = "Open Trade Statistics"),
-
       dashboardSidebar(
         useShinyjs(),
         useWaitress(),
@@ -30,11 +28,9 @@ app_ui <- function(request) {
           menuItem("Cite", tabName = "cite")
         )
       ),
-
       dashboardBody(
         tabItems(
           # Welcome -----
-
           tabItem(
             tabName = "welcome",
             HTML('
@@ -53,7 +49,6 @@ app_ui <- function(request) {
               <a type="button" target="_blank" class="btn btn-primary" href="https://github.com/ropensci/tradestatistics">R package</a>
             ')
           ),
-
           tabItem(
             tabName = "visualize",
             fluidRow(
@@ -61,7 +56,6 @@ app_ui <- function(request) {
               col_12(
                 h2("Filter")
               ),
-
               col_3(
                 sliderInput(
                   "y",
@@ -75,19 +69,18 @@ app_ui <- function(request) {
                   width = "100%"
                 )
               ),
-
               col_3(
                 selectInput(
                   "r",
                   "Reporter",
                   choices = sort(available_reporters_iso()[
-                    available_reporters_iso() != "all"]),
+                    available_reporters_iso() != "all"
+                  ]),
                   selected = "can",
                   selectize = TRUE,
                   width = "100%"
                 )
               ),
-
               col_3(
                 selectInput(
                   "p",
@@ -98,7 +91,6 @@ app_ui <- function(request) {
                   width = "100%"
                 )
               ),
-
               col_3(
                 selectInput(
                   "d",
@@ -119,11 +111,11 @@ app_ui <- function(request) {
                     size = "s"
                   )
               ),
-
               col_12(
-                align="center",
+                align = "center",
                 actionButton("go", "Give me the country profile",
-                             class = "btn-primary")
+                  class = "btn-primary"
+                )
               ),
 
               # Trade ----
@@ -136,18 +128,15 @@ app_ui <- function(request) {
 
               div(
                 id = "aggregated_trade",
-
                 col_12(
                   htmlOutput("trd_stl", container = tags$h3)
                 ),
-
                 col_3(
                   htmlOutput("trd_stl_exp", container = tags$h4),
                   htmlOutput("trd_smr_exp", container = tags$p),
                   htmlOutput("trd_stl_imp", container = tags$h4),
                   htmlOutput("trd_smr_imp", container = tags$p)
                 ),
-
                 col_9(
                   highchartOutput("trd_exc_columns_agg", height = "500px")
                 )
@@ -157,37 +146,30 @@ app_ui <- function(request) {
 
               div(
                 id = "detailed_trade",
-
                 col_12(
                   htmlOutput("exp_tt_yr", container = tags$h3),
                   highchartOutput("exp_col_dtl_yr", height = "500px")
                 ),
-
                 col_6(
                   htmlOutput("exp_tt_min_yr", container = tags$h4),
                   highchartOutput("exp_tm_dtl_min_yr", height = "500px")
                 ),
-
                 col_6(
                   htmlOutput("exp_tt_max_yr", container = tags$h4),
                   highchartOutput("exp_tm_dtl_max_yr", height = "500px")
                 ),
-
                 col_12(
                   htmlOutput("imp_tt_yr", container = tags$h3),
                   highchartOutput("imp_col_dtl_yr", height = "500px")
                 ),
-
                 col_6(
                   htmlOutput("imp_tt_min_yr", container = tags$h4),
                   highchartOutput("imp_tm_dtl_min_yr", height = "500px")
                 ),
-
                 col_6(
                   htmlOutput("imp_tt_max_yr", container = tags$h4),
                   highchartOutput("imp_tm_dtl_max_yr", height = "500px")
                 ),
-
                 col_12(
                   htmlOutput("dwn_stl", container = tags$h3),
                   htmlOutput("dwn_txt", container = tags$p),
@@ -221,15 +203,12 @@ app_ui <- function(request) {
             htmlOutput("site_footer", container = tags$p)
           )
         ),
-
         HTML('
           <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="pacha" data-description="Support me on Buy me a coffee!" data-message="If this tool is useful to you, please support it." data-color="#ff813f" data-position="Right" data-x_margin="18" data-y_margin="48"></script>
         ')
       ),
-
       uiOutput(outputId = "dynamicUI")
     ),
-
     tags$footer(
       tags$link(rel = "shortcut icon", href = "img/favicon.ico")
     )
