@@ -39,16 +39,16 @@ gdp_deflator_adjustment <- function(d, reference_year, con) {
       if (year < reference_year) {
         tbl(con, "gdp_deflator") %>%
           filter(!!sym("year_to") <= reference_year &
-            !!sym("year_to") > !!sym("year") &
-            !!sym("country_iso") == "wld") %>%
+            !!sym("year_to") > !!sym("year_from") &
+            !!sym("country_iso") == "all") %>%
           collect() %>%
           summarise(gdp_deflator = last(cumprod(!!sym("gdp_deflator")))) %>%
           mutate(year = year, conversion_year = reference_year)
       } else if (year > reference_year) {
         tbl(con, "gdp_deflator") %>%
           filter(!!sym("year_from") >= reference_year &
-            !!sym("year_from") < !!sym("year") &
-            !!sym("country_iso") == "wld") %>%
+            !!sym("year_to") > !!sym("year_from") &
+            !!sym("country_iso") == "all") %>%
           collect() %>%
           summarise(gdp_deflator = 1 / last(cumprod(!!sym("gdp_deflator")))) %>%
           mutate(year = year, conversion_year = reference_year)
@@ -90,7 +90,7 @@ gdp_deflator_adjustment_model <- function(d, reference_year, con) {
         tbl(con, "gdp_deflator") %>%
           filter(!!sym("year_to") <= reference_year &
             !!sym("year_to") > year &
-            !!sym("country_iso") == "wld") %>%
+            !!sym("country_iso") == "all") %>%
           collect() %>%
           summarise(gdp_deflator = last(cumprod(!!sym("gdp_deflator")))) %>%
           mutate(year = year, conversion_year = reference_year)
@@ -98,7 +98,7 @@ gdp_deflator_adjustment_model <- function(d, reference_year, con) {
         tbl(con, "gdp_deflator") %>%
           filter(!!sym("year_from") >= reference_year &
             !!sym("year_from") < year &
-            !!sym("country_iso") == "wld") %>%
+            !!sym("country_iso") == "all") %>%
           collect() %>%
           summarise(gdp_deflator = 1 / last(cumprod(!!sym("gdp_deflator")))) %>%
           mutate(year = year, conversion_year = reference_year)
