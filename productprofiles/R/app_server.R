@@ -22,6 +22,9 @@ app_server <- function(input, output, session) {
   # Connect to SQL ----
 
   con <- sql_con()
+  onStop(function() {
+    poolClose(con)
+  })
 
   # User inputs ----
 
