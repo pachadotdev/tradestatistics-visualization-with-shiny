@@ -380,7 +380,7 @@ mod_sectors_server <- function(id, con) {
       rest <- d[country == "Rest of the world"][, n := 5L]
       others <- d[country != "Rest of the world"][order(-trade)][, n := .I]
       d <- rbindlist(list(rest, others), fill = TRUE)
-      d[, country := paste(n, country, sep = " - ")]
+      d[, country := fifelse(country != "Rest of the world", paste(n, country, sep = " - "))]
       d[, trade := round(trade / 1e9, 2)]
       d[, n := NULL]
 

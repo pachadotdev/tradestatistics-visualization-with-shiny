@@ -103,10 +103,15 @@ mod_countries_ui <- function(id) {
           br(),
           col12(card(
             htmlOutput(ns("exp_tt_yr"), container = tags$h2),
-            p("These charts show exports evolution over the selected years (line chart) and exports composition by sector and industry (treemaps) for the first and last year.")
+            p("These charts show exports evolution over the selected years (line chart), top export destinations (bar charts) and exports composition by sector and industry (treemaps) for the first and last year.")
           )),
           br(),
           col12(card(d3po_output(ns("trd_line_exp"), height = "400px"))),
+          br(),
+          row(
+            col6(card(d3po_output(ns("exp_col_min_yr_usd"), height = "500px"))),
+            col6(card(d3po_output(ns("exp_col_max_yr_usd"), height = "500px")))
+          ),
           br(),
           row(
             col6(card(d3po_output(ns("exp_tm_dtl_min_yr"), height = "500px"))),
@@ -124,11 +129,16 @@ mod_countries_ui <- function(id) {
           col12(
             card(
               htmlOutput(ns("imp_tt_yr"), container = tags$h2),
-              p("These charts show imports evolution over the selected years (line chart) and imports composition by sector and industry (treemaps) for the first and last year.")
+              p("These charts show imports evolution over the selected years (line chart), top import origins (bar charts) and imports composition by sector and industry (treemaps) for the first and last year.")
             )
           ),
           br(),
           col12(card(d3po_output(ns("trd_line_imp"), height = "400px"))),
+          br(),
+          row(
+            col6(card(d3po_output(ns("imp_col_min_yr_usd"), height = "500px"))),
+            col6(card(d3po_output(ns("imp_col_max_yr_usd"), height = "500px")))
+          ),
           br(),
           row(
             col6(card(d3po_output(ns("imp_tm_dtl_min_yr"), height = "500px"))),

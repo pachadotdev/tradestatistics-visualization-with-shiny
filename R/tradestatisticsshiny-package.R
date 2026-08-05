@@ -1,4 +1,7 @@
-#' @keywords internal
+#' @title Open Trade Statistics Dashboard
+#' @description Iteractive dashboard to explore Open Trade Statistics data, which consists in a
+#'  curated version of the International Trade and Production Database for Estimation (ITPD-E) and
+#'  the International Trade and Production Database for Simulation (ITPD-S).
 #' @import tabler
 #' @import d3po
 #' @importFrom tinycache dcache
@@ -12,48 +15,44 @@
 #' @importFrom stats setNames
 "_PACKAGE"
 
+# THIS IS KINDA BAD PRACTISE BUT THIS IS AN INTERNAL PKG TO AVOID A VERY LONG 1-SCRIPT APP
 utils::globalVariables(c(
   ".", ".data",
-  "bal_rank", "broad_sector", "broad_sector_id",
+  "broad_sector", "broad_sector_id",
   "case_id", "color", "commodity_name", "continent_name", "country", "country_color", "country_name",
-  "exp_pct", "exp_share", "exporter", "exporter_iso3_dynamic",
+  "exp_pct", "exp_rank", "exp_share", "exporter", "exporter_iso3_dynamic",
   "financial", "flow",
-  "imp_pct", "imp_share", "importer", "industry_id",
+  "imp_pct", "imp_rank", "imp_share", "importer", "industry_id",
   "n",
   "region_colour",
   "sanctioning_state_dynamic",
   "sector_color", "sum_trade_value",
   "trade", "trade_exp", "trade_imp", "trade_value", "trd_value_usd_bal",
-  "year"
+  "year",
+  "outcome", "partner", "priority", "rank"
 ))
 
 .onLoad <- function(libname, pkgname) {
   tablerOptions(cache = dcache(dir = "/tradestatistics/cache"))
 }
 
-#' countries
-#'
-#' Internal dataset for country codes.
-#'
+#' @title Countries
+#' @descriptionInternal dataset for country codes.
 #' @docType data
 #' @keywords datasets
 #' @name countries
-NULL
+"countries"
 
-#' sectors
-#'
-#' Internal dataset for section/commodity codes.
-#'
+#' @title Sectors
+#' @description Internal dataset for sector codes.
 #' @docType data
 #' @keywords datasets
 #' @name sectors
-NULL
+"sectors"
 
-#' industries
-#'
-#' Internal dataset for commodity codes (6,898 codes).
-#'
+#' @title Industries
+#' @description Internal dataset for industry codes.
 #' @docType data
 #' @keywords datasets
 #' @name industries
-NULL
+"industries"

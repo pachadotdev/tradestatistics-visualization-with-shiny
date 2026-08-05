@@ -15,7 +15,8 @@ open_con <- function() {
   )
 }
 
-#' @title CLose SQL connection
+#' @title Close SQL connection
+#' @param con SQL connection (PostgreSQL)
 close_con <- function(con) {
   if (!is.null(con) && dbIsValid(con)) {
     dbDisconnect(con)
@@ -380,6 +381,93 @@ se_treemap <- function(d, d2, title = NULL) {
     ))
 }
 
+# PARTNER RANKING BAR CHARTS ----
+
+#' @title Top-partner bar chart (top partners + optional highlighted partner + rest of the world)
+#' @description Builds a bar chart of a reporter's top trading partners. With `highlight_code`
+#' left as `NULL` this is a plain top 4 + "Rest of the world" breakdown (multilateral view). When
+#' `highlight_code` is supplied (bilateral view), it shows the top 3 *other* partners plus the
+#' selected partner shown separately (labelled "(selected)"), so it can be compared against the
+#' top partners regardless of its own rank.
+#' @param d input data.table with columns `partner` (dynamic country code) and `trade` (raw trade value)
+#' @param title chart title
+#' @param bar_color bar color
+#' @param highlight_code dynamic code of the selected partner to always show separately, or `NULL`
+#' @param lookup_dt data.table with columns `code`/`country`, as built from `flatten_countries()`
+partner_top_chart <- function(d, title, bar_color, highlight_code = NULL, lookup_dt) {
+  d <- setDT(copy(d))
+  d <- d[, .(trade = sum(trade, na.rm = TRUE)), by = .(partner)]
+  d <- d[trade > 0]
+  if (nrow(d) == 0L) {
+    return(NULL)
+  }
+  setorder(d, -trade)
+  # true rank among ALL partners, captured before collapsing the rest into
+  # "REST" - so the highlighted partner (and the top-N ones) keep their
+  # real position (e.g. 6/14/25) instead of their position within the
+  # kept subset (which was always 1-4).
+  d[, rank := .I]
+
+  if (!is.null(highlight_code) && highlight_code %in% d$partner) {
+    top_n <- d[partner != highlight_code][seq_len(min(3L, .N)), partner]
+    keep <- c(top_n, highlight_code)
+  } else {
+    keep <- d[seq_len(min(4L, .N)), partner]
+  }
+  ranks <- d[partner %in% keep, .(partner, rank)]
+
+  d[!(partner %in% keep), partner := "REST"]
+  d <- d[, .(trade = sum(trade, na.rm = TRUE)), by = .(partner)]
+  d <- merge(d, lookup_dt, by.x = "partner", by.y = "code", all.x = TRUE)
+  d[partner == "REST", country := "Rest of the world"]
+  d[is.na(country), country := partner]
+  if (!is.null(highlight_code) && highlight_code %in% keep) {
+    d[partner == highlight_code, country := paste0(country, " (selected)")]
+  }
+  d <- merge(d, ranks, by = "partner", all.x = TRUE)
+  d[partner == "REST", rank := length(keep) + 1L]
+
+  rest <- d[country == "Rest of the world"]
+  others <- d[country != "Rest of the world"][order(-trade)]
+  d <- rbindlist(list(rest, others), fill = TRUE)
+  # Zero-pad the rank so d3po's "asc-y" sort (which sorts the y-axis
+  # category labels alphabetically, as strings) matches numeric order -
+  # otherwise e.g. "10 - Morocco" sorts between "1 - France" and
+  # "2 - Germany" since "1" < "10" < "2" lexicographically. "Rest of the
+  # world" is left unprefixed since it isn't a real rank.
+  d[country != "Rest of the world", country := paste(sprintf("%03d", rank), country, sep = " - ")]
+  d[, trade := round(trade / 1e9, 2)]
+  d[, rank := NULL]
+  d[, color := bar_color]
+
+  d3po(d) |>
+    po_bar(
+      daes(
+        y = .data$country,
+        x = .data$trade,
+        color = .data$color,
+        sort = "asc-y"
+      )
+    ) |>
+    po_labels(
+      title = title,
+      y = "Country",
+      x = "Trade Value (USD billion)"
+    ) |>
+    po_format(
+      x = format(.data$trade, big.mark = " ", scientific = FALSE, digits = 2),
+      y = gsub("^0", "", gsub("^0", "", .data$country))
+    ) |>
+    # po_tooltip("{country}: {trade} billion")
+    po_tooltip(JS(
+      "function(percentage, row) {
+          var country = row && row.country ? row.country.replace(/^\\d+\\s*-\\s*/, '') : '';
+          var trade = row && row.trade != null ? row.trade : '';
+          return country + ': ' + trade + ' billion';
+        }"
+    ))
+}
+
 #' @title Add definite article for reporter names
 #' @description Grammar helper function that adds "the" for reporter names such as
 #' "United Kingdom" and "United States"
@@ -463,6 +551,7 @@ country_name_from_code <- function(code, lookup) {
 # NARRATIVE TEXT (BACKGROUND / SANCTIONS) ----
 
 #' @title Join a vector of items into a human-readable "a, b and c" list
+#' @param x list or vector (e.g., \code{letters[1:3]})
 format_list_and <- function(x) {
   x <- unique(x)
   x <- x[!is.na(x) & nchar(x) > 0]

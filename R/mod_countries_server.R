@@ -10,6 +10,10 @@ mod_countries_server <- function(id, con) {
     # grouped by region for the select inputs, see flatten_countries()).
     countries_lookup <- flatten_countries()
 
+    # Same lookup as a code -> country data.table, for vectorized joins (used
+    # to label the top-partner bar charts below).
+    countries_dt <- data.table(code = unname(countries_lookup), country = names(countries_lookup))
+
     # User inputs ----
     inp_i <- reactive({
       input$i
@@ -85,6 +89,10 @@ mod_countries_server <- function(id, con) {
         trd_exc_columns_agg()
         trd_line_exp()
         trd_line_imp()
+        exp_col_min_yr_usd()
+        exp_col_max_yr_usd()
+        imp_col_min_yr_usd()
+        imp_col_max_yr_usd()
         exp_tm_dtl_min_yr()
         exp_tm_dtl_max_yr()
         imp_tm_dtl_min_yr()
@@ -359,15 +367,22 @@ mod_countries_server <- function(id, con) {
       setnames(d, "exporter", "exporter_iso3_dynamic")
 
       d[, trd_value_usd_bal := trade_exp + trade_imp]
-      d[, bal_rank := frankv(trd_value_usd_bal, order = -1L, ties.method = "dense"), by = .(year)]
+      # Ranked separately per flow (not on the combined trd_value_usd_bal) so
+      # each narrative sentence's rank matches its own share percentage and
+      # the top-partner bar charts, which are also flow-specific - e.g. an
+      # "exports" sentence/chart is ranked by trade_exp alone, not by
+      # combined export+import trade.
+      d[, exp_rank := frankv(trade_exp, order = -1L, ties.method = "dense"), by = .(year)]
+      d[, imp_rank := frankv(trade_imp, order = -1L, ties.method = "dense"), by = .(year)]
       d[, exp_share := trade_exp / sum(trade_exp, na.rm = TRUE), by = .(year)]
       d[, imp_share := trade_imp / sum(trade_imp, na.rm = TRUE), by = .(year)]
 
       return(d)
     })
 
-    # Helper function to get ranking with tie information
-    get_ranking_with_ties <- function(year_val) {
+    # Helper function to get ranking (by the given flow-specific rank column)
+    # with tie information
+    get_ranking_with_ties <- function(year_val, rank_col) {
       if (inp_e() == "ALL") {
         return("N/A") # No ranking for multilateral trade
       }
@@ -375,14 +390,14 @@ mod_countries_server <- function(id, con) {
       rankings_data <- trd_rankings()[year == year_val]
       partner_iso_val <- inp_e()
 
-      partner_rank <- rankings_data[exporter_iso3_dynamic == partner_iso_val, bal_rank]
+      partner_rank <- rankings_data[exporter_iso3_dynamic == partner_iso_val, get(rank_col)]
 
       if (length(partner_rank) == 0 || is.na(partner_rank)) {
         return("N/A")
       }
 
       # Check for ties
-      tied_count <- rankings_data[bal_rank == partner_rank & exporter_iso3_dynamic != partner_iso_val, .N]
+      tied_count <- rankings_data[get(rank_col) == partner_rank & exporter_iso3_dynamic != partner_iso_val, .N]
 
       if (tied_count > 0) {
         return(paste0(
@@ -394,18 +409,10 @@ mod_countries_server <- function(id, con) {
       }
     }
 
-    trd_rankings_no_min_yr <- eventReactive(input$go, {
-      get_ranking_with_ties(min(inp_y()))
-    })
-
-    trd_rankings_no_max_yr <- eventReactive(input$go, {
-      get_ranking_with_ties(max(inp_y()))
-    })
-
-    trd_rankings_remained <- eventReactive(input$go, {
-      min_rank <- trd_rankings_no_min_yr()
-      max_rank <- trd_rankings_no_max_yr()
-
+    # Compares two "No. X"-style ranking strings (as returned by
+    # get_ranking_with_ties(), tie info and all) and returns "remained" or
+    # "moved to" for use in a ranking_sentence.
+    ranking_change_verb <- function(min_rank, max_rank) {
       if (min_rank == "N/A" || max_rank == "N/A") {
         return("was")
       }
@@ -419,6 +426,30 @@ mod_countries_server <- function(id, con) {
         "remained",
         "moved to"
       )
+    }
+
+    trd_rankings_exp_no_min_yr <- eventReactive(input$go, {
+      get_ranking_with_ties(min(inp_y()), "exp_rank")
+    })
+
+    trd_rankings_exp_no_max_yr <- eventReactive(input$go, {
+      get_ranking_with_ties(max(inp_y()), "exp_rank")
+    })
+
+    trd_rankings_exp_remained <- eventReactive(input$go, {
+      ranking_change_verb(trd_rankings_exp_no_min_yr(), trd_rankings_exp_no_max_yr())
+    })
+
+    trd_rankings_imp_no_min_yr <- eventReactive(input$go, {
+      get_ranking_with_ties(min(inp_y()), "imp_rank")
+    })
+
+    trd_rankings_imp_no_max_yr <- eventReactive(input$go, {
+      get_ranking_with_ties(max(inp_y()), "imp_rank")
+    })
+
+    trd_rankings_imp_remained <- eventReactive(input$go, {
+      ranking_change_verb(trd_rankings_imp_no_min_yr(), trd_rankings_imp_no_max_yr())
     })
 
     trd_rankings_exp_share_min_yr <- eventReactive(input$go, {
@@ -483,6 +514,54 @@ mod_countries_server <- function(id, con) {
         return("N/A")
       }
       show_percentage(share_val)
+    })
+
+    ### Top-partner bar charts ----
+
+    # Titles: same wording whether the partner is "ALL" (plain top 4 + rest of
+    # the world) or a specific country (top 3 other partners + the selected
+    # partner + rest of the world) - the underlying chart data/labels below
+    # already reflect which mode applies.
+    exp_col_min_yr_usd_tt <- eventReactive(input$go, {
+      glue("Top export destinations in { min(inp_y()) }")
+    })
+
+    exp_col_max_yr_usd_tt <- eventReactive(input$go, {
+      glue("Top export destinations in { max(inp_y()) }")
+    })
+
+    imp_col_min_yr_usd_tt <- eventReactive(input$go, {
+      glue("Top import origins in { min(inp_y()) }")
+    })
+
+    imp_col_max_yr_usd_tt <- eventReactive(input$go, {
+      glue("Top import origins in { max(inp_y()) }")
+    })
+
+    # highlight_code is NULL in multilateral mode ("ALL"), or the selected
+    # partner's code in bilateral mode - see partner_top_chart().
+    highlight_code <- eventReactive(input$go, {
+      if (inp_e() == "ALL") NULL else inp_e()
+    })
+
+    exp_col_min_yr_usd <- eventReactive(input$go, {
+      d <- trd_rankings()[year == min(inp_y()), .(partner = exporter_iso3_dynamic, trade = trade_exp)]
+      partner_top_chart(d, exp_col_min_yr_usd_tt(), "#85cca6", highlight_code(), countries_dt)
+    })
+
+    exp_col_max_yr_usd <- eventReactive(input$go, {
+      d <- trd_rankings()[year == max(inp_y()), .(partner = exporter_iso3_dynamic, trade = trade_exp)]
+      partner_top_chart(d, exp_col_max_yr_usd_tt(), "#67c090", highlight_code(), countries_dt)
+    })
+
+    imp_col_min_yr_usd <- eventReactive(input$go, {
+      d <- trd_rankings()[year == min(inp_y()), .(partner = exporter_iso3_dynamic, trade = trade_imp)]
+      partner_top_chart(d, imp_col_min_yr_usd_tt(), "#518498", highlight_code(), countries_dt)
+    })
+
+    imp_col_max_yr_usd <- eventReactive(input$go, {
+      d <- trd_rankings()[year == max(inp_y()), .(partner = exporter_iso3_dynamic, trade = trade_imp)]
+      partner_top_chart(d, imp_col_max_yr_usd_tt(), "#26667f", highlight_code(), countries_dt)
     })
 
     ### GDP Context Functions ----
@@ -720,7 +799,7 @@ mod_countries_server <- function(id, con) {
       } else {
         # Split into two shorter sentences for better readability
         main_sentence <- glue("{ r_add_upp_the(rname()) } { rname() }'s exports to { r_add_the(pname()) } { pname() } { exports_growth_increase_decrease() } from { exp_val_min_yr_2() } in { min(inp_y()) } to { exp_val_max_yr_2() } in { max(inp_y()) } ({ exports_growth_2() } annual { exports_growth_increase_decrease_2() }).")
-        ranking_sentence <- glue("{ r_add_upp_the(pname()) } { pname() } ranked No. { trd_rankings_no_min_yr() } in { min(inp_y()) } ({ trd_rankings_exp_share_min_yr_2() } of exports) and { trd_rankings_remained() } No. { trd_rankings_no_max_yr() } in { max(inp_y()) } ({ trd_rankings_exp_share_max_yr_2() }).")
+        ranking_sentence <- glue("{ r_add_upp_the(pname()) } { pname() } ranked No. { trd_rankings_exp_no_min_yr() } in { min(inp_y()) } ({ trd_rankings_exp_share_min_yr_2() } of exports) and { trd_rankings_exp_remained() } No. { trd_rankings_exp_no_max_yr() } in { max(inp_y()) } ({ trd_rankings_exp_share_max_yr_2() }).")
         paste(main_sentence, ranking_sentence)
       }
 
@@ -746,7 +825,7 @@ mod_countries_server <- function(id, con) {
       } else {
         # Split into two shorter sentences for better readability
         main_sentence <- glue("{ r_add_upp_the(rname()) } { rname() }'s imports from { r_add_the(pname()) } { pname() } { imports_growth_increase_decrease() } from { imp_val_min_yr_2() } in { min(inp_y()) } to { imp_val_max_yr_2() } in { max(inp_y()) } ({ imports_growth_2() } annual { imports_growth_increase_decrease_2() }).")
-        ranking_sentence <- glue("{ r_add_upp_the(pname()) } { pname() } ranked No. { trd_rankings_no_min_yr() } in { min(inp_y()) } ({ trd_rankings_imp_share_min_yr_2() } of imports) and { trd_rankings_remained() } No. { trd_rankings_no_max_yr() } in { max(inp_y()) } ({ trd_rankings_imp_share_max_yr_2() }).")
+        ranking_sentence <- glue("{ r_add_upp_the(pname()) } { pname() } ranked No. { trd_rankings_imp_no_min_yr() } in { min(inp_y()) } ({ trd_rankings_imp_share_min_yr_2() } of imports) and { trd_rankings_imp_remained() } No. { trd_rankings_imp_no_max_yr() } in { max(inp_y()) } ({ trd_rankings_imp_share_max_yr_2() }).")
         paste(main_sentence, ranking_sentence)
       }
 
@@ -1102,6 +1181,15 @@ mod_countries_server <- function(id, con) {
       trd_line_exp()
     })
 
+    output$exp_col_min_yr_usd_tt <- renderText(exp_col_min_yr_usd_tt())
+    output$exp_col_min_yr_usd <- renderWidget({
+      exp_col_min_yr_usd()
+    })
+    output$exp_col_max_yr_usd_tt <- renderText(exp_col_max_yr_usd_tt())
+    output$exp_col_max_yr_usd <- renderWidget({
+      exp_col_max_yr_usd()
+    })
+
     output$exp_tt_min_yr <- renderText(exp_tt_min_yr())
     output$exp_tm_dtl_min_yr <- renderWidget({
       exp_tm_dtl_min_yr()
@@ -1118,6 +1206,15 @@ mod_countries_server <- function(id, con) {
     # Import line chart outputs
     output$trd_line_imp <- renderWidget({
       trd_line_imp()
+    })
+
+    output$imp_col_min_yr_usd_tt <- renderText(imp_col_min_yr_usd_tt())
+    output$imp_col_min_yr_usd <- renderWidget({
+      imp_col_min_yr_usd()
+    })
+    output$imp_col_max_yr_usd_tt <- renderText(imp_col_max_yr_usd_tt())
+    output$imp_col_max_yr_usd <- renderWidget({
+      imp_col_max_yr_usd()
     })
 
     output$imp_tt_min_yr <- renderText(imp_tt_min_yr())
